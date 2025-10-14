@@ -15,7 +15,7 @@ import { useAuthStore } from '@/store/authStore';
 import { LogOut } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Reservas de hoy', href: '/reservations/today', icon: Calendar },
   { name: 'Todas las reservas', href: '/reservations', icon: UtensilsCrossed },
   { name: 'Clientes', href: '/customers', icon: Users },
@@ -42,14 +42,14 @@ export function Sidebar() {
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-gray-900 text-white transition-transform duration-300 lg:relative lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-[#102027] text-white transition-transform duration-300 lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Logo / Header */}
-        <div className="flex h-16 items-center justify-between border-b border-gray-800 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-[#102027] px-4">
           <div className="flex items-center">
-            <UtensilsCrossed className="h-8 w-8 text-blue-500" />
+            <img src="./paul-logo.png" alt="Agent Paul Logo" className="h-11 w-11" />
             <span className="ml-2 text-xl font-bold">Agent Paul</span>
           </div>
 
@@ -76,7 +76,7 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#4d195c] text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 )}
               >
@@ -90,7 +90,7 @@ export function Sidebar() {
         {/* User info at bottom */}
         <div className="border-t border-gray-800 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4d195c]">
               <span className="text-sm font-semibold">
                 {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
               </span>
