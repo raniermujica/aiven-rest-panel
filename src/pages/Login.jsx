@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { api } from '@/services/api';
 
 export function Login() {
   const navigate = useNavigate();
@@ -17,50 +18,61 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
 
-    // Validaciones básicas
-    if (!email || !password) {
-      setError('Por favor completa todos los campos');
-      setIsLoading(false);
-      return;
-    }
+  // Validaciones básicas
+  if (!email || !password) {
+    setError('Por favor completa todos los campos');
+    setIsLoading(false);
+    return;
+  }
 
-    if (!email.includes('@')) {
-      setError('El email no es válido');
-      setIsLoading(false);
-      return;
-    }
+  if (!email.includes('@')) {
+    setError('El email no es válido');
+    setIsLoading(false);
+    return;
+  }
 
-    // Simulación de login (después conectaremos con el backend)
-    setTimeout(() => {
-      // Login exitoso simulado
-      login({
-        id: '1',
-        name: 'Ranier Mujica',
-        email: email,
-        role: 'ADMIN',
-        restaurantId: '123',
-        restaurantName: 'Restaurante Demo',
-      });
-      
+  try {
+    // Obtener slug de la URL si existe
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const slug = pathSegments[0] !== 'login' ? pathSegments[0] : undefined;
+
+    // Llamar a la API real
+    const response = await api.login(email, password, slug);
+    
+    // Guardar en el store
+    login(response.user, response.token);
+    
+    // Redirigir según el tipo de usuario
+    if (response.user.isSuperAdmin) {
+      console.log('✅ SuperAdmin detectado, redirigiendo a /admin');
+      navigate('/admin');
+    } else {
+      console.log('✅ Usuario normal, redirigiendo a /dashboard');
       navigate('/dashboard');
-      setIsLoading(false);
-    }, 1000);
-  };
+    }
+    
+  } catch (err) {
+    console.error('❌ Error en login:', err);
+    setError(err.message || 'Error al iniciar sesión');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#d9d9d9] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
           {/* Logo */}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#bfdce2]">
-            <img src="./paul-logo.png" alt="Agent Paul Logo" className="h-12 w-12" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
+            <UtensilsCrossed className="h-8 w-8 text-white" />
           </div>
           
-          <CardTitle className="text-2xl font-bold">Agent Paul</CardTitle>
+          <CardTitle className="text-2xl font-bold">RestauPanel</CardTitle>
           <CardDescription>
             Inicia sesión para acceder al panel de gestión
           </CardDescription>
@@ -121,24 +133,6 @@ export function Login() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-gray-600">Recordarme</span>
-              </label>
-              
-              <button
-                type="button"
-                className="text-[#102027] hover:text-blue-700 font-medium"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-
             {/* Submit Button */}
             <Button
               type="submit"
@@ -154,13 +148,6 @@ export function Login() {
                 'Iniciar sesión'
               )}
             </Button>
-
-            {/* Demo Credentials */}
-            <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
-              <p className="font-semibold mb-1">Demo (cualquier email/password):</p>
-              <p>Email: demo@restaurant.com</p>
-              <p>Password: demo123</p>
-            </div>
           </form>
         </CardContent>
       </Card>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,41 +11,57 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
+import { api } from '@/services/api';
+import { useAuthStore } from '@/store/authStore';
+import { CreateReservationModal } from '@/components/layout/CreateReservationModal';
 
 export function Dashboard() {
-  // Datos de ejemplo (después vendrán del backend)
-  const stats = {
-    todayReservations: 12,
-    todayCovers: 38,
-    vipCustomers: 5,
-    occupancyRate: 87,
-    upcomingReservations: 3,
-    pendingReservations: 2,
+  const { user } = useAuthStore();
+  const [stats, setStats] = useState(null);
+  const [todayReservations, setTodayReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar stats del dashboard
+      const statsData = await api.getDashboardStats();
+      setStats(statsData);
+
+      // Cargar reservas de hoy (próximas 3)
+      const reservationsData = await api.getTodayReservations();
+      const upcoming = reservationsData.reservations
+        .filter(r => r.status === 'confirmed' || r.status === 'pending')
+        .slice(0, 3);
+      setTodayReservations(upcoming);
+
+    } catch (error) {
+      console.error('Error cargando dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const upcomingReservations = [
-    {
-      id: 1,
-      time: '14:00',
-      customerName: 'Juan Pérez',
-      partySize: 4,
-      status: 'confirmed',
-    },
-    {
-      id: 2,
-      time: '14:30',
-      customerName: 'María García',
-      partySize: 2,
-      status: 'pending',
-    },
-    {
-      id: 3,
-      time: '15:00',
-      customerName: 'Carlos López',
-      partySize: 6,
-      status: 'confirmed',
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  const terminology = user?.business?.terminology || {
+    booking: 'Reserva',
+    bookings: 'Reservas',
+    customer: 'Cliente',
+    customers: 'Clientes',
+  };
 
   return (
     <div className="space-y-6">
@@ -67,9 +84,9 @@ export function Dashboard() {
             <Calendar className="mr-2 h-4 w-4" />
             Ver calendario
           </Button>
-          <Button>
+          <Button onClick={() => setShowCreateModal(true)}>
             <Phone className="mr-2 h-4 w-4" />
-            Nueva reserva
+            Nueva {terminology.booking.toLowerCase()}
           </Button>
         </div>
       </div>
@@ -80,14 +97,14 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Reservas hoy
+              {terminology.bookings} hoy
             </CardTitle>
             <Calendar className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.todayReservations}</div>
+            <div className="text-2xl font-bold">{stats?.today?.total || 0}</div>
             <p className="text-xs text-gray-500">
-              {stats.pendingReservations} pendientes de confirmar
+              {stats?.today?.pending || 0} pendientes de confirmar
             </p>
           </CardContent>
         </Card>
@@ -101,9 +118,9 @@ export function Dashboard() {
             <Users className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.todayCovers}</div>
+            <div className="text-2xl font-bold">{stats?.today?.covers || 0}</div>
             <p className="text-xs text-green-600">
-              +12% vs ayer
+              Total del día
             </p>
           </CardContent>
         </Card>
@@ -112,12 +129,12 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Clientes VIP hoy
+              {terminology.customers} VIP hoy
             </CardTitle>
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.vipCustomers}</div>
+            <div className="text-2xl font-bold">{stats?.vipToday || 0}</div>
             <p className="text-xs text-gray-500">
               Requieren atención especial
             </p>
@@ -133,9 +150,9 @@ export function Dashboard() {
             <TrendingUp className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.occupancyRate}%</div>
+            <div className="text-2xl font-bold">{stats?.occupancyRate || 0}%</div>
             <p className="text-xs text-gray-500">
-              Capacidad máxima: 50 personas
+              Del aforo total
             </p>
           </CardContent>
         </Card>
@@ -147,49 +164,55 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Próximas reservas (2 horas)</CardTitle>
+              <CardTitle>Próximas {terminology.bookings.toLowerCase()}</CardTitle>
               <Clock className="h-5 w-5 text-gray-400" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {upcomingReservations.map((reservation) => (
-                <div
-                  key={reservation.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                      <span className="text-lg font-bold text-blue-600">
-                        {reservation.time}
-                      </span>
+              {todayReservations.length > 0 ? (
+                todayReservations.map((reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                        <span className="text-lg font-bold text-blue-600">
+                          {reservation.reservation_time.substring(0, 5)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{reservation.customers?.name || 'Cliente'}</p>
+                        <p className="text-sm text-gray-500">
+                          {reservation.party_size} personas
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{reservation.customerName}</p>
-                      <p className="text-sm text-gray-500">
-                        {reservation.partySize} personas
-                      </p>
+                    
+                    <div className="flex items-center gap-2">
+                      {reservation.status === 'confirmed' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                          <CheckCircle className="h-3 w-3" />
+                          Confirmada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                          <AlertCircle className="h-3 w-3" />
+                          Pendiente
+                        </span>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {reservation.status === 'confirmed' ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                        <CheckCircle className="h-3 w-3" />
-                        Confirmada
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                        <AlertCircle className="h-3 w-3" />
-                        Pendiente
-                      </span>
-                    )}
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No hay {terminology.bookings.toLowerCase()} próximas
                 </div>
-              ))}
+              )}
               
               <Button variant="outline" className="w-full">
-                Ver todas las reservas de hoy
+                Ver todas las {terminology.bookings.toLowerCase()} de hoy
               </Button>
             </div>
           </CardContent>
@@ -205,8 +228,8 @@ export function Dashboard() {
               <Button variant="outline" className="justify-start h-auto py-4">
                 <Calendar className="mr-3 h-5 w-5" />
                 <div className="text-left">
-                  <div className="font-semibold">Crear reserva manual</div>
-                  <div className="text-xs text-gray-500">Agendar nueva reserva desde el panel</div>
+                  <div className="font-semibold">Crear {terminology.booking.toLowerCase()} manual</div>
+                  <div className="text-xs text-gray-500">Agendar nueva {terminology.booking.toLowerCase()} desde el panel</div>
                 </div>
               </Button>
 
@@ -214,15 +237,15 @@ export function Dashboard() {
                 <Users className="mr-3 h-5 w-5" />
                 <div className="text-left">
                   <div className="font-semibold">Gestionar lista de espera</div>
-                  <div className="text-xs text-gray-500">Ver clientes en espera de mesa</div>
+                  <div className="text-xs text-gray-500">Ver {terminology.customers.toLowerCase()} en espera de mesa</div>
                 </div>
               </Button>
 
               <Button variant="outline" className="justify-start h-auto py-4">
                 <Star className="mr-3 h-5 w-5" />
                 <div className="text-left">
-                  <div className="font-semibold">Clientes VIP</div>
-                  <div className="text-xs text-gray-500">Ver y gestionar clientes VIP</div>
+                  <div className="font-semibold">{terminology.customers} VIP</div>
+                  <div className="text-xs text-gray-500">Ver y gestionar {terminology.customers.toLowerCase()} VIP</div>
                 </div>
               </Button>
 
@@ -230,7 +253,7 @@ export function Dashboard() {
                 <TrendingUp className="mr-3 h-5 w-5" />
                 <div className="text-left">
                   <div className="font-semibold">Ver estadísticas</div>
-                  <div className="text-xs text-gray-500">Análisis y reportes del restaurante</div>
+                  <div className="text-xs text-gray-500">Análisis y reportes del {user?.business?.name || 'negocio'}</div>
                 </div>
               </Button>
             </div>
@@ -247,7 +270,7 @@ export function Dashboard() {
           <div className="flex-1">
             <h3 className="font-semibold text-blue-900">Sistema de IA activo</h3>
             <p className="text-sm text-blue-700">
-              El agente de WhatsApp está respondiendo automáticamente. Tienes 3 conversaciones activas.
+              El agente de WhatsApp está respondiendo automáticamente.
             </p>
           </div>
           <Button variant="outline" className="bg-white">
@@ -255,6 +278,14 @@ export function Dashboard() {
           </Button>
         </CardContent>
       </Card>
+      <CreateReservationModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          loadDashboardData();
+          setShowCreateModal(false);
+        }}
+      />
     </div>
   );
 };

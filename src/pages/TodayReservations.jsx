@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,95 +11,79 @@ import {
   Star,
   AlertTriangle,
   MessageSquare,
-  Eye
+  Eye,
+  Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { api } from '@/services/api';
+import { useAuthStore } from '@/store/authStore';
+import { CreateReservationModal } from '@/components/layout/CreateReservationModal';
 
 export function TodayReservations() {
-  const [filter, setFilter] = useState('all'); // all, pending, confirmed, completed
+  const { user } = useAuthStore();
+  const [filter, setFilter] = useState('all');
+  const [reservations, setReservations] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Datos de ejemplo (después vendrán del backend)
-  const reservations = [
-    {
-      id: 1,
-      time: '14:00',
-      customerName: 'Juan Pérez',
-      phone: '+34 600 123 456',
-      partySize: 4,
-      status: 'confirmed',
-      isVIP: false,
-      table: 'Mesa 5',
-      notes: 'Cumpleaños, necesitan velas',
-      allergies: null,
-    },
-    {
-      id: 2,
-      time: '14:30',
-      customerName: 'María García',
-      phone: '+34 600 789 012',
-      partySize: 2,
-      status: 'pending',
-      isVIP: true,
-      table: 'Mesa 12',
-      notes: null,
-      allergies: ['Gluten', 'Lactosa'],
-    },
-    {
-      id: 3,
-      time: '15:00',
-      customerName: 'Carlos López',
-      phone: '+34 600 345 678',
-      partySize: 6,
-      status: 'confirmed',
-      isVIP: false,
-      table: 'Mesa 8',
-      notes: 'Prefieren terraza',
-      allergies: null,
-    },
-    {
-      id: 4,
-      time: '21:00',
-      customerName: 'Ana Martínez',
-      phone: '+34 600 901 234',
-      partySize: 2,
-      status: 'seated',
-      isVIP: true,
-      table: 'Mesa 3',
-      notes: 'Aniversario',
-      allergies: ['Mariscos'],
-    },
-    {
-      id: 5,
-      time: '21:30',
-      customerName: 'Pedro Sánchez',
-      phone: '+34 600 567 890',
-      partySize: 8,
-      status: 'pending',
-      isVIP: false,
-      table: null,
-      notes: 'Evento corporativo',
-      allergies: null,
-    },
-  ];
+  const terminology = user?.business?.terminology || {
+    booking: 'Reserva',
+    bookings: 'Reservas',
+    customer: 'Cliente',
+  };
+
+  useEffect(() => {
+    loadReservations();
+  }, []);
+
+  const loadReservations = async () => {
+    try {
+      setLoading(true);
+      const [reservationsData, statsData] = await Promise.all([
+        api.getTodayReservations(),
+        api.getReservationStats(),
+      ]);
+      
+      setReservations(reservationsData.reservations || []);
+      setStats(statsData.today || {});
+    } catch (error) {
+      console.error('Error cargando reservas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkStatus = async (reservationId, newStatus) => {
+    try {
+      await api.updateReservationStatus(reservationId, newStatus);
+      // Recargar reservas
+      await loadReservations();
+    } catch (error) {
+      console.error('Error actualizando estado:', error);
+      alert('Error al actualizar el estado');
+    }
+  };
 
   const filteredReservations = reservations.filter(res => {
     if (filter === 'all') return true;
     return res.status === filter;
   });
 
-  const stats = {
-    total: reservations.length,
-    pending: reservations.filter(r => r.status === 'pending').length,
-    confirmed: reservations.filter(r => r.status === 'confirmed').length,
-    seated: reservations.filter(r => r.status === 'seated').length,
-  };
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reservas de hoy</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{terminology.bookings} de hoy</h1>
           <p className="mt-1 text-sm text-gray-500">
             {new Date().toLocaleDateString('es-ES', { 
               weekday: 'long', 
@@ -112,12 +96,12 @@ export function TodayReservations() {
         
         <div className="flex gap-3">
           <Button variant="outline" size="sm">
-            <Clock className="mr-2 h-4 w-4" />
+            <Download className="mr-2 h-4 w-4" />
             Exportar PDF
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowCreateModal(true)}>
             <Phone className="mr-2 h-4 w-4" />
-            Nueva reserva
+            Nueva {terminology.booking.toLowerCase()}
           </Button>
         </div>
       </div>
@@ -135,7 +119,7 @@ export function TodayReservations() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-2xl font-bold">{stats?.total || 0}</p>
               </div>
               <UsersIcon className="h-8 w-8 text-gray-400" />
             </div>
@@ -153,7 +137,7 @@ export function TodayReservations() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Pendientes</p>
-                <p className="text-2xl font-bold">{stats.pending}</p>
+                <p className="text-2xl font-bold">{stats?.pending || 0}</p>
               </div>
               <AlertCircle className="h-8 w-8 text-yellow-500" />
             </div>
@@ -171,7 +155,7 @@ export function TodayReservations() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Confirmadas</p>
-                <p className="text-2xl font-bold">{stats.confirmed}</p>
+                <p className="text-2xl font-bold">{stats?.confirmed || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -189,7 +173,7 @@ export function TodayReservations() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">En mesa</p>
-                <p className="text-2xl font-bold">{stats.seated}</p>
+                <p className="text-2xl font-bold">{stats?.seated || 0}</p>
               </div>
               <UsersIcon className="h-8 w-8 text-blue-500" />
             </div>
@@ -202,7 +186,9 @@ export function TodayReservations() {
         {filteredReservations.map((reservation) => (
           <ReservationCard 
             key={reservation.id} 
-            reservation={reservation} 
+            reservation={reservation}
+            onMarkStatus={handleMarkStatus}
+            terminology={terminology}
           />
         ))}
       </div>
@@ -212,19 +198,27 @@ export function TodayReservations() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-gray-400" />
             <p className="mt-4 text-lg font-medium text-gray-900">
-              No hay reservas {filter !== 'all' && `con estado "${filter}"`}
+              No hay {terminology.bookings.toLowerCase()} {filter !== 'all' && `con estado "${filter}"`}
             </p>
             <p className="mt-1 text-sm text-gray-500">
-              Las reservas aparecerán aquí cuando se creen
+              Las {terminology.bookings.toLowerCase()} aparecerán aquí cuando se creen
             </p>
           </CardContent>
         </Card>
       )}
+      <CreateReservationModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          loadReservations();
+          setShowCreateModal(false);
+        }}
+      />
     </div>
   );
 }
 
-function ReservationCard({ reservation }) {
+function ReservationCard({ reservation, onMarkStatus, terminology }) {
   const getStatusInfo = (status) => {
     const statusMap = {
       pending: {
@@ -242,17 +236,24 @@ function ReservationCard({ reservation }) {
         color: 'bg-blue-100 text-blue-800',
         icon: UsersIcon,
       },
+      completed: {
+        label: 'Completada',
+        color: 'bg-gray-100 text-gray-800',
+        icon: CheckCircle,
+      },
     };
     return statusMap[status] || statusMap.pending;
   };
 
   const statusInfo = getStatusInfo(reservation.status);
   const StatusIcon = statusInfo.icon;
+  const customer = reservation.customers || {};
+  const preferences = customer.customer_preferences?.[0] || {};
 
   return (
     <Card className={cn(
       'transition-all hover:shadow-md',
-      reservation.isVIP && 'ring-2 ring-yellow-400'
+      customer.is_vip && 'ring-2 ring-yellow-400'
     )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -260,10 +261,10 @@ function ReservationCard({ reservation }) {
             {/* Time Badge */}
             <div className="flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-blue-100">
               <span className="text-xs font-medium text-blue-600">
-                {reservation.time.split(':')[0]}
+                {reservation.reservation_time.split(':')[0]}
               </span>
               <span className="text-lg font-bold text-blue-600">
-                {reservation.time.split(':')[1]}
+                {reservation.reservation_time.split(':')[1]}
               </span>
             </div>
 
@@ -271,13 +272,13 @@ function ReservationCard({ reservation }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-gray-900">
-                  {reservation.customerName}
+                  {customer.name || 'Cliente'}
                 </h3>
-                {reservation.isVIP && (
+                {customer.is_vip && (
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 )}
               </div>
-              <p className="text-sm text-gray-500">{reservation.phone}</p>
+              <p className="text-sm text-gray-500">{customer.phone || 'Sin teléfono'}</p>
             </div>
           </div>
 
@@ -298,37 +299,37 @@ function ReservationCard({ reservation }) {
           <div className="flex items-center gap-2">
             <UsersIcon className="h-4 w-4 text-gray-400" />
             <span className="text-gray-600">
-              {reservation.partySize} personas
+              {reservation.party_size} personas
             </span>
           </div>
           
-          {reservation.table && (
+          {reservation.tables?.table_number && (
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-600">{reservation.table}</span>
+              <span className="text-gray-600">Mesa {reservation.tables.table_number}</span>
             </div>
           )}
         </div>
 
         {/* Alerts */}
-        {reservation.allergies && reservation.allergies.length > 0 && (
+        {preferences.allergies && preferences.allergies.length > 0 && (
           <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3">
             <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-red-900">Alergias</p>
               <p className="text-xs text-red-700">
-                {reservation.allergies.join(', ')}
+                {preferences.allergies.join(', ')}
               </p>
             </div>
           </div>
         )}
 
-        {reservation.notes && (
+        {reservation.special_requests && (
           <div className="flex items-start gap-2 rounded-lg bg-blue-50 p-3">
             <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-blue-900">Nota</p>
-              <p className="text-xs text-blue-700">{reservation.notes}</p>
+              <p className="text-xs text-blue-700">{reservation.special_requests}</p>
             </div>
           </div>
         )}
@@ -336,21 +337,34 @@ function ReservationCard({ reservation }) {
         {/* Actions */}
         <div className="flex gap-2 pt-2">
           {reservation.status === 'pending' && (
-            <Button size="sm" className="flex-1">
+            <Button 
+              size="sm" 
+              className="flex-1"
+              onClick={() => onMarkStatus(reservation.id, 'confirmed')}
+            >
               <CheckCircle className="mr-1 h-4 w-4" />
               Confirmar
             </Button>
           )}
           
           {reservation.status === 'confirmed' && (
-            <Button size="sm" className="flex-1">
+            <Button 
+              size="sm" 
+              className="flex-1"
+              onClick={() => onMarkStatus(reservation.id, 'seated')}
+            >
               <UsersIcon className="mr-1 h-4 w-4" />
               Marcar llegada
             </Button>
           )}
 
           {reservation.status === 'seated' && (
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => onMarkStatus(reservation.id, 'completed')}
+            >
               <CheckCircle className="mr-1 h-4 w-4" />
               Finalizar
             </Button>
