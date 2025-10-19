@@ -3,12 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
-  TrendingDown,
   Users, 
   Calendar,
-  DollarSign,
   Star,
-  AlertTriangle,
   Download,
   ArrowUp,
   ArrowDown
@@ -28,6 +25,7 @@ export function Analytics() {
     bookings: 'Reservas',
     customer: 'Cliente',
     customers: 'Clientes',
+    capacity: 'Personas',
   };
 
   useEffect(() => {
@@ -115,7 +113,9 @@ export function Analytics() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Comensales</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    {terminology.capacity} hoy
+                  </p>
                   <p className="text-2xl font-bold">{dashboardStats?.today?.covers || 0}</p>
                   <p className="mt-1 text-xs text-gray-500">
                     Total del día
@@ -193,11 +193,6 @@ export function Analytics() {
                   </span>
                   <span className="text-xs text-gray-500">vs mes anterior</span>
                 </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-gray-600">
-                    Mes anterior: {lastMonth.reservations || 0}
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -205,7 +200,7 @@ export function Analytics() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-gray-500">
-                Comensales
+                {terminology.capacity}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -231,11 +226,6 @@ export function Analytics() {
                   </span>
                   <span className="text-xs text-gray-500">vs mes anterior</span>
                 </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-gray-600">
-                    Mes anterior: {lastMonth.covers || 0}
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -252,19 +242,8 @@ export function Analytics() {
                   <p className="text-2xl font-bold">{thisMonth.noShows || 0}</p>
                   <p className="text-xs text-gray-500">Este mes</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm text-gray-600">
-                    {thisMonth.reservations > 0 
-                      ? Math.round((thisMonth.noShows / thisMonth.reservations) * 100)
-                      : 0
-                    }% del total
-                  </span>
-                </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-gray-600">
-                    Mes anterior: {lastMonth.noShows || 0}
-                  </p>
+                <div className="text-xs text-gray-500">
+                  vs {lastMonth.noShows || 0} mes anterior
                 </div>
               </div>
             </CardContent>
@@ -275,10 +254,7 @@ export function Analytics() {
       {/* Top Customers */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Top {terminology.customers}</CardTitle>
-            <Star className="h-5 w-5 text-yellow-500" />
-          </div>
+          <CardTitle>Top {terminology.customers}</CardTitle>
         </CardHeader>
         <CardContent>
           {topCustomers.length > 0 ? (
@@ -349,8 +325,7 @@ export function Analytics() {
                   {terminology.customers} leales
                 </h3>
                 <p className="mt-1 text-sm text-blue-700">
-                  Tienes {topCustomers.length} {terminology.customers.toLowerCase()} frecuentes. 
-                  Considera crear un programa de fidelidad.
+                  Tienes {topCustomers.length} {terminology.customers.toLowerCase()} frecuentes. Considera crear un programa de fidelidad.
                 </p>
               </div>
             </div>

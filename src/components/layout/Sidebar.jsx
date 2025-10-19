@@ -2,11 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
-import { 
-  LayoutDashboard, 
-  Calendar, 
+import {
+  LayoutDashboard,
+  Calendar,
   CalendarDays,
-  Users, 
+  Users,
   Clock,
   BarChart3,
   Settings,
@@ -62,41 +62,13 @@ export function Sidebar() {
   };
 
   const navigation = [
-    { 
-      name: 'Dashboard', 
-      href: '/dashboard', 
-      icon: LayoutDashboard 
-    },
-    { 
-      name: `${terminology.bookings} de hoy`, 
-      href: '/reservations/today', 
-      icon: Calendar 
-    },
-    { 
-      name: `Todas las ${terminology.bookings.toLowerCase()}`, 
-      href: '/reservations', 
-      icon: CalendarDays 
-    },
-    { 
-      name: terminology.customers, 
-      href: '/customers', 
-      icon: Users 
-    },
-    { 
-      name: 'Lista de espera', 
-      href: '/waitlist', 
-      icon: Clock 
-    },
-    { 
-      name: 'Estadísticas', 
-      href: '/analytics', 
-      icon: BarChart3 
-    },
-    { 
-      name: 'Configuración', 
-      href: '/settings', 
-      icon: Settings 
-    },
+    { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
+    { name: `${terminology.bookings} de hoy`, href: '/reservations/today', icon: Calendar },
+    { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: UtensilsCrossed },
+    { name: 'Clientes', href: '/customers', icon: Users },
+    { name: 'Lista de espera', href: '/waitlist', icon: Clock },
+    { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
+    { name: 'Configuración', href: '/settings', icon: Settings },
   ];
 
   return (
@@ -126,7 +98,7 @@ export function Sidebar() {
               <p className="text-xs text-white/60">Gestión</p>
             </div>
           </div>
-          
+
           <button
             onClick={closeSidebar}
             className="lg:hidden rounded p-1 hover:bg-white/10"
@@ -140,7 +112,7 @@ export function Sidebar() {
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
-            
+
             return (
               <Link
                 key={item.name}

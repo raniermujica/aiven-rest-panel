@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Clock, 
-  User, 
   Users as UsersIcon, 
   Phone, 
   CheckCircle, 
   AlertCircle,
   Star,
-  AlertTriangle,
-  MessageSquare,
   Eye,
-  Download
+  Download,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
@@ -27,6 +25,7 @@ export function TodayReservations() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const isRestaurant = user?.business?.type === 'restaurant';
   const terminology = user?.business?.terminology || {
     booking: 'Reserva',
     bookings: 'Reservas',
@@ -57,7 +56,6 @@ export function TodayReservations() {
   const handleMarkStatus = async (reservationId, newStatus) => {
     try {
       await api.updateReservationStatus(reservationId, newStatus);
-      // Recargar reservas
       await loadReservations();
     } catch (error) {
       console.error('Error actualizando estado:', error);
@@ -162,23 +160,47 @@ export function TodayReservations() {
           </CardContent>
         </Card>
 
-        <Card 
-          className={cn(
-            'cursor-pointer transition-colors',
-            filter === 'seated' && 'ring-2 ring-blue-500'
-          )}
-          onClick={() => setFilter('seated')}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">En mesa</p>
-                <p className="text-2xl font-bold">{stats?.seated || 0}</p>
+        {/* Solo mostrar "En mesa" para restaurantes */}
+        {isRestaurant && (
+          <Card 
+            className={cn(
+              'cursor-pointer transition-colors',
+              filter === 'seated' && 'ring-2 ring-blue-500'
+            )}
+            onClick={() => setFilter('seated')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">En mesa</p>
+                  <p className="text-2xl font-bold">{stats?.seated || 0}</p>
+                </div>
+                <UsersIcon className="h-8 w-8 text-blue-500" />
               </div>
-              <UsersIcon className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Mostrar "Completadas" para no-restaurantes */}
+        {!isRestaurant && (
+          <Card 
+            className={cn(
+              'cursor-pointer transition-colors',
+              filter === 'completed' && 'ring-2 ring-gray-500'
+            )}
+            onClick={() => setFilter('completed')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Completadas</p>
+                  <p className="text-2xl font-bold">{stats?.completed || 0}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-gray-500" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Reservations List */}
@@ -206,6 +228,7 @@ export function TodayReservations() {
           </CardContent>
         </Card>
       )}
+
       <CreateReservationModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -241,7 +264,6 @@ function ReservationCard({ reservation, onMarkStatus, terminology }) {
       },
     };
 
-    // Solo agregar "seated" si es restaurante
     if (isRestaurant) {
       statusMap.seated = {
         label: 'En mesa',

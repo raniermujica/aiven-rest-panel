@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Calendar, 
-  Search, 
+import {
+  Calendar,
+  Search,
   Filter,
   Download,
   Eye,
@@ -25,6 +25,7 @@ export function AllReservations() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
+  const isRestaurant = user?.business?.type === 'restaurant';
   const terminology = user?.business?.terminology || {
     booking: 'Reserva',
     bookings: 'Reservas',
@@ -37,11 +38,11 @@ export function AllReservations() {
   const loadReservations = async () => {
     try {
       setLoading(true);
-      
+
       const params = {
         date: selectedDate,
       };
-      
+
       if (statusFilter !== 'all') {
         params.status = statusFilter;
       }
@@ -59,11 +60,15 @@ export function AllReservations() {
     const statusMap = {
       pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
       confirmed: { label: 'Confirmada', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      seated: { label: 'En mesa', color: 'bg-blue-100 text-blue-800', icon: Users },
       completed: { label: 'Completada', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
       cancelled: { label: 'Cancelada', color: 'bg-red-100 text-red-800', icon: XCircle },
       no_show: { label: 'No show', color: 'bg-red-100 text-red-800', icon: XCircle },
     };
+
+    if (isRestaurant) {
+      statusMap.seated = { label: 'En mesa', color: 'bg-blue-100 text-blue-800', icon: Users };
+    }
+
     return statusMap[status] || statusMap.pending;
   };
 
@@ -71,7 +76,7 @@ export function AllReservations() {
     { value: 'all', label: 'Todas' },
     { value: 'pending', label: 'Pendientes' },
     { value: 'confirmed', label: 'Confirmadas' },
-    { value: 'seated', label: 'En mesa' },
+    ...(isRestaurant ? [{ value: 'seated', label: 'En mesa' }] : []),
     { value: 'completed', label: 'Completadas' },
     { value: 'cancelled', label: 'Canceladas' },
   ];
@@ -96,7 +101,7 @@ export function AllReservations() {
             Historial completo de {terminology.bookings.toLowerCase()}
           </p>
         </div>
-        
+
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
           Exportar
@@ -151,7 +156,7 @@ export function AllReservations() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {terminology.bookings} - {new Date(selectedDate).toLocaleDateString('es-ES', { 
+            {terminology.bookings} - {new Date(selectedDate).toLocaleDateString('es-ES', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -179,7 +184,7 @@ export function AllReservations() {
                     const statusInfo = getStatusBadge(reservation.status);
                     const StatusIcon = statusInfo.icon;
                     const customer = reservation.customers || {};
-                    
+
                     return (
                       <tr key={reservation.id} className="text-sm">
                         <td className="py-4">

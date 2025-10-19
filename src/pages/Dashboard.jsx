@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Calendar, 
-  Users, 
-  Star, 
+import {
+  Calendar,
+  Users,
+  Star,
   TrendingUp,
   Clock,
   Phone,
@@ -29,7 +29,7 @@ export function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar stats del dashboard
       const statsData = await api.getDashboardStats();
       setStats(statsData);
@@ -70,15 +70,15 @@ export function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Panel de Control</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Resumen de actividad de hoy - {new Date().toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            Resumen de actividad de hoy - {new Date().toLocaleDateString('es-ES', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
-        
+
         <div className="flex gap-3">
           <Button variant="outline">
             <Calendar className="mr-2 h-4 w-4" />
@@ -109,13 +109,13 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Card 2: Comensales */}
+        {/* Card 2: Comensales/Personas de hoy */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Comensales totales
+              {terminology.capacity || 'Personas'} hoy
             </CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+            <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.today?.covers || 0}</div>
@@ -189,7 +189,7 @@ export function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {reservation.status === 'confirmed' ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
@@ -210,7 +210,7 @@ export function Dashboard() {
                   No hay {terminology.bookings.toLowerCase()} próximas
                 </div>
               )}
-              
+
               <Button variant="outline" className="w-full">
                 Ver todas las {terminology.bookings.toLowerCase()} de hoy
               </Button>
