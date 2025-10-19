@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Calendar, Clock, Users, Phone, Mail, User, MessageSquare } from 'lucide-react';
+import { X, Calendar, Clock, Users, Phone, Mail, User, Scissors } from 'lucide-react';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -15,22 +15,17 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
-    // Customer info
     customerId: null,
     customerName: '',
     customerPhone: '',
     customerEmail: '',
-    
-    // Reservation details
     reservationDate: new Date().toISOString().split('T')[0],
-    reservationTime: '20:00',
-    partySize: 2,
-    
-    // Optional
-    specialOccasion: '',
-    specialRequests: '',
+    reservationTime: '10:00',
+    partySize: 1,
+    specialRequests: '', // Ahora será "Tipo de Servicio"
   });
 
+  const isRestaurant = user?.business?.type === 'restaurant';
   const terminology = user?.business?.terminology || {
     booking: 'Reserva',
     customer: 'Cliente',
@@ -38,7 +33,6 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (isOpen) {
-      // Reset form when modal opens
       setStep(1);
       setError('');
       setFormData({
@@ -47,9 +41,8 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
         customerPhone: '',
         customerEmail: '',
         reservationDate: new Date().toISOString().split('T')[0],
-        reservationTime: '20:00',
-        partySize: 2,
-        specialOccasion: '',
+        reservationTime: '10:00',
+        partySize: 1,
         specialRequests: '',
       });
     }
@@ -96,7 +89,6 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     setError('');
     setLoading(true);
 
-    // Validaciones
     if (!formData.customerName || !formData.customerPhone) {
       setError('Nombre y teléfono del cliente son requeridos');
       setLoading(false);
@@ -118,7 +110,6 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
         reservationDate: formData.reservationDate,
         reservationTime: formData.reservationTime,
         partySize: parseInt(formData.partySize),
-        specialOccasion: formData.specialOccasion,
         specialRequests: formData.specialRequests,
         source: 'manual',
       });
@@ -169,27 +160,15 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                   1. Información del {terminology.customer.toLowerCase()}
                 </h3>
 
-                {/* Search existing customer */}
                 <div>
                   <label className="text-sm font-medium text-gray-700">
                     Buscar {terminology.customer.toLowerCase()} existente
                   </label>
                   <div className="relative">
                     <Input
-                      placeholder={`Buscar por nombre o teléfono...`}
                       value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        if (!e.target.value) {
-                          setFormData({
-                            ...formData,
-                            customerId: null,
-                            customerName: '',
-                            customerPhone: '',
-                            customerEmail: '',
-                          });
-                        }
-                      }}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar por nombre o teléfono..."
                     />
                     {customers.length > 0 && (
                       <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
@@ -222,7 +201,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                       <Input
                         value={formData.customerName}
                         onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                        placeholder="Juan Pérez"
+                        placeholder="María Pérez"
                         required
                       />
                     </div>
@@ -235,7 +214,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                       <Input
                         value={formData.customerPhone}
                         onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                        placeholder="+34 600 123 456"
+                        placeholder="+34 666 777 888"
                         required
                       />
                     </div>
@@ -316,33 +295,15 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
 
                 <div>
                   <label className="text-sm font-medium text-gray-700">
-                    Ocasión especial
-                  </label>
-                  <select
-                    value={formData.specialOccasion}
-                    onChange={(e) => setFormData({ ...formData, specialOccasion: e.target.value })}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">Ninguna</option>
-                    <option value="birthday">Cumpleaños</option>
-                    <option value="anniversary">Aniversario</option>
-                    <option value="business">Cena de negocios</option>
-                    <option value="celebration">Celebración</option>
-                    <option value="other">Otra</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    <MessageSquare className="inline h-4 w-4 mr-1" />
-                    Solicitudes especiales
+                    <Scissors className="inline h-4 w-4 mr-1" />
+                    {isRestaurant ? 'Solicitudes especiales' : 'Tipo de Servicio'}
                   </label>
                   <textarea
                     value={formData.specialRequests}
                     onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
                     className="w-full rounded-md border border-gray-300 px-3 py-2"
                     rows={3}
-                    placeholder="Ej: Terraza, mesa junto a ventana, silla para bebé..."
+                    placeholder={isRestaurant ? 'Ej: Mesa junto a ventana, silla para bebé...' : 'Ej: Corte + tinte, Manicura completa, Tratamiento facial...'}
                   />
                 </div>
 
