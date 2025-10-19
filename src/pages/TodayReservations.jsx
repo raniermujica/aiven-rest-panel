@@ -219,6 +219,9 @@ export function TodayReservations() {
 }
 
 function ReservationCard({ reservation, onMarkStatus, terminology }) {
+  const { user } = useAuthStore();
+  const isRestaurant = user?.business?.type === 'restaurant';
+
   const getStatusInfo = (status) => {
     const statusMap = {
       pending: {
@@ -231,140 +234,90 @@ function ReservationCard({ reservation, onMarkStatus, terminology }) {
         color: 'bg-green-100 text-green-800',
         icon: CheckCircle,
       },
-      seated: {
-        label: 'En mesa',
-        color: 'bg-blue-100 text-blue-800',
-        icon: UsersIcon,
-      },
       completed: {
         label: 'Completada',
         color: 'bg-gray-100 text-gray-800',
         icon: CheckCircle,
       },
     };
+
+    // Solo agregar "seated" si es restaurante
+    if (isRestaurant) {
+      statusMap.seated = {
+        label: 'En mesa',
+        color: 'bg-blue-100 text-blue-800',
+        icon: UsersIcon,
+      };
+    }
+
     return statusMap[status] || statusMap.pending;
   };
 
   const statusInfo = getStatusInfo(reservation.status);
   const StatusIcon = statusInfo.icon;
   const customer = reservation.customers || {};
-  const preferences = customer.customer_preferences?.[0] || {};
 
   return (
-    <Card className={cn(
-      'transition-all hover:shadow-md',
-      customer.is_vip && 'ring-2 ring-yellow-400'
-    )}>
-      <CardHeader className="pb-3">
+    <Card>
+      <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            {/* Time Badge */}
-            <div className="flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-blue-100">
-              <span className="text-xs font-medium text-blue-600">
-                {reservation.reservation_time.split(':')[0]}
-              </span>
-              <span className="text-lg font-bold text-blue-600">
-                {reservation.reservation_time.split(':')[1]}
-              </span>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900">{customer.name}</h3>
+              {customer.is_vip && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
             </div>
-
-            {/* Customer Info */}
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">
-                  {customer.name || 'Cliente'}
-                </h3>
-                {customer.is_vip && (
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                )}
-              </div>
-              <p className="text-sm text-gray-500">{customer.phone || 'Sin teléfono'}</p>
-            </div>
+            <p className="text-sm text-gray-600">{customer.phone}</p>
           </div>
-
-          {/* Status Badge */}
-          <span className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium',
-            statusInfo.color
-          )}>
+          
+          <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium', statusInfo.color)}>
             <StatusIcon className="h-3 w-3" />
             {statusInfo.label}
           </span>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-3">
-        {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
           <div className="flex items-center gap-2">
-            <UsersIcon className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-600">
-              {reservation.party_size} personas
-            </span>
+            <Clock className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-600">{reservation.reservation_time}</span>
           </div>
           
-          {reservation.tables?.table_number && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-600">Mesa {reservation.tables.table_number}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <UsersIcon className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-600">{reservation.party_size} personas</span>
+          </div>
         </div>
 
-        {/* Alerts */}
-        {preferences.allergies && preferences.allergies.length > 0 && (
-          <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3">
-            <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-red-900">Alergias</p>
-              <p className="text-xs text-red-700">
-                {preferences.allergies.join(', ')}
-              </p>
-            </div>
-          </div>
-        )}
-
         {reservation.special_requests && (
-          <div className="flex items-start gap-2 rounded-lg bg-blue-50 p-3">
-            <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-blue-900">Nota</p>
-              <p className="text-xs text-blue-700">{reservation.special_requests}</p>
-            </div>
+          <div className="mt-2 rounded-lg bg-blue-50 p-2">
+            <p className="text-xs font-semibold text-blue-900">Nota</p>
+            <p className="text-xs text-blue-700">{reservation.special_requests}</p>
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex gap-2 pt-2">
           {reservation.status === 'pending' && (
-            <Button 
-              size="sm" 
-              className="flex-1"
-              onClick={() => onMarkStatus(reservation.id, 'confirmed')}
-            >
+            <Button size="sm" className="flex-1" onClick={() => onMarkStatus(reservation.id, 'confirmed')}>
               <CheckCircle className="mr-1 h-4 w-4" />
               Confirmar
             </Button>
           )}
           
-          {reservation.status === 'confirmed' && (
-            <Button 
-              size="sm" 
-              className="flex-1"
-              onClick={() => onMarkStatus(reservation.id, 'seated')}
-            >
+          {reservation.status === 'confirmed' && isRestaurant && (
+            <Button size="sm" className="flex-1" onClick={() => onMarkStatus(reservation.id, 'seated')}>
               <UsersIcon className="mr-1 h-4 w-4" />
               Marcar llegada
             </Button>
           )}
 
+          {reservation.status === 'confirmed' && !isRestaurant && (
+            <Button size="sm" className="flex-1" onClick={() => onMarkStatus(reservation.id, 'completed')}>
+              <CheckCircle className="mr-1 h-4 w-4" />
+              Completar
+            </Button>
+          )}
+
           {reservation.status === 'seated' && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => onMarkStatus(reservation.id, 'completed')}
-            >
+            <Button size="sm" variant="outline" className="flex-1" onClick={() => onMarkStatus(reservation.id, 'completed')}>
               <CheckCircle className="mr-1 h-4 w-4" />
               Finalizar
             </Button>

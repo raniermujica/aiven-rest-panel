@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-primary: rgb(37, 99, 235);
+  --color-primary-hover: rgb(29, 78, 216);
+  --color-sidebar: rgb(17, 24, 39);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Estilos para botones primarios dinámicos */
+button[class*="bg-blue-"],
+.btn-primary {
+  background-color: var(--color-primary) !important;
+}
+
+button[class*="bg-blue-"]:hover,
+.btn-primary:hover {
+  background-color: var(--color-primary-hover) !important;
+};
