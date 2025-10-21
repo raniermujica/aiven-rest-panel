@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UtensilsCrossed, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,61 +18,61 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setIsLoading(true);
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-  // Validaciones básicas
-  if (!email || !password) {
-    setError('Por favor completa todos los campos');
-    setIsLoading(false);
-    return;
-  }
-
-  if (!email.includes('@')) {
-    setError('El email no es válido');
-    setIsLoading(false);
-    return;
-  }
-
-  try {
-    // Obtener slug de la URL si existe
-    const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    const slug = pathSegments[0] !== 'login' ? pathSegments[0] : undefined;
-
-    // Llamar a la API real
-    const response = await api.login(email, password, slug);
-    
-    // Guardar en el store
-    login(response.user, response.token);
-    
-    // Redirigir según el tipo de usuario
-    if (response.user.isSuperAdmin) {
-      console.log('✅ SuperAdmin detectado, redirigiendo a /admin');
-      navigate('/admin');
-    } else {
-      console.log('✅ Usuario normal, redirigiendo a /dashboard');
-      navigate('/dashboard');
+    // Validaciones básicas
+    if (!email || !password) {
+      setError('Por favor completa todos los campos');
+      setIsLoading(false);
+      return;
     }
-    
-  } catch (err) {
-    console.error('❌ Error en login:', err);
-    setError(err.message || 'Error al iniciar sesión');
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    if (!email.includes('@')) {
+      setError('El email no es válido');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Obtener slug de la URL si existe
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const slug = pathSegments[0] !== 'login' ? pathSegments[0] : undefined;
+
+      // Llamar a la API real
+      const response = await api.login(email, password, slug);
+
+      // Guardar en el store
+      login(response.user, response.token);
+
+      // Redirigir según el tipo de usuario
+      if (response.user.isSuperAdmin) {
+        console.log('✅ SuperAdmin detectado, redirigiendo a /admin');
+        navigate('/admin');
+      } else {
+        console.log('✅ Usuario normal, redirigiendo a /dashboard');
+        navigate('/dashboard');
+      }
+
+    } catch (err) {
+      console.error('❌ Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#d9d9d9] ">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
           {/* Logo */}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
-            <UtensilsCrossed className="h-8 w-8 text-white" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-purple-600 p-3">
+            <img src="/paul-logo.png" alt="Agent Paul Logo" className="h-full w-full" />
           </div>
-          
-          <CardTitle className="text-2xl font-bold">RestauPanel</CardTitle>
+
+          <CardTitle className="text-2xl font-bold">Agent Paul</CardTitle>
           <CardDescription>
             Inicia sesión para acceder al panel de gestión
           </CardDescription>

@@ -63,6 +63,7 @@ export function Sidebar() {
 
   const navigation = [
     { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Calendario', href: '/calendar', icon: Calendar },
     { name: `${terminology.bookings} de hoy`, href: '/reservations/today', icon: Calendar },
     { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: UtensilsCrossed },
     { name: 'Clientes', href: '/customers', icon: Users },

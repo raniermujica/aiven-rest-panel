@@ -8,7 +8,7 @@ class APIService {
   getHeaders() {
     const token = localStorage.getItem('token');
     const businessSlug = localStorage.getItem('businessSlug');
-    
+
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -26,7 +26,7 @@ class APIService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config = {
       ...options,
       headers: {
@@ -37,7 +37,7 @@ class APIService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Error en la petición');
@@ -82,6 +82,13 @@ class APIService {
 
   async getTodayReservations() {
     return this.request('/api/reservations/today');
+  }
+
+  async getCalendarReservations(startDate, endDate) {
+    const response = await apiClient.get('/reservations/calendar', {
+      params: { startDate, endDate }
+    });
+    return response.data;
   }
 
   async getReservationStats() {

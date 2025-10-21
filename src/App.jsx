@@ -11,6 +11,7 @@ import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { useAuthStore } from './store/authStore';
+import { Calendar } from './pages/Calendar';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -66,6 +67,7 @@ function App() {
                     <Route path="/waitlist" element={<Waitlist />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/calendar" element={<Calendar />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
