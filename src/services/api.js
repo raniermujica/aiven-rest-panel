@@ -74,6 +74,43 @@ class APIService {
     return this.request('/api/superadmin/businesses');
   }
 
+  // ================================================================
+  // APPOINTMENTS
+  // ================================================================
+  
+  async getAppointments(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/api/appointments?${queryString}`);
+  }
+
+  async getTodayAppointments() {
+    return this.request('/api/appointments/today');
+  }
+
+  async getAppointmentStats() {
+    return this.request('/api/appointments/stats');
+  }
+
+  async createAppointment(data) {
+    return this.request('/api/appointments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAppointmentStatus(appointmentId, status) {
+    return this.request(`/api/appointments/${appointmentId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteAppointment(appointmentId) {
+    return this.request(`/api/appointments/${appointmentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Reservations
   async getReservations(params = {}) {
     const queryString = new URLSearchParams(params).toString();
