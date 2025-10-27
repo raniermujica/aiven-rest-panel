@@ -2,49 +2,66 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  TrendingUp, 
-  Users, 
   Calendar,
+  Users,
+  TrendingUp,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  XCircle,
   Star,
-  Download,
-  ArrowUp,
-  ArrowDown
+  BarChart3,
+  PieChart,
+  Activity
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 
 export function Analytics() {
   const { user } = useAuthStore();
-  const [dashboardStats, setDashboardStats] = useState(null);
-  const [monthlyStats, setMonthlyStats] = useState(null);
-  const [topCustomers, setTopCustomers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [statusData, setStatusData] = useState(null);
+  const [topServices, setTopServices] = useState([]);
+  const [timeline, setTimeline] = useState([]);
+  const [revenue, setRevenue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('month');
 
   const terminology = user?.business?.terminology || {
-    booking: 'Reserva',
-    bookings: 'Reservas',
+    booking: 'Cita',
+    bookings: 'Citas',
     customer: 'Cliente',
     customers: 'Clientes',
-    capacity: 'Personas',
   };
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [period]);
 
   const loadAnalytics = async () => {
     try {
       setLoading(true);
       
-      const [dashboard, monthly, customers] = await Promise.all([
-        api.getDashboardStats(),
-        api.getMonthlyStats(),
-        api.getTopCustomers(5),
+      const [
+        overviewData,
+        statusDataRes,
+        servicesData,
+        timelineData,
+        revenueData,
+      ] = await Promise.all([
+        api.getOverviewStats(),
+        api.getAppointmentsByStatus(period),
+        api.getTopServices(5),
+        api.getAppointmentsTimeline(7),
+        api.getRevenueStats(),
       ]);
-      
-      setDashboardStats(dashboard);
-      setMonthlyStats(monthly);
-      setTopCustomers(customers.customers || []);
+
+      setStats(overviewData);
+      setStatusData(statusDataRes);
+      setTopServices(servicesData.services || []);
+      setTimeline(timelineData.timeline || []);
+      setRevenue(revenueData);
     } catch (error) {
       console.error('Error cargando analytics:', error);
     } finally {
@@ -52,285 +69,348 @@ export function Analytics() {
     }
   };
 
-  const calculateChange = (current, previous) => {
-    if (!previous || previous === 0) return 0;
-    return Math.round(((current - previous) / previous) * 100);
-  };
-
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando estadísticas...</p>
+        </div>
       </div>
     );
   }
 
-  const thisMonth = monthlyStats?.thisMonth || {};
-  const lastMonth = monthlyStats?.lastMonth || {};
-  
-  const reservationsChange = calculateChange(thisMonth.reservations, lastMonth.reservations);
-  const coversChange = calculateChange(thisMonth.covers, lastMonth.covers);
+  const totalAppointmentsByStatus = statusData 
+    ? Object.values(statusData).reduce((a, b) => a + b, 0)
+    : 0;
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Estadísticas</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Análisis y métricas de {user?.business?.name || 'tu negocio'}
+          <p className="text-gray-600 mt-1">
+            Análisis del rendimiento de tu negocio
           </p>
         </div>
-        
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Exportar reporte
-        </Button>
-      </div>
 
-      {/* Today's Overview */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Resumen de hoy</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    {terminology.bookings} totales
-                  </p>
-                  <p className="text-2xl font-bold">{dashboardStats?.today?.total || 0}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {dashboardStats?.today?.confirmed || 0} confirmadas
-                  </p>
-                </div>
-                <Calendar className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    {terminology.capacity} hoy
-                  </p>
-                  <p className="text-2xl font-bold">{dashboardStats?.today?.covers || 0}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Total del día
-                  </p>
-                </div>
-                <Users className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">VIP hoy</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.vipToday || 0}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {terminology.customers} especiales
-                  </p>
-                </div>
-                <Star className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Ocupación</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Del aforo total
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Period Selector */}
+        <div className="flex gap-2">
+          <Button
+            variant={period === 'week' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPeriod('week')}
+          >
+            Semana
+          </Button>
+          <Button
+            variant={period === 'month' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPeriod('month')}
+          >
+            Mes
+          </Button>
+          <Button
+            variant={period === 'year' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPeriod('year')}
+          >
+            Año
+          </Button>
         </div>
       </div>
 
-      {/* Monthly Comparison */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
-          Comparativa mensual
-        </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-500">
-                {terminology.bookings}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-2xl font-bold">{thisMonth.reservations || 0}</p>
-                  <p className="text-xs text-gray-500">Este mes</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {reservationsChange > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-500" />
-                  ) : reservationsChange < 0 ? (
-                    <ArrowDown className="h-4 w-4 text-red-500" />
-                  ) : null}
-                  <span className={`text-sm font-medium ${
-                    reservationsChange > 0 
-                      ? 'text-green-600' 
-                      : reservationsChange < 0 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
-                  }`}>
-                    {reservationsChange > 0 ? '+' : ''}{reservationsChange}%
-                  </span>
-                  <span className="text-xs text-gray-500">vs mes anterior</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-500">
-                {terminology.capacity}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-2xl font-bold">{thisMonth.covers || 0}</p>
-                  <p className="text-xs text-gray-500">Este mes</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {coversChange > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-500" />
-                  ) : coversChange < 0 ? (
-                    <ArrowDown className="h-4 w-4 text-red-500" />
-                  ) : null}
-                  <span className={`text-sm font-medium ${
-                    coversChange > 0 
-                      ? 'text-green-600' 
-                      : coversChange < 0 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
-                  }`}>
-                    {coversChange > 0 ? '+' : ''}{coversChange}%
-                  </span>
-                  <span className="text-xs text-gray-500">vs mes anterior</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-500">
-                No-shows
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-2xl font-bold">{thisMonth.noShows || 0}</p>
-                  <p className="text-xs text-gray-500">Este mes</p>
-                </div>
-                <div className="text-xs text-gray-500">
-                  vs {lastMonth.noShows || 0} mes anterior
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Overview Stats */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title={`${terminology.bookings} Hoy`}
+            value={stats.appointments?.today || 0}
+            icon={Calendar}
+            color="blue"
+          />
+          <StatsCard
+            title={`${terminology.bookings} Esta Semana`}
+            value={stats.appointments?.thisWeek || 0}
+            icon={TrendingUp}
+            color="green"
+          />
+          <StatsCard
+            title={`${terminology.bookings} Este Mes`}
+            value={stats.appointments?.thisMonth || 0}
+            icon={BarChart3}
+            color="purple"
+          />
+          <StatsCard
+            title={`Total ${terminology.customers}`}
+            value={stats.customers?.total || 0}
+            icon={Users}
+            color="yellow"
+          />
         </div>
+      )}
+
+      {/* Second Row Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats && (
+          <>
+            <StatsCard
+              title={`Nuevos ${terminology.customers} Este Mes`}
+              value={stats.customers?.newThisMonth || 0}
+              icon={Users}
+              color="blue"
+            />
+            <StatsCard
+              title={`${terminology.customers} VIP`}
+              value={stats.customers?.vip || 0}
+              icon={Star}
+              color="yellow"
+            />
+          </>
+        )}
+        {revenue && (
+          <StatsCard
+            title="Ingresos Estimados (Mes)"
+            value={`€${revenue.estimatedRevenue?.toFixed(2) || 0}`}
+            icon={DollarSign}
+            color="green"
+            subtitle={`${revenue.completedAppointments} citas completadas`}
+          />
+        )}
       </div>
 
-      {/* Top Customers */}
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Appointments by Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5" />
+              {terminology.bookings} por Estado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statusData && (
+              <div className="space-y-4">
+                <StatusBar
+                  label="Confirmadas"
+                  value={statusData.confirmado || 0}
+                  total={totalAppointmentsByStatus}
+                  color="green"
+                  icon={CheckCircle}
+                />
+                <StatusBar
+                  label="Pendientes"
+                  value={statusData.pendiente || 0}
+                  total={totalAppointmentsByStatus}
+                  color="yellow"
+                  icon={Clock}
+                />
+                <StatusBar
+                  label="Completadas"
+                  value={statusData.completada || 0}
+                  total={totalAppointmentsByStatus}
+                  color="blue"
+                  icon={CheckCircle}
+                />
+                <StatusBar
+                  label="Canceladas"
+                  value={statusData.cancelada || 0}
+                  total={totalAppointmentsByStatus}
+                  color="red"
+                  icon={XCircle}
+                />
+                <StatusBar
+                  label="No Show"
+                  value={statusData.no_show || 0}
+                  total={totalAppointmentsByStatus}
+                  color="gray"
+                  icon={XCircle}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Services */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5" />
+              Servicios Más Solicitados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topServices.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">
+                No hay datos suficientes
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {topServices.map((service, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold',
+                        index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                        index === 1 ? 'bg-gray-100 text-gray-700' :
+                        index === 2 ? 'bg-orange-100 text-orange-700' :
+                        'bg-blue-50 text-blue-700'
+                      )}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{service.name}</p>
+                        <p className="text-sm text-gray-500">{service.count} veces</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-gray-900">{service.count}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>Top {terminology.customers}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            {terminology.bookings} de los Últimos 7 Días
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {topCustomers.length > 0 ? (
-            <div className="space-y-4">
-              {topCustomers.map((customer, index) => (
-                <div key={customer.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                      <span className="font-bold text-blue-600">#{index + 1}</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold">{customer.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {customer.total_visits} visitas
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-32 rounded-full bg-gray-200">
-                      <div 
-                        className="h-full rounded-full bg-blue-500"
-                        style={{ 
-                          width: `${Math.min((customer.total_visits / (topCustomers[0]?.total_visits || 1)) * 100, 100)}%` 
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {timeline.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-8">
+              No hay datos suficientes
+            </p>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              No hay datos suficientes aún
+            <div className="space-y-4">
+              {timeline.map((day, index) => {
+                const date = new Date(day.date);
+                const dayName = date.toLocaleDateString('es-ES', { weekday: 'short' });
+                const dayNumber = date.getDate();
+                const maxValue = Math.max(...timeline.map(d => d.total), 1);
+
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-700 capitalize">
+                        {dayName} {dayNumber}
+                      </span>
+                      <span className="text-gray-600">{day.total} citas</span>
+                    </div>
+                    <div className="flex gap-1 h-8">
+                      {day.confirmado > 0 && (
+                        <div
+                          className="bg-green-500 rounded"
+                          style={{ width: `${(day.confirmado / maxValue) * 100}%` }}
+                          title={`${day.confirmado} confirmadas`}
+                        />
+                      )}
+                      {day.completada > 0 && (
+                        <div
+                          className="bg-blue-500 rounded"
+                          style={{ width: `${(day.completada / maxValue) * 100}%` }}
+                          title={`${day.completada} completadas`}
+                        />
+                      )}
+                      {day.cancelada > 0 && (
+                        <div
+                          className="bg-red-500 rounded"
+                          style={{ width: `${(day.cancelada / maxValue) * 100}%` }}
+                          title={`${day.cancelada} canceladas`}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
 
-      {/* Insights */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-green-100 p-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-green-900">Tendencia positiva</h3>
-                <p className="mt-1 text-sm text-green-700">
-                  {reservationsChange > 0 
-                    ? `Las ${terminology.bookings.toLowerCase()} aumentaron un ${reservationsChange}% este mes`
-                    : 'Mantén el buen trabajo con tus clientes'
-                  }
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+function StatsCard({ title, value, subtitle, icon: Icon, color }) {
+  const colorClasses = {
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
+    purple: 'bg-purple-100 text-purple-600',
+    red: 'bg-red-100 text-red-600',
+  };
 
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-blue-100 p-2">
-                <Star className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">
-                  {terminology.customers} leales
-                </h3>
-                <p className="mt-1 text-sm text-blue-700">
-                  Tienes {topCustomers.length} {terminology.customers.toLowerCase()} frecuentes. Considera crear un programa de fidelidad.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-gray-600">{title}</p>
+            <p className="text-3xl font-bold mt-2">{value}</p>
+            {subtitle && (
+              <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+            )}
+          </div>
+          <div className={cn('p-3 rounded-lg', colorClasses[color])}>
+            <Icon className="h-6 w-6" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusBar({ label, value, total, color, icon: Icon }) {
+  const percentage = total > 0 ? (value / total) * 100 : 0;
+
+  const colorClasses = {
+    green: 'bg-green-500',
+    yellow: 'bg-yellow-500',
+    blue: 'bg-blue-500',
+    red: 'bg-red-500',
+    gray: 'bg-gray-500',
+  };
+
+  const bgColorClasses = {
+    green: 'bg-green-50',
+    yellow: 'bg-yellow-50',
+    blue: 'bg-blue-50',
+    red: 'bg-red-50',
+    gray: 'bg-gray-50',
+  };
+
+  const textColorClasses = {
+    green: 'text-green-700',
+    yellow: 'text-yellow-700',
+    blue: 'text-blue-700',
+    red: 'text-red-700',
+    gray: 'text-gray-700',
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Icon className={cn('h-4 w-4', textColorClasses[color])} />
+          <span className="text-sm font-medium text-gray-700">{label}</span>
+        </div>
+        <span className="text-sm font-semibold text-gray-900">
+          {value} ({percentage.toFixed(1)}%)
+        </span>
+      </div>
+      <div className={cn('w-full h-2 rounded-full', bgColorClasses[color])}>
+        <div
+          className={cn('h-2 rounded-full transition-all', colorClasses[color])}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );

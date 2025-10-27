@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { cn } from '@/lib/utils';
 
 export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [services, setServices] = useState([]);
+  const [availability, setAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
   
   const [formData, setFormData] = useState({
     clientName: '',
@@ -40,9 +43,10 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
         scheduledDate: today,
         appointmentTime: '10:00',
       }));
+      setAvailability(null);
     }
   }, [isOpen]);
-
+  
   const loadServices = async () => {
     try {
       const response = await api.getServices();
@@ -51,6 +55,35 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
       console.error('Error cargando servicios:', error);
     }
   };
+
+  // Check availability cuando cambia fecha/hora/duración
+  useEffect(() => {
+  if (formData.scheduledDate && formData.appointmentTime && formData.durationMinutes) {
+    checkAvailability();
+  }
+}, [formData.scheduledDate, formData.appointmentTime, formData.durationMinutes]);
+
+const checkAvailability = async () => {
+  if (!formData.scheduledDate || !formData.appointmentTime) return;
+
+  try {
+    setCheckingAvailability(true);
+    
+    // Pasar hora en formato correcto
+    const result = await api.checkAppointmentAvailability(
+      formData.scheduledDate,
+      formData.appointmentTime, // Esto ya está bien, el backend debe manejarlo
+      formData.durationMinutes
+    );
+    
+    setAvailability(result);
+  } catch (error) {
+    console.error('Error verificando disponibilidad:', error);
+    setAvailability(null);
+  } finally {
+    setCheckingAvailability(false);
+  }
+};
 
   const handleServiceChange = (e) => {
     const serviceId = e.target.value;
@@ -82,29 +115,49 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
       return;
     }
 
-    try {
-      // Combinar fecha y hora en formato ISO
-      const scheduledDateTime = `${formData.scheduledDate}T${formData.appointmentTime}:00Z`;
-
-      await api.createAppointment({
-        clientName: formData.clientName,
-        clientPhone: formData.clientPhone,
-        scheduledDate: scheduledDateTime,
-        appointmentTime: scheduledDateTime,
-        serviceName: formData.serviceName || 'Servicio',
-        serviceId: formData.serviceId,
-        durationMinutes: formData.durationMinutes,
-        notes: formData.notes,
-      });
-
-      onSuccess();
-    } catch (error) {
-      console.error('Error creando cita:', error);
-      setError(error.message || 'Error al crear la cita');
-    } finally {
+    // Validar disponibilidad
+    if (availability && !availability.available) {
+      setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
       setLoading(false);
+      return;
     }
-  };
+
+     try {
+    // Usar la zona horaria del navegador automáticamente
+    const localDateTime = `${formData.scheduledDate}T${formData.appointmentTime}`;
+    const localDate = new Date(localDateTime);
+    
+    // Esto convierte automáticamente la hora local del navegador a UTC
+    const scheduledDateTime = localDate.toISOString();
+    
+    console.log('📅 Local input:', localDateTime);
+    console.log('🌍 UTC stored:', scheduledDateTime);
+    console.log('🕐 Timezone offset:', localDate.getTimezoneOffset() / 60, 'hours');
+
+    await api.createAppointment({
+      clientName: formData.clientName,
+      clientPhone: formData.clientPhone,
+      scheduledDate: scheduledDateTime,
+      appointmentTime: scheduledDateTime,
+      serviceName: formData.serviceName || 'Servicio',
+      serviceId: formData.serviceId,
+      durationMinutes: formData.durationMinutes,
+      notes: formData.notes,
+    });
+
+    onSuccess();
+  } catch (error) {
+    console.error('Error creando cita:', error);
+    
+    if (error.response?.status === 409) {
+      setError(error.response.data.message || 'Ya existe una cita en ese horario');
+    } else {
+      setError(error.message || 'Error al crear la cita');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -123,8 +176,9 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-              {error}
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -167,7 +221,9 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
               <option value="">Seleccionar servicio</option>
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
-                  {service.name} ({service.duration_minutes} min)
+                  {service.emoji && `${service.emoji} `}
+                  {service.name} ({service.duration_minutes} min
+                  {service.price && ` - €${service.price}`})
                 </option>
               ))}
             </select>
@@ -183,6 +239,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
                 type="date"
                 value={formData.scheduledDate}
                 onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                min={new Date().toISOString().split('T')[0]}
                 required
               />
             </div>
@@ -199,6 +256,51 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
           </div>
+
+          {/* Availability Check */}
+          {formData.scheduledDate && formData.appointmentTime && (
+            <div className={cn(
+              'p-3 rounded-lg text-sm flex items-start gap-2',
+              checkingAvailability ? 'bg-gray-50 text-gray-600' :
+              availability?.available ? 'bg-green-50 text-green-700' :
+              'bg-red-50 text-red-700'
+            )}>
+              {checkingAvailability ? (
+                <>
+                  <Clock className="h-5 w-5 animate-spin flex-shrink-0 mt-0.5" />
+                  <span>Verificando disponibilidad...</span>
+                </>
+              ) : availability?.available ? (
+                <>
+                  <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Horario disponible</p>
+                    {availability.total_appointments_that_day > 0 && (
+                      <p className="text-xs mt-1">
+                        {availability.total_appointments_that_day} cita(s) ese día
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Horario no disponible</p>
+                    {availability?.has_conflict && availability?.conflicting_appointment && (
+                      <p className="text-xs mt-1">
+                        Conflicto con: {availability.conflicting_appointment.client_name} 
+                        {' '}({availability.conflicting_appointment.duration} min)
+                      </p>
+                    )}
+                    {availability?.business_hours_message && (
+                      <p className="text-xs mt-1">{availability.business_hours_message}</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Notas */}
           <div>
@@ -226,7 +328,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             </Button>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || checkingAvailability || (availability && !availability.available)}
               className="flex-1"
             >
               {loading ? 'Creando...' : 'Crear ' + terminology.booking}

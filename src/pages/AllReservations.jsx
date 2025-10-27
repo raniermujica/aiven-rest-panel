@@ -2,119 +2,167 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Calendar,
-  Search,
+import { 
+  Calendar, 
+  Search, 
   Filter,
   Download,
   Eye,
   CheckCircle,
   Clock,
   XCircle,
-  Users,
-  Phone
+  Phone,
+  User,
+  Trash2,
+  AlertCircle,
+  Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
 
 export function AllReservations() {
   const { user } = useAuthStore();
-  const [reservations, setReservations] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const isRestaurant = user?.business?.type === 'restaurant';
   const terminology = user?.business?.terminology || {
-    booking: 'Reserva',
-    bookings: 'Reservas',
+    booking: 'Cita',
+    bookings: 'Citas',
+    customer: 'Cliente',
   };
 
   useEffect(() => {
-    loadReservations();
+    loadAppointments();
   }, [selectedDate, statusFilter]);
 
-  const loadReservations = async () => {
+  const loadAppointments = async () => {
     try {
       setLoading(true);
-
+      
       const params = {
         date: selectedDate,
       };
-
+      
       if (statusFilter !== 'all') {
         params.status = statusFilter;
       }
 
-      const data = await api.getReservations(params);
-      setReservations(data.reservations || []);
+      const data = await api.getAppointments(params);
+      setAppointments(data.appointments || []);
     } catch (error) {
-      console.error('Error cargando reservas:', error);
+      console.error('Error cargando citas:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      confirmed: { label: 'Confirmada', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      completed: { label: 'Completada', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
-      cancelled: { label: 'Cancelada', color: 'bg-red-100 text-red-800', icon: XCircle },
-      no_show: { label: 'No show', color: 'bg-red-100 text-red-800', icon: XCircle },
-    };
-
-    if (isRestaurant) {
-      statusMap.seated = { label: 'En mesa', color: 'bg-blue-100 text-blue-800', icon: Users };
+  const handleStatusChange = async (appointmentId, newStatus) => {
+    try {
+      await api.updateAppointmentStatus(appointmentId, newStatus);
+      await loadAppointments();
+    } catch (error) {
+      console.error('Error actualizando estado:', error);
+      alert('Error al actualizar el estado');
     }
-
-    return statusMap[status] || statusMap.pending;
   };
 
-  const statuses = [
-    { value: 'all', label: 'Todas' },
-    { value: 'pending', label: 'Pendientes' },
-    { value: 'confirmed', label: 'Confirmadas' },
-    ...(isRestaurant ? [{ value: 'seated', label: 'En mesa' }] : []),
-    { value: 'completed', label: 'Completadas' },
-    { value: 'cancelled', label: 'Canceladas' },
-  ];
+  const handleDeleteAppointment = async (appointmentId) => {
+    if (!confirm('¿Estás seguro de eliminar esta cita?')) return;
+    
+    try {
+      await api.deleteAppointment(appointmentId);
+      await loadAppointments();
+    } catch (error) {
+      console.error('Error eliminando cita:', error);
+      alert('Error al eliminar la cita');
+    }
+  };
+
+  // Filtrar por búsqueda
+  const filteredAppointments = appointments.filter(apt => {
+    if (!searchTerm) return true;
+    
+    const search = searchTerm.toLowerCase();
+    return (
+      apt.client_name?.toLowerCase().includes(search) ||
+      apt.client_phone?.toLowerCase().includes(search) ||
+      apt.service_name?.toLowerCase().includes(search)
+    );
+  });
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      pendiente: { 
+        label: 'Pendiente', 
+        color: 'bg-yellow-100 text-yellow-800', 
+        icon: Clock 
+      },
+      confirmado: { 
+        label: 'Confirmada', 
+        color: 'bg-green-100 text-green-800', 
+        icon: CheckCircle 
+      },
+      completada: { 
+        label: 'Completada', 
+        color: 'bg-gray-100 text-gray-800', 
+        icon: CheckCircle 
+      },
+      cancelada: { 
+        label: 'Cancelada', 
+        color: 'bg-red-100 text-red-800', 
+        icon: XCircle 
+      },
+      no_show: { 
+        label: 'No Show', 
+        color: 'bg-red-100 text-red-800', 
+        icon: AlertCircle 
+      },
+    };
+    return statusMap[status] || statusMap.pendiente;
+  };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando {terminology.bookings.toLowerCase()}...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Todas las {terminology.bookings.toLowerCase()}
+            Todas las {terminology.bookings}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Historial completo de {terminology.bookings.toLowerCase()}
+          <p className="text-gray-600 mt-1">
+            Gestiona todas las {terminology.bookings.toLowerCase()} de tu negocio
           </p>
         </div>
-
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Exportar
+        <Button onClick={() => setShowCreateModal(true)}>
+          + Nueva {terminology.booking}
         </Button>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row">
-            {/* Date Picker */}
-            <div className="flex-1">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Date Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="h-4 w-4 inline mr-2" />
                 Fecha
               </label>
               <Input
@@ -125,129 +173,236 @@ export function AllReservations() {
             </div>
 
             {/* Status Filter */}
-            <div className="flex-1">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Filter className="h-4 w-4 inline mr-2" />
                 Estado
               </label>
               <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
               >
-                {statuses.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
+                <option value="all">Todos los estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="confirmado">Confirmadas</option>
+                <option value="completada">Completadas</option>
+                <option value="cancelada">Canceladas</option>
+                <option value="no_show">No Show</option>
               </select>
             </div>
 
-            <div className="flex items-end">
-              <Button onClick={loadReservations}>
-                <Search className="mr-2 h-4 w-4" />
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Search className="h-4 w-4 inline mr-2" />
                 Buscar
-              </Button>
+              </label>
+              <Input
+                type="text"
+                placeholder="Cliente, teléfono o servicio..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Reservations Table */}
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard
+          label="Total"
+          value={filteredAppointments.length}
+          color="blue"
+        />
+        <StatCard
+          label="Confirmadas"
+          value={filteredAppointments.filter(a => a.status === 'confirmado').length}
+          color="green"
+        />
+        <StatCard
+          label="Pendientes"
+          value={filteredAppointments.filter(a => a.status === 'pendiente').length}
+          color="yellow"
+        />
+        <StatCard
+          label="Completadas"
+          value={filteredAppointments.filter(a => a.status === 'completada').length}
+          color="gray"
+        />
+        <StatCard
+          label="Canceladas"
+          value={filteredAppointments.filter(a => a.status === 'cancelada').length}
+          color="red"
+        />
+      </div>
+
+      {/* Appointments List */}
       <Card>
         <CardHeader>
           <CardTitle>
-            {terminology.bookings} - {new Date(selectedDate).toLocaleDateString('es-ES', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+            {filteredAppointments.length} {terminology.bookings}
+            {selectedDate && ` - ${new Date(selectedDate).toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}`}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {reservations.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr className="text-left text-sm text-gray-500">
-                    <th className="pb-3 font-medium">Hora</th>
-                    <th className="pb-3 font-medium">Cliente</th>
-                    <th className="pb-3 font-medium">Contacto</th>
-                    <th className="pb-3 font-medium">Personas</th>
-                    <th className="pb-3 font-medium">Mesa</th>
-                    <th className="pb-3 font-medium">Estado</th>
-                    <th className="pb-3 font-medium">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {reservations.map((reservation) => {
-                    const statusInfo = getStatusBadge(reservation.status);
-                    const StatusIcon = statusInfo.icon;
-                    const customer = reservation.customers || {};
-
-                    return (
-                      <tr key={reservation.id} className="text-sm">
-                        <td className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">
-                              {reservation.reservation_time.substring(0, 5)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-4">
-                          <div className="font-medium">{customer.name || 'N/A'}</div>
-                        </td>
-                        <td className="py-4">
-                          <div className="text-gray-600">{customer.phone || 'N/A'}</div>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4 text-gray-400" />
-                            {reservation.party_size}
-                          </div>
-                        </td>
-                        <td className="py-4">
-                          {reservation.tables?.table_number || '-'}
-                        </td>
-                        <td className="py-4">
-                          <span className={cn(
-                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium',
-                            statusInfo.color
-                          )}>
-                            <StatusIcon className="h-3 w-3" />
-                            {statusInfo.label}
-                          </span>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
+          {filteredAppointments.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-4 text-lg font-medium text-gray-900">
+              <Calendar className="h-12 w-12 text-gray-300 mx-auto" />
+              <p className="mt-4 text-gray-500">
                 No hay {terminology.bookings.toLowerCase()} para esta fecha
               </p>
-              <p className="mt-1 text-sm text-gray-500">
-                Selecciona otra fecha o estado para ver más resultados
-              </p>
+              <Button
+                className="mt-4"
+                onClick={() => setShowCreateModal(true)}
+              >
+                Crear {terminology.booking}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredAppointments.map((appointment) => (
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  onStatusChange={handleStatusChange}
+                  onDelete={handleDeleteAppointment}
+                  getStatusBadge={getStatusBadge}
+                />
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Create Appointment Modal */}
+      <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          loadAppointments();
+          setShowCreateModal(false);
+        }}
+      />
+    </div>
+  );
+}
+
+function StatCard({ label, value, color }) {
+  const colorClasses = {
+    blue: 'border-blue-200 bg-blue-50',
+    green: 'border-green-200 bg-green-50',
+    yellow: 'border-yellow-200 bg-yellow-50',
+    gray: 'border-gray-200 bg-gray-50',
+    red: 'border-red-200 bg-red-50',
+  };
+
+  return (
+    <div className={cn('p-4 rounded-lg border-2', colorClasses[color])}>
+      <p className="text-sm text-gray-600">{label}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
+  );
+}
+
+function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge }) {
+  const statusInfo = getStatusBadge(appointment.status);
+  const StatusIcon = statusInfo.icon;
+
+  // Formatear fecha y hora
+  const appointmentDate = new Date(appointment.appointment_time);
+  const madridDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+  const timeStr = madridDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+      <div className="flex items-center gap-4 flex-1">
+        {/* Time */}
+        <div className="text-center min-w-[80px]">
+          <Clock className="h-5 w-5 text-gray-400 mx-auto" />
+          <span className="text-sm font-semibold text-gray-900 mt-1 block">
+            {timeStr}
+          </span>
+        </div>
+
+        {/* Client Info */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-400" />
+            <span className="font-medium text-gray-900">{appointment.client_name}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Phone className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-600">{appointment.client_phone}</span>
+          </div>
+        </div>
+
+        {/* Service */}
+        <div className="hidden md:block flex-1">
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-700">{appointment.service_name}</span>
+          </div>
+          {appointment.duration_minutes && (
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              {appointment.duration_minutes} minutos
+            </p>
+          )}
+        </div>
+
+        {/* Status */}
+        <div className="min-w-[120px]">
+          <span className={cn('px-3 py-1 rounded-full text-xs font-medium inline-flex items-center', statusInfo.color)}>
+            <StatusIcon className="h-3 w-3 mr-1" />
+            {statusInfo.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 ml-4">
+        {appointment.status === 'pendiente' && (
+          <Button
+            size="sm"
+            onClick={() => onStatusChange(appointment.id, 'confirmado')}
+          >
+            Confirmar
+          </Button>
+        )}
+        
+        {appointment.status === 'confirmado' && (
+          <Button
+            size="sm"
+            onClick={() => onStatusChange(appointment.id, 'completada')}
+          >
+            Completar
+          </Button>
+        )}
+
+        {(appointment.status === 'pendiente' || appointment.status === 'confirmado') && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onStatusChange(appointment.id, 'cancelada')}
+          >
+            Cancelar
+          </Button>
+        )}
+
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => onDelete(appointment.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };

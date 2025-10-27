@@ -77,7 +77,7 @@ class APIService {
   // ================================================================
   // APPOINTMENTS
   // ================================================================
-  
+
   async getAppointments(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/api/appointments?${queryString}`);
@@ -109,6 +109,24 @@ class APIService {
     return this.request(`/api/appointments/${appointmentId}`, {
       method: 'DELETE',
     });
+  }
+
+  async getServices(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/api/services?${queryString}`);
+  }
+
+  async getService(serviceId) {
+    return this.request(`/api/services/${serviceId}`);
+  }
+
+    async checkAppointmentAvailability(date, time, durationMinutes = 60) {
+    const params = new URLSearchParams({
+      date,
+      time,
+      duration_minutes: durationMinutes.toString(),
+    });
+    return this.request(`/api/appointments/check-availability?${params}`);
   }
 
   // Reservations
@@ -157,11 +175,11 @@ class APIService {
   }
 
   async getCustomerStats() {
-    return this.request('/api/customers/stats');
+    return this.request(`/api/customers/stats`);
   }
 
   async createCustomer(data) {
-    return this.request('/api/customers', {
+    return this.request(`/api/customers`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -171,6 +189,18 @@ class APIService {
     return this.request(`/api/customers/${customerId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  }
+
+  async toggleCustomerVip(customerId) {
+    return this.request(`/api/customers/${customerId}/vip`, {
+      method: 'PATCH',
+    });
+  }
+
+  async deleteCustomer(customerId) {
+    return this.request(`/api/customers/${customerId}`, {
+      method: 'DELETE',
     });
   }
 
@@ -199,17 +229,25 @@ class APIService {
   }
 
   // Analytics
-  async getDashboardStats() {
-    return this.request('/api/analytics/dashboard');
+    async getOverviewStats() {
+    return this.request('/api/analytics/overview');
   }
 
-  async getMonthlyStats() {
-    return this.request('/api/analytics/monthly');
+  async getAppointmentsByStatus(period = 'month') {
+    return this.request(`/api/analytics/appointments-by-status?period=${period}`);
   }
 
-  async getTopCustomers(limit = 10) {
-    return this.request(`/api/analytics/top-customers?limit=${limit}`);
+  async getTopServices(limit = 10) {
+    return this.request(`/api/analytics/top-services?limit=${limit}`);
   }
-}
+
+  async getAppointmentsTimeline(days = 7) {
+    return this.request(`/api/analytics/timeline?days=${days}`);
+  }
+
+  async getRevenueStats() {
+    return this.request('/api/analytics/revenue');
+  }
+};
 
 export const api = new APIService();
