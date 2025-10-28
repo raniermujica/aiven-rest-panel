@@ -95,8 +95,8 @@ class APIService {
     });
   }
 
-  async updateAppointmentStatus(reservationId, status) {
-    return this.request(`/api/reservations/${reservationId}/status`, {
+  async updateAppointmentStatus(appointmentId, status) {
+    return this.request(`/api/appointments/${appointmentId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });

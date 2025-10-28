@@ -97,67 +97,56 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    // Validaciones
-    if (!formData.clientName || !formData.clientPhone) {
-      setError('Nombre y teléfono del cliente son requeridos');
-      setLoading(false);
-      return;
+  // Validaciones
+  if (!formData.clientName || !formData.clientPhone) {
+    setError('Nombre y teléfono del cliente son requeridos');
+    setLoading(false);
+    return;
+  }
+
+  if (!formData.scheduledDate || !formData.appointmentTime) {
+    setError('Fecha y hora son requeridas');
+    setLoading(false);
+    return;
+  }
+
+  // Validar disponibilidad
+  if (availability && !availability.available) {
+    setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
+    setLoading(false);
+    return;
+  }
+
+  try {
+    await api.createAppointment({
+      clientName: formData.clientName,
+      clientPhone: formData.clientPhone,
+      scheduledDate: formData.scheduledDate,        // YYYY-MM-DD
+      appointmentTime: formData.appointmentTime,      // HH:MM
+      serviceName: formData.serviceName || 'Servicio',
+      serviceId: formData.serviceId,
+      durationMinutes: formData.durationMinutes,
+      notes: formData.notes,
+    });
+
+    onSuccess();
+  } catch (error) {
+    console.error('Error creando cita:', error);
+    
+    if (error.response?.status === 409) {
+      setError(error.response.data.message || 'Ya existe una cita en ese horario');
+    } else {
+      setError(error.message || 'Error al crear la cita');
     }
-
-    if (!formData.scheduledDate || !formData.appointmentTime) {
-      setError('Fecha y hora son requeridas');
-      setLoading(false);
-      return;
-    }
-
-    // Validar disponibilidad
-    if (availability && !availability.available) {
-      setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Usar la zona horaria del navegador automáticamente
-      const localDateTime = `${formData.scheduledDate}T${formData.appointmentTime}`;
-      const localDate = new Date(localDateTime);
-      
-      // Esto convierte automáticamente la hora local del navegador a UTC
-      const scheduledDateTime = localDate.toISOString();
-      
-      console.log('📅 Local input:', localDateTime);
-      console.log('🌍 UTC stored:', scheduledDateTime);
-      console.log('🕐 Timezone offset:', localDate.getTimezoneOffset() / 60, 'hours');
-
-      await api.createAppointment({
-        clientName: formData.clientName,
-        clientPhone: formData.clientPhone,
-        scheduledDate: scheduledDateTime,
-        appointmentTime: scheduledDateTime,
-        serviceName: formData.serviceName || 'Servicio',
-        serviceId: formData.serviceId,
-        durationMinutes: formData.durationMinutes,
-        notes: formData.notes,
-      });
-
-      onSuccess();
-    } catch (error) {
-      console.error('Error creando cita:', error);
-      
-      if (error.response?.status === 409) {
-        setError(error.response.data.message || 'Ya existe una cita en ese horario');
-      } else {
-        setError(error.message || 'Error al crear la cita');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 
