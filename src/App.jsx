@@ -39,7 +39,7 @@ function SuperAdminRoute({ children }) {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter >
       <ThemeProvider>
         <Routes>
           <Route path="/login" element={<Login />} />

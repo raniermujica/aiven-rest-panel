@@ -87,8 +87,8 @@ export function Waitlist() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Lista de espera</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-white">Lista de espera</h1>
+          <p className="mt-1 text-sm text-white">
             Gestiona la fila de {terminology.customers.toLowerCase()} esperando mesa
           </p>
         </div>
@@ -105,7 +105,7 @@ export function Waitlist() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">En espera</p>
+                <p className="text-sm font-medium text-white">En espera</p>
                 <p className="text-2xl font-bold">{stats?.waiting || 0}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-500" />
@@ -117,7 +117,7 @@ export function Waitlist() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total personas</p>
+                <p className="text-sm font-medium text-white">Total personas</p>
                 <p className="text-2xl font-bold">{stats?.totalPeople || 0}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
@@ -129,7 +129,7 @@ export function Waitlist() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Espera promedio</p>
+                <p className="text-sm font-medium text-white">Espera promedio</p>
                 <p className="text-2xl font-bold">{stats?.avgWait || 0} min</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
@@ -154,11 +154,11 @@ export function Waitlist() {
       {waitlist.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Clock className="h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-lg font-medium text-gray-900">
+            <Clock className="h-12 w-12 text-white" />
+            <p className="mt-4 text-lg font-medium text-white">
               No hay {terminology.customers.toLowerCase()} en espera
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-white">
               La lista de espera aparecerá aquí cuando haya {terminology.customers.toLowerCase()} esperando
             </p>
           </CardContent>
@@ -227,14 +227,14 @@ function WaitlistCard({ entry, onUpdateStatus, getWaitingTime, terminology }) {
             {/* Customer Info */}
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-white">
                   {customer.name || 'Cliente'}
                 </h3>
                 {customer.is_vip && (
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 )}
               </div>
-              <p className="text-sm text-gray-500">{customer.phone || 'Sin teléfono'}</p>
+              <p className="text-sm text-white">{customer.phone || 'Sin teléfono'}</p>
             </div>
           </div>
 
@@ -253,14 +253,14 @@ function WaitlistCard({ entry, onUpdateStatus, getWaitingTime, terminology }) {
         {/* Details */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-gray-400" />
+            <Users className="h-4 w-4 text-white" />
             <span className="text-gray-600">
               {entry.party_size} personas
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-400" />
+            <Clock className="h-4 w-4 text-white" />
             <span className="text-gray-600">
               {waitingTime}
             </span>
@@ -282,7 +282,7 @@ function WaitlistCard({ entry, onUpdateStatus, getWaitingTime, terminology }) {
         {/* Notes */}
         {entry.notes && (
           <div className="rounded-lg bg-gray-50 p-3">
-            <p className="text-xs font-semibold text-gray-900">Nota</p>
+            <p className="text-xs font-semibold text-white">Nota</p>
             <p className="text-xs text-gray-700">{entry.notes}</p>
           </div>
         )}

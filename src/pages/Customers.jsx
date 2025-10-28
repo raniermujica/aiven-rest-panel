@@ -114,7 +114,7 @@ export function Customers() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando {terminology.customers.toLowerCase()}...</p>
+          <p className="mt-4 text-white">Cargando {terminology.customers.toLowerCase()}...</p>
         </div>
       </div>
     );
@@ -125,10 +125,11 @@ export function Customers() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-white">
             {terminology.customers}
           </h1>
-          <p className="text-gray-600 mt-1">
+          {/* ✅ CAMBIO 1: Subtítulo en gris claro */}
+          <p className="text-gray-400 mt-1">
             Gestiona tu base de {terminology.customers.toLowerCase()}
           </p>
         </div>
@@ -169,6 +170,7 @@ export function Customers() {
             {/* Search */}
             <form onSubmit={handleSearch} className="flex-1">
               <div className="relative">
+                {/* ✅ CAMBIO 2: Icono en gris claro */}
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   type="text"
@@ -218,8 +220,9 @@ export function Customers() {
         <CardContent>
           {customers.length === 0 ? (
             <div className="text-center py-12">
-              <User className="h-12 w-12 text-gray-300 mx-auto" />
-              <p className="mt-4 text-gray-500">
+              {/* ✅ CAMBIO 3: Icono en gris claro */}
+              <User className="h-12 w-12 text-gray-400 mx-auto" />
+              <p className="mt-4 text-white">
                 No hay {terminology.customers.toLowerCase()} 
                 {filterVip && ' VIP'} {searchTerm && ' que coincidan con la búsqueda'}
               </p>
@@ -246,9 +249,10 @@ export function Customers() {
         </CardContent>
       </Card>
 
-      {/* Create Customer Modal */}
+      {/* Modals */}
       {showCreateModal && (
         <CreateCustomerModal
+          isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             loadCustomers();
@@ -258,14 +262,13 @@ export function Customers() {
         />
       )}
 
-      {/* Customer Detail Modal */}
       {selectedCustomer && (
         <CustomerDetailModal
           customer={selectedCustomer}
           onClose={() => setSelectedCustomer(null)}
           onUpdate={() => {
             loadCustomers();
-            setSelectedCustomer(null);
+            loadStats();
           }}
         />
       )}
@@ -274,21 +277,29 @@ export function Customers() {
 }
 
 function StatsCard({ title, value, icon: Icon, color }) {
+  // ✅ CAMBIO 4: Stats con fondo oscuro
   const colorClasses = {
+    blue: 'bg-blue-900/20 border-blue-500/30',
+    yellow: 'bg-yellow-900/20 border-yellow-500/30',
+    green: 'bg-green-900/20 border-green-500/30',
+  };
+
+  const iconClasses = {
     blue: 'bg-blue-100 text-blue-600',
     yellow: 'bg-yellow-100 text-yellow-600',
     green: 'bg-green-100 text-green-600',
   };
 
   return (
-    <Card>
+    <Card className={cn('border-2', colorClasses[color])}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">{title}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
+            {/* ✅ CAMBIO 5: Textos actualizados */}
+            <p className="text-sm text-gray-400">{title}</p>
+            <p className="text-3xl font-bold mt-2 text-white">{value}</p>
           </div>
-          <div className={cn('p-3 rounded-lg', colorClasses[color])}>
+          <div className={`p-3 rounded-lg ${iconClasses[color]}`}>
             <Icon className="h-6 w-6" />
           </div>
         </div>
@@ -299,53 +310,48 @@ function StatsCard({ title, value, icon: Icon, color }) {
 
 function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+    // ✅ CAMBIO 6: Fondo oscuro como otras páginas
+    <div className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700">
       <div className="flex items-center gap-4 flex-1">
         {/* Avatar */}
-        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-          <span className="text-lg font-semibold text-blue-600">
-            {customer.name.charAt(0).toUpperCase()}
-          </span>
+        <div className={cn(
+          'w-12 h-12 rounded-full flex items-center justify-center font-semibold',
+          customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
+        )}>
+          {customer.name.charAt(0).toUpperCase()}
         </div>
 
         {/* Info */}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900">{customer.name}</span>
+            <span className="font-medium text-white">{customer.name}</span>
             {customer.is_vip && (
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
             )}
           </div>
-          <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-            {customer.phone && (
-              <div className="flex items-center gap-1">
-                <Phone className="h-3 w-3" />
-                {customer.phone}
-              </div>
-            )}
+          <div className="flex items-center gap-4 mt-1">
+            <div className="flex items-center gap-1">
+              {/* ✅ CAMBIO 7: Iconos en gris claro */}
+              <Phone className="h-3 w-3 text-gray-400" />
+              <span className="text-sm text-gray-400">{customer.phone}</span>
+            </div>
             {customer.email && (
               <div className="flex items-center gap-1">
-                <Mail className="h-3 w-3" />
-                {customer.email}
+                <Mail className="h-3 w-3 text-gray-400" />
+                <span className="text-sm text-gray-400">{customer.email}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Stats */}
-        <div className="hidden md:flex items-center gap-6 text-sm">
+        <div className="hidden md:flex items-center gap-6">
           <div className="text-center">
-            <p className="font-semibold text-gray-900">{customer.total_visits || 0}</p>
-            <p className="text-gray-500">Visitas</p>
+            <Calendar className="h-4 w-4 text-gray-400 mx-auto" />
+            <p className="text-xs text-gray-400 mt-1">
+              {customer.total_visits || 0} visitas
+            </p>
           </div>
-          {customer.first_visit_at && (
-            <div className="text-center">
-              <p className="text-gray-500">Primera visita</p>
-              <p className="font-medium text-gray-700">
-                {new Date(customer.first_visit_at).toLocaleDateString('es-ES')}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -355,16 +361,14 @@ function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
           size="sm"
           variant="outline"
           onClick={() => onView(customer)}
-          title="Ver detalles"
         >
           <Eye className="h-4 w-4" />
         </Button>
-        
+
         <Button
           size="sm"
           variant="outline"
           onClick={() => onToggleVip(customer.id)}
-          title={customer.is_vip ? 'Quitar VIP' : 'Marcar como VIP'}
         >
           {customer.is_vip ? (
             <StarOff className="h-4 w-4" />
@@ -377,7 +381,6 @@ function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
           size="sm"
           variant="destructive"
           onClick={() => onDelete(customer.id)}
-          title="Eliminar"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -386,15 +389,15 @@ function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
   );
 }
 
-function CreateCustomerModal({ onClose, onSuccess }) {
+function CreateCustomerModal({ isOpen, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     notes: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -420,10 +423,12 @@ function CreateCustomerModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Nuevo Cliente</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+      {/* ✅ CAMBIO 8: Modal con fondo oscuro */}
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Nuevo Cliente</h2>
+          {/* ✅ CAMBIO 9: Botón cerrar en gris */}
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -436,7 +441,8 @@ function CreateCustomerModal({ onClose, onSuccess }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            {/* ✅ CAMBIO 10: Labels en gris claro */}
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Nombre *
             </label>
             <Input
@@ -448,7 +454,7 @@ function CreateCustomerModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Teléfono *
             </label>
             <Input
@@ -461,7 +467,7 @@ function CreateCustomerModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Email
             </label>
             <Input
@@ -473,11 +479,12 @@ function CreateCustomerModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Notas
             </label>
+            {/* ✅ CAMBIO 11: Textarea con fondo oscuro */}
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
               rows="3"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -530,25 +537,27 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
+      {/* ✅ CAMBIO 12: Modal detalles con fondo oscuro */}
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-xl font-semibold text-blue-600">
+            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+              <span className="text-xl font-semibold text-white">
                 {customer.name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="text-xl font-semibold flex items-center gap-2 text-white">
                 {customer.name}
                 {customer.is_vip && (
                   <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                 )}
               </h2>
-              <p className="text-sm text-gray-500">{customer.phone}</p>
+              {/* ✅ CAMBIO 13: Texto secundario en gris */}
+              <p className="text-sm text-gray-400">{customer.phone}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -556,18 +565,18 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
         <div className="p-6 space-y-6">
           {/* Contact Info */}
           <div>
-            <h3 className="font-semibold mb-3">Información de Contacto</h3>
+            <h3 className="font-semibold mb-3 text-white">Información de Contacto</h3>
             <div className="space-y-2 text-sm">
               {customer.phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-400" />
-                  <span>{customer.phone}</span>
+                  <span className="text-gray-300">{customer.phone}</span>
                 </div>
               )}
               {customer.email && (
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-gray-400" />
-                  <span>{customer.email}</span>
+                  <span className="text-gray-300">{customer.email}</span>
                 </div>
               )}
             </div>
@@ -575,15 +584,16 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
 
           {/* Stats */}
           <div>
-            <h3 className="font-semibold mb-3">Estadísticas</h3>
+            <h3 className="font-semibold mb-3 text-white">Estadísticas</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Total Visitas</p>
-                <p className="text-2xl font-bold">{customer.total_visits || 0}</p>
+              {/* ✅ CAMBIO 14: Cards de stats oscuras */}
+              <div className="bg-[#0a1820] p-4 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Total Visitas</p>
+                <p className="text-2xl font-bold text-white">{customer.total_visits || 0}</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Primera Visita</p>
-                <p className="text-lg font-semibold">
+              <div className="bg-[#0a1820] p-4 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Primera Visita</p>
+                <p className="text-lg font-semibold text-white">
                   {customer.first_visit_at 
                     ? new Date(customer.first_visit_at).toLocaleDateString('es-ES')
                     : 'N/A'}
@@ -594,20 +604,21 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
 
           {/* Recent Appointments */}
           <div>
-            <h3 className="font-semibold mb-3">Últimas Citas</h3>
+            <h3 className="font-semibold mb-3 text-white">Últimas Citas</h3>
             {loading ? (
-              <p className="text-sm text-gray-500">Cargando...</p>
+              <p className="text-sm text-gray-400">Cargando...</p>
             ) : appointments.length === 0 ? (
-              <p className="text-sm text-gray-500">No hay citas registradas</p>
+              <p className="text-sm text-gray-400">No hay citas registradas</p>
             ) : (
               <div className="space-y-2">
                 {appointments.slice(0, 5).map((apt) => {
                   const date = new Date(apt.scheduled_date);
                   return (
-                    <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                    // ✅ CAMBIO 15: Citas con fondo oscuro
+                    <div key={apt.id} className="flex items-center justify-between p-3 bg-[#0a1820] rounded-lg text-sm border border-gray-700">
                       <div>
-                        <p className="font-medium">{apt.service_name}</p>
-                        <p className="text-gray-600">
+                        <p className="font-medium text-white">{apt.service_name}</p>
+                        <p className="text-gray-400">
                           {date.toLocaleDateString('es-ES')} - {date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -628,15 +639,16 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
 
           {customer.notes && (
             <div>
-              <h3 className="font-semibold mb-3">Notas</h3>
-              <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+              <h3 className="font-semibold mb-3 text-white">Notas</h3>
+              {/* ✅ CAMBIO 16: Notas con fondo oscuro */}
+              <p className="text-sm text-gray-300 bg-[#0a1820] p-3 rounded-lg border border-gray-700">
                 {customer.notes}
               </p>
             </div>
           )}
         </div>
 
-        <div className="p-6 border-t">
+        <div className="p-6 border-t border-gray-700">
           <Button onClick={onClose} className="w-full">
             Cerrar
           </Button>

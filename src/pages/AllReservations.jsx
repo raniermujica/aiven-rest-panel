@@ -132,7 +132,7 @@ export function AllReservations() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando {terminology.bookings.toLowerCase()}...</p>
+          <p className="mt-4 text-white">Cargando {terminology.bookings.toLowerCase()}...</p>
         </div>
       </div>
     );
@@ -143,10 +143,11 @@ export function AllReservations() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-white">
             Todas las {terminology.bookings}
           </h1>
-          <p className="text-gray-600 mt-1">
+          {/* ✅ CAMBIO 1: Color del subtítulo */}
+          <p className="text-gray-400 mt-1">
             Gestiona todas las {terminology.bookings.toLowerCase()} de tu negocio
           </p>
         </div>
@@ -161,7 +162,8 @@ export function AllReservations() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Date Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              {/* ✅ CAMBIO 2: Label en gris claro */}
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-2" />
                 Fecha
               </label>
@@ -174,12 +176,14 @@ export function AllReservations() {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              {/* ✅ CAMBIO 3: Label en gris claro */}
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 <Filter className="h-4 w-4 inline mr-2" />
                 Estado
               </label>
+              {/* ✅ CAMBIO 4: Select con fondo oscuro */}
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-600 bg-[#1a2f38] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -194,7 +198,8 @@ export function AllReservations() {
 
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              {/* ✅ CAMBIO 5: Label en gris claro */}
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 <Search className="h-4 w-4 inline mr-2" />
                 Buscar
               </label>
@@ -254,8 +259,9 @@ export function AllReservations() {
         <CardContent>
           {filteredAppointments.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto" />
-              <p className="mt-4 text-gray-500">
+              {/* ✅ CAMBIO 6: Icono en gris claro */}
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto" />
+              <p className="mt-4 text-white">
                 No hay {terminology.bookings.toLowerCase()} para esta fecha
               </p>
               <Button
@@ -295,18 +301,20 @@ export function AllReservations() {
 }
 
 function StatCard({ label, value, color }) {
+  // ✅ CAMBIO 7: Stats cards con fondo oscuro
   const colorClasses = {
-    blue: 'border-blue-200 bg-blue-50',
-    green: 'border-green-200 bg-green-50',
-    yellow: 'border-yellow-200 bg-yellow-50',
-    gray: 'border-gray-200 bg-gray-50',
-    red: 'border-red-200 bg-red-50',
+    blue: 'border-blue-500/30 bg-blue-900/20',
+    green: 'border-green-500/30 bg-green-900/20',
+    yellow: 'border-yellow-500/30 bg-yellow-900/20',
+    gray: 'border-gray-500/30 bg-gray-800/50',
+    red: 'border-red-500/30 bg-red-900/20',
   };
 
   return (
     <div className={cn('p-4 rounded-lg border-2', colorClasses[color])}>
-      <p className="text-sm text-gray-600">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+      {/* ✅ CAMBIO 8: Texto en gris claro */}
+      <p className="text-sm text-gray-400">{label}</p>
+      <p className="text-2xl font-bold mt-1 text-white">{value}</p>
     </div>
   );
 }
@@ -321,12 +329,14 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
   const timeStr = madridDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+    // ✅ CAMBIO 9: Fondo oscuro como Dashboard
+    <div className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700">
       <div className="flex items-center gap-4 flex-1">
         {/* Time */}
         <div className="text-center min-w-[80px]">
+          {/* ✅ CAMBIO 10: Iconos en gris claro */}
           <Clock className="h-5 w-5 text-gray-400 mx-auto" />
-          <span className="text-sm font-semibold text-gray-900 mt-1 block">
+          <span className="text-sm font-semibold text-white mt-1 block">
             {timeStr}
           </span>
         </div>
@@ -335,11 +345,12 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-gray-400" />
-            <span className="font-medium text-gray-900">{appointment.client_name}</span>
+            <span className="font-medium text-white">{appointment.client_name}</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Phone className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-600">{appointment.client_phone}</span>
+            {/* ✅ CAMBIO 11: Texto secundario en gris */}
+            <span className="text-sm text-gray-400">{appointment.client_phone}</span>
           </div>
         </div>
 
@@ -347,10 +358,10 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
         <div className="hidden md:block flex-1">
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-700">{appointment.service_name}</span>
+            <span className="text-sm text-white">{appointment.service_name}</span>
           </div>
           {appointment.duration_minutes && (
-            <p className="text-xs text-gray-500 mt-1 ml-6">
+            <p className="text-xs text-gray-400 mt-1 ml-6">
               {appointment.duration_minutes} minutos
             </p>
           )}

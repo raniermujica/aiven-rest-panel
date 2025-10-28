@@ -161,7 +161,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                 </h3>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-white">
                     Buscar {terminology.customer.toLowerCase()} existente
                   </label>
                   <div className="relative">
@@ -171,7 +171,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                       placeholder="Buscar por nombre o teléfono..."
                     />
                     {customers.length > 0 && (
-                      <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
+                      <div className="absolute z-10 mt-1 w-full rounded-md border bg-[#1a2f38] shadow-lg">
                         {customers.map((customer) => (
                           <button
                             key={customer.id}
@@ -186,7 +186,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                       </div>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-white">
                     O completa los datos manualmente abajo
                   </p>
                 </div>
@@ -194,7 +194,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                 <div className="border-t pt-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-white">
                         <User className="inline h-4 w-4 mr-1" />
                         Nombre completo *
                       </label>
@@ -207,7 +207,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-white">
                         <Phone className="inline h-4 w-4 mr-1" />
                         Teléfono *
                       </label>
@@ -221,7 +221,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                   </div>
 
                   <div className="mt-4">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-white">
                       <Mail className="inline h-4 w-4 mr-1" />
                       Email (opcional)
                     </label>
@@ -251,7 +251,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-white">
                       <Calendar className="inline h-4 w-4 mr-1" />
                       Fecha *
                     </label>
@@ -265,7 +265,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-white">
                       <Clock className="inline h-4 w-4 mr-1" />
                       Hora *
                     </label>
@@ -279,7 +279,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-white">
                     <Users className="inline h-4 w-4 mr-1" />
                     Número de personas *
                   </label>
@@ -294,7 +294,7 @@ export function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-white">
                     <Scissors className="inline h-4 w-4 mr-1" />
                     {isRestaurant ? 'Solicitudes especiales' : 'Tipo de Servicio'}
                   </label>

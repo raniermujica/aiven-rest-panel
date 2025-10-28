@@ -8,7 +8,7 @@ class APIService {
   getHeaders() {
     const token = localStorage.getItem('token');
     const businessSlug = localStorage.getItem('businessSlug');
-
+    
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -26,7 +26,7 @@ class APIService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-
+    
     const config = {
       ...options,
       headers: {
@@ -37,7 +37,7 @@ class APIService {
 
     try {
       const response = await fetch(url, config);
-
+      
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Error en la petición');
@@ -74,61 +74,6 @@ class APIService {
     return this.request('/api/superadmin/businesses');
   }
 
-  // ================================================================
-  // APPOINTMENTS
-  // ================================================================
-
-  async getAppointments(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/appointments?${queryString}`);
-  }
-
-  async getTodayAppointments() {
-    return this.request('/api/appointments/today');
-  }
-
-  async getAppointmentStats() {
-    return this.request('/api/appointments/stats');
-  }
-
-  async createAppointment(data) {
-    return this.request('/api/appointments', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateAppointmentStatus(appointmentId, status) {
-    return this.request(`/api/appointments/${appointmentId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  }
-
-  async deleteAppointment(appointmentId) {
-    return this.request(`/api/appointments/${appointmentId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getServices(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/services?${queryString}`);
-  }
-
-  async getService(serviceId) {
-    return this.request(`/api/services/${serviceId}`);
-  }
-
-    async checkAppointmentAvailability(date, time, durationMinutes = 60) {
-    const params = new URLSearchParams({
-      date,
-      time,
-      duration_minutes: durationMinutes.toString(),
-    });
-    return this.request(`/api/appointments/check-availability?${params}`);
-  }
-
   // Reservations
   async getReservations(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -137,13 +82,6 @@ class APIService {
 
   async getTodayReservations() {
     return this.request('/api/reservations/today');
-  }
-
-  async getCalendarReservations(startDate, endDate) {
-    const response = await apiClient.get('/reservations/calendar', {
-      params: { startDate, endDate }
-    });
-    return response.data;
   }
 
   async getReservationStats() {
@@ -175,11 +113,11 @@ class APIService {
   }
 
   async getCustomerStats() {
-    return this.request(`/api/customers/stats`);
+    return this.request('/api/customers/stats');
   }
 
   async createCustomer(data) {
-    return this.request(`/api/customers`, {
+    return this.request('/api/customers', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -192,22 +130,9 @@ class APIService {
     });
   }
 
-  async toggleCustomerVip(customerId) {
-    return this.request(`/api/customers/${customerId}/vip`, {
-      method: 'PATCH',
-    });
-  }
-
-  async deleteCustomer(customerId) {
-    return this.request(`/api/customers/${customerId}`, {
-      method: 'DELETE',
-    });
-  }
-
   // Waitlist
-  async getWaitlist(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/waitlist?${queryString}`);
+  async getWaitlist() {
+    return this.request('/api/waitlist');
   }
 
   async getWaitlistStats() {
@@ -229,24 +154,104 @@ class APIService {
   }
 
   // Analytics
-    async getOverviewStats() {
-    return this.request('/api/analytics/overview');
+  async getDashboardStats() {
+    return this.request('/api/analytics/dashboard');
   }
 
-  async getAppointmentsByStatus(period = 'month') {
-    return this.request(`/api/analytics/appointments-by-status?period=${period}`);
+  async getMonthlyStats(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/api/analytics/monthly?${queryString}`);
   }
 
-  async getTopServices(limit = 10) {
-    return this.request(`/api/analytics/top-services?limit=${limit}`);
+  async getTopCustomers() {
+    return this.request('/api/analytics/top-customers');
   }
 
-  async getAppointmentsTimeline(days = 7) {
-    return this.request(`/api/analytics/timeline?days=${days}`);
+  // Settings
+  async getSettings() {
+    return this.request('/api/settings');
   }
 
-  async getRevenueStats() {
-    return this.request('/api/analytics/revenue');
+  async updateSettings(data) {
+    return this.request('/api/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getBusinessUsers() {
+    return this.request('/api/settings/users');
+  }
+
+  async createBusinessUser(data) {
+    return this.request('/api/settings/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBusinessUser(userId, data) {
+    return this.request(`/api/settings/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteBusinessUser(userId) {
+    return this.request(`/api/settings/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getBusinessHours() {
+    return this.request('/api/settings/hours');
+  }
+
+  async updateBusinessHours(hours) {
+    return this.request('/api/settings/hours', {
+      method: 'POST',
+      body: JSON.stringify({ hours }),
+    });
+  }
+
+  // Services
+  async getServices() {
+    return this.request('/api/services');
+  }
+
+  async createService(data) {
+    return this.request('/api/services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateService(serviceId, data) {
+    return this.request(`/api/services/${serviceId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteService(serviceId) {
+    return this.request(`/api/services/${serviceId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Appointments
+  async checkAppointmentAvailability(date, time, duration) {
+    return this.request('/api/appointments/check-availability', {
+      method: 'POST',
+      body: JSON.stringify({ date, time, duration }),
+    });
+  }
+
+  async createAppointment(data) {
+    return this.request('/api/appointments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 };
 

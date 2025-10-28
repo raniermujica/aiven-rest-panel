@@ -3,44 +3,69 @@ import { persist } from 'zustand/middleware';
 
 export const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
+      businessSlug: null,
       isAuthenticated: false,
-      
-      login: (userData, token) => {
+
+      setAuth: (token, user, businessSlug) => {
         localStorage.setItem('token', token);
-        if (userData.business?.slug) {
-          localStorage.setItem('businessSlug', userData.business.slug);
-        }
-        
-        set({ 
-          user: userData, 
+        localStorage.setItem('businessSlug', businessSlug);
+        set({
           token,
-          isAuthenticated: true 
+          user,
+          businessSlug,
+          isAuthenticated: true,
         });
       },
-      
+
+      login: (user, token) => {
+        const businessSlug = user.business?.slug;
+        localStorage.setItem('token', token);
+        localStorage.setItem('businessSlug', businessSlug);
+        set({
+          token,
+          user,
+          businessSlug,
+          isAuthenticated: true,
+        });
+      },
+
+      updateUser: (userData) => {
+        set((state) => ({
+          user: {
+            ...state.user,
+            ...userData,
+          },
+        }));
+      },
+
+      updateBusinessName: (name) => {
+        set((state) => ({
+          user: {
+            ...state.user,
+            business: {
+              ...state.user.business,
+              name: name,
+            },
+          },
+        }));
+      },
+
       logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('businessSlug');
-        
-        set({ 
+        set({
           user: null,
           token: null,
-          isAuthenticated: false 
+          businessSlug: null,
+          isAuthenticated: false,
         });
       },
-      
-      setUser: (userData) => set({ user: userData }),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user,
-        token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
     }
   )
 );

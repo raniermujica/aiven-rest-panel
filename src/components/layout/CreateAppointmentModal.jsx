@@ -58,32 +58,32 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
   // Check availability cuando cambia fecha/hora/duración
   useEffect(() => {
-  if (formData.scheduledDate && formData.appointmentTime && formData.durationMinutes) {
-    checkAvailability();
-  }
-}, [formData.scheduledDate, formData.appointmentTime, formData.durationMinutes]);
+    if (formData.scheduledDate && formData.appointmentTime && formData.durationMinutes) {
+      checkAvailability();
+    }
+  }, [formData.scheduledDate, formData.appointmentTime, formData.durationMinutes]);
 
-const checkAvailability = async () => {
-  if (!formData.scheduledDate || !formData.appointmentTime) return;
+  const checkAvailability = async () => {
+    if (!formData.scheduledDate || !formData.appointmentTime) return;
 
-  try {
-    setCheckingAvailability(true);
-    
-    // Pasar hora en formato correcto
-    const result = await api.checkAppointmentAvailability(
-      formData.scheduledDate,
-      formData.appointmentTime, // Esto ya está bien, el backend debe manejarlo
-      formData.durationMinutes
-    );
-    
-    setAvailability(result);
-  } catch (error) {
-    console.error('Error verificando disponibilidad:', error);
-    setAvailability(null);
-  } finally {
-    setCheckingAvailability(false);
-  }
-};
+    try {
+      setCheckingAvailability(true);
+      
+      // Pasar hora en formato correcto
+      const result = await api.checkAppointmentAvailability(
+        formData.scheduledDate,
+        formData.appointmentTime,
+        formData.durationMinutes
+      );
+      
+      setAvailability(result);
+    } catch (error) {
+      console.error('Error verificando disponibilidad:', error);
+      setAvailability(null);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
 
   const handleServiceChange = (e) => {
     const serviceId = e.target.value;
@@ -122,53 +122,57 @@ const checkAvailability = async () => {
       return;
     }
 
-     try {
-    // Usar la zona horaria del navegador automáticamente
-    const localDateTime = `${formData.scheduledDate}T${formData.appointmentTime}`;
-    const localDate = new Date(localDateTime);
-    
-    // Esto convierte automáticamente la hora local del navegador a UTC
-    const scheduledDateTime = localDate.toISOString();
-    
-    console.log('📅 Local input:', localDateTime);
-    console.log('🌍 UTC stored:', scheduledDateTime);
-    console.log('🕐 Timezone offset:', localDate.getTimezoneOffset() / 60, 'hours');
+    try {
+      // Usar la zona horaria del navegador automáticamente
+      const localDateTime = `${formData.scheduledDate}T${formData.appointmentTime}`;
+      const localDate = new Date(localDateTime);
+      
+      // Esto convierte automáticamente la hora local del navegador a UTC
+      const scheduledDateTime = localDate.toISOString();
+      
+      console.log('📅 Local input:', localDateTime);
+      console.log('🌍 UTC stored:', scheduledDateTime);
+      console.log('🕐 Timezone offset:', localDate.getTimezoneOffset() / 60, 'hours');
 
-    await api.createAppointment({
-      clientName: formData.clientName,
-      clientPhone: formData.clientPhone,
-      scheduledDate: scheduledDateTime,
-      appointmentTime: scheduledDateTime,
-      serviceName: formData.serviceName || 'Servicio',
-      serviceId: formData.serviceId,
-      durationMinutes: formData.durationMinutes,
-      notes: formData.notes,
-    });
+      await api.createAppointment({
+        clientName: formData.clientName,
+        clientPhone: formData.clientPhone,
+        scheduledDate: scheduledDateTime,
+        appointmentTime: scheduledDateTime,
+        serviceName: formData.serviceName || 'Servicio',
+        serviceId: formData.serviceId,
+        durationMinutes: formData.durationMinutes,
+        notes: formData.notes,
+      });
 
-    onSuccess();
-  } catch (error) {
-    console.error('Error creando cita:', error);
-    
-    if (error.response?.status === 409) {
-      setError(error.response.data.message || 'Ya existe una cita en ese horario');
-    } else {
-      setError(error.message || 'Error al crear la cita');
+      onSuccess();
+    } catch (error) {
+      console.error('Error creando cita:', error);
+      
+      if (error.response?.status === 409) {
+        setError(error.response.data.message || 'Ya existe una cita en ese horario');
+      } else {
+        setError(error.message || 'Error al crear la cita');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Nueva {terminology.booking}</h2>
+    // ✅ CAMBIO 1: Overlay más oscuro
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+      {/* ✅ CAMBIO 2: Modal con fondo oscuro */}
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
+        {/* ✅ CAMBIO 3: Header con border gris */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Nueva {terminology.booking}</h2>
+          {/* ✅ CAMBIO 4: Botón cerrar en gris */}
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
@@ -184,7 +188,8 @@ const checkAvailability = async () => {
 
           {/* Cliente */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            {/* ✅ CAMBIO 5: Labels en gris claro */}
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Nombre del {terminology.customer} *
             </label>
             <Input
@@ -196,7 +201,7 @@ const checkAvailability = async () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Teléfono *
             </label>
             <Input
@@ -210,11 +215,12 @@ const checkAvailability = async () => {
 
           {/* Servicio */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               {terminology.service}
             </label>
+            {/* ✅ CAMBIO 6: Select con fondo oscuro */}
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.serviceId || ''}
               onChange={handleServiceChange}
             >
@@ -232,7 +238,7 @@ const checkAvailability = async () => {
           {/* Fecha y Hora */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Fecha *
               </label>
               <Input
@@ -245,7 +251,7 @@ const checkAvailability = async () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Hora *
               </label>
               <Input
@@ -259,11 +265,12 @@ const checkAvailability = async () => {
 
           {/* Availability Check */}
           {formData.scheduledDate && formData.appointmentTime && (
+            // ✅ CAMBIO 7: Indicador de disponibilidad con fondos oscuros
             <div className={cn(
-              'p-3 rounded-lg text-sm flex items-start gap-2',
-              checkingAvailability ? 'bg-gray-50 text-gray-600' :
-              availability?.available ? 'bg-green-50 text-green-700' :
-              'bg-red-50 text-red-700'
+              'p-3 rounded-lg text-sm flex items-start gap-2 border',
+              checkingAvailability ? 'bg-gray-800/50 text-gray-300 border-gray-700' :
+              availability?.available ? 'bg-green-900/30 text-green-300 border-green-700/50' :
+              'bg-red-900/30 text-red-300 border-red-700/50'
             )}>
               {checkingAvailability ? (
                 <>
@@ -274,9 +281,9 @@ const checkAvailability = async () => {
                 <>
                   <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Horario disponible</p>
+                    <p className="font-medium text-green-200">Horario disponible</p>
                     {availability.total_appointments_that_day > 0 && (
-                      <p className="text-xs mt-1">
+                      <p className="text-xs mt-1 text-green-400">
                         {availability.total_appointments_that_day} cita(s) ese día
                       </p>
                     )}
@@ -286,15 +293,15 @@ const checkAvailability = async () => {
                 <>
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Horario no disponible</p>
+                    <p className="font-medium text-red-200">Horario no disponible</p>
                     {availability?.has_conflict && availability?.conflicting_appointment && (
-                      <p className="text-xs mt-1">
+                      <p className="text-xs mt-1 text-red-400">
                         Conflicto con: {availability.conflicting_appointment.client_name} 
                         {' '}({availability.conflicting_appointment.duration} min)
                       </p>
                     )}
                     {availability?.business_hours_message && (
-                      <p className="text-xs mt-1">{availability.business_hours_message}</p>
+                      <p className="text-xs mt-1 text-red-400">{availability.business_hours_message}</p>
                     )}
                   </div>
                 </>
@@ -304,11 +311,12 @@ const checkAvailability = async () => {
 
           {/* Notas */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Notas
             </label>
+            {/* ✅ CAMBIO 8: Textarea con fondo oscuro */}
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
               rows="3"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}

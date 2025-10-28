@@ -49,8 +49,8 @@ export function SuperAdmin() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel SuperAdmin</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-white">Panel SuperAdmin</h1>
+          <p className="mt-1 text-sm text-white">
             Gestiona todos los negocios de la plataforma
           </p>
         </div>
@@ -66,7 +66,7 @@ export function SuperAdmin() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total negocios</p>
+                <p className="text-sm font-medium text-white">Total negocios</p>
                 <p className="text-2xl font-bold">{businesses.length}</p>
               </div>
               <Building2 className="h-8 w-8 text-blue-500" />
@@ -78,7 +78,7 @@ export function SuperAdmin() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Activos</p>
+                <p className="text-sm font-medium text-white">Activos</p>
                 <p className="text-2xl font-bold">
                   {businesses.filter(b => b.is_active).length}
                 </p>
@@ -92,7 +92,7 @@ export function SuperAdmin() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Restaurantes</p>
+                <p className="text-sm font-medium text-white">Restaurantes</p>
                 <p className="text-2xl font-bold">
                   {businesses.filter(b => b.business_type === 'restaurant').length}
                 </p>
@@ -106,7 +106,7 @@ export function SuperAdmin() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Salones/Clínicas</p>
+                <p className="text-sm font-medium text-white">Salones/Clínicas</p>
                 <p className="text-2xl font-bold">
                   {businesses.filter(b => b.business_type !== 'restaurant').length}
                 </p>
@@ -145,10 +145,10 @@ export function SuperAdmin() {
             {businesses.length === 0 && (
               <div className="text-center py-12">
                 <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-4 text-lg font-medium text-gray-900">
+                <p className="mt-4 text-lg font-medium text-white">
                   No hay negocios creados
                 </p>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-white">
                   Crea el primer negocio para comenzar
                 </p>
               </div>
@@ -335,7 +335,7 @@ function CreateBusinessForm({ onClose, onSuccess }) {
                 placeholder="ej: buen-sabor"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-white">
                 URL: {window.location.origin}/{formData.slug || 'slug'}
               </p>
             </div>
@@ -431,7 +431,7 @@ function BusinessCard({ business }) {
               {business.is_active ? 'Activo' : 'Inactivo'}
             </span>
           </div>
-          <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
+          <div className="mt-1 flex items-center gap-3 text-sm text-white">
             <span>{config.name}</span>
             <span>•</span>
             <span>{business.url}</span>

@@ -89,8 +89,8 @@ export function Analytics() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Estadísticas</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-white">Estadísticas</h1>
+          <p className="text-white mt-1">
             Análisis del rendimiento de tu negocio
           </p>
         </div>
@@ -243,7 +243,7 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             {topServices.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">
+              <p className="text-sm text-white text-center py-8">
                 No hay datos suficientes
               </p>
             ) : (
@@ -261,12 +261,12 @@ export function Analytics() {
                         {index + 1}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{service.name}</p>
-                        <p className="text-sm text-gray-500">{service.count} veces</p>
+                        <p className="font-medium text-white">{service.name}</p>
+                        <p className="text-sm text-gray-400">{service.count} veces</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">{service.count}</p>
+                      <p className="text-lg font-semibold text-white">{service.count}</p>
                     </div>
                   </div>
                 ))}
@@ -286,7 +286,7 @@ export function Analytics() {
         </CardHeader>
         <CardContent>
           {timeline.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">
+            <p className="text-sm text-white text-center py-8">
               No hay datos suficientes
             </p>
           ) : (
@@ -300,10 +300,10 @@ export function Analytics() {
                 return (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700 capitalize">
+                      <span className="font-medium text-white capitalize">
                         {dayName} {dayNumber}
                       </span>
-                      <span className="text-gray-600">{day.total} citas</span>
+                      <span className="text-white">{day.total} citas</span>
                     </div>
                     <div className="flex gap-1 h-8">
                       {day.confirmado > 0 && (
@@ -353,10 +353,10 @@ function StatsCard({ title, value, subtitle, icon: Icon, color }) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm text-gray-600">{title}</p>
+            <p className="text-sm text-white">{title}</p>
             <p className="text-3xl font-bold mt-2">{value}</p>
             {subtitle && (
-              <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+              <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
             )}
           </div>
           <div className={cn('p-3 rounded-lg', colorClasses[color])}>
@@ -400,9 +400,9 @@ function StatusBar({ label, value, total, color, icon: Icon }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Icon className={cn('h-4 w-4', textColorClasses[color])} />
-          <span className="text-sm font-medium text-gray-700">{label}</span>
+          <span className="text-sm font-medium text-white">{label}</span>
         </div>
-        <span className="text-sm font-semibold text-gray-900">
+        <span className="text-sm font-semibold text-white">
           {value} ({percentage.toFixed(1)}%)
         </span>
       </div>

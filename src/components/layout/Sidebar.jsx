@@ -15,7 +15,7 @@ import {
   UtensilsCrossed,
   Sparkles,
   Activity,
-  LogOut // ← NUEVO
+  LogOut,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -43,7 +43,7 @@ export function Sidebar() {
       beauty_salon: 'bg-pink-900',
       aesthetic_clinic: 'bg-purple-900',
       dental_clinic: 'bg-teal-900',
-      barbershop: 'bg-amber-900',
+      barbershop: 'bg-[#003c23]',
     };
     return colors[user?.business?.type] || 'bg-gray-900';
   };
@@ -52,20 +52,42 @@ export function Sidebar() {
   const getBusinessIcon = () => {
     const icons = {
       restaurant: UtensilsCrossed,
-      beauty_salon: Scissors,
+      beauty_salon: Sparkles,
       aesthetic_clinic: Sparkles,
       dental_clinic: Activity,
       barbershop: Scissors,
     };
-    const Icon = icons[user?.business?.type] || UtensilsCrossed;
-    return <Icon className="h-8 w-8" />;
+    return icons[user?.business?.type] || UtensilsCrossed;
+  };
+
+  // Obtener el emoji del icono
+  const getBusinessEmoji = () => {
+    const emojis = {
+      restaurant: '🍽️',
+      beauty_salon: '💅',
+      aesthetic_clinic: '✨',
+      dental_clinic: '🦷',
+      barbershop: '💈',
+    };
+    return emojis[user?.business?.type] || '🏢';
+  };
+
+  // Obtener nombre del tipo de negocio
+  const getBusinessTypeName = () => {
+    const names = {
+      restaurant: 'Restaurante',
+      beauty_salon: 'Salón de Belleza',
+      aesthetic_clinic: 'Clínica Estética',
+      dental_clinic: 'Clínica Dental',
+      barbershop: 'Barbería',
+    };
+    return names[user?.business?.type] || 'Negocio';
   };
 
   const navigation = [
     { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
-   // { name: 'Calendario', href: '/calendar', icon: Calendar },
     { name: `${terminology.bookings} de hoy`, href: '/reservations/today', icon: Calendar },
-    { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: UtensilsCrossed },
+    { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: CalendarDays },
     { name: 'Clientes', href: '/customers', icon: Users },
     { name: 'Lista de espera', href: '/waitlist', icon: Clock },
     { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
@@ -91,21 +113,20 @@ export function Sidebar() {
         )}
       >
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+        <div className="p-6 border-b border-gray-700">
           <div className="flex items-center gap-3">
-            {getBusinessIcon()}
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-2xl">
+              {getBusinessEmoji()}
+            </div>
             <div>
-              <h1 className="text-lg font-bold">{user?.business?.name || 'Panel'}</h1>
-              <p className="text-xs text-white/60">Gestión</p>
+              <h2 className="text-lg font-bold text-white">
+                {user?.business?.name || 'Mi Negocio'}
+              </h2>
+              <p className="text-xs text-gray-300">
+                {getBusinessTypeName()}
+              </p>
             </div>
           </div>
-
-          <button
-            onClick={closeSidebar}
-            className="lg:hidden rounded p-1 hover:bg-white/10"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Navigation */}

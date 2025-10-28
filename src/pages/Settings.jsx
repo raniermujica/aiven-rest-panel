@@ -6,28 +6,30 @@ import {
   Building2, 
   Users, 
   Clock,
-  Bell,
   Shield,
   Save,
   Eye,
   EyeOff,
   Plus,
   Trash2,
-  Edit
+  Edit,
+  Scissors,
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
+import { cn } from '@/lib/utils';
 
 export function Settings() {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('general');
-  const [saving, setSaving] = useState(false);
 
   const tabs = [
     { id: 'general', label: 'General', icon: Building2 },
+    { id: 'services', label: 'Servicios', icon: Scissors },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'hours', label: 'Horarios', icon: Clock },
-    { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'security', label: 'Seguridad', icon: Shield },
   ];
 
@@ -35,14 +37,14 @@ export function Settings() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-3xl font-bold text-white">Configuración</h1>
+        <p className="mt-1 text-sm text-gray-400">
           Gestiona la configuración de {user?.business?.name || 'tu negocio'}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b">
+      <div className="border-b border-gray-700">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -52,8 +54,8 @@ export function Settings() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -66,60 +68,133 @@ export function Settings() {
 
       {/* Tab Content */}
       {activeTab === 'general' && <GeneralSettings user={user} />}
+      {activeTab === 'services' && <ServicesSettings user={user} />}
       {activeTab === 'users' && <UsersSettings user={user} />}
       {activeTab === 'hours' && <HoursSettings user={user} />}
-      {activeTab === 'notifications' && <NotificationsSettings user={user} />}
       {activeTab === 'security' && <SecuritySettings user={user} />}
     </div>
   );
 }
 
 function GeneralSettings({ user }) {
+  const { updateBusinessName } = useAuthStore(); 
   const [formData, setFormData] = useState({
-    name: user?.business?.name || '',
+    name: '',
     email: '',
     phone: '',
     address: '',
+    city: '',
+    website: '',
     maxCapacity: '',
+    assistantName: '',
+    businessHours: '',
   });
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getSettings();
+      
+      setFormData({
+        name: data.settings.name || '',
+        email: data.settings.email || '',
+        phone: data.settings.phone || '',
+        address: data.settings.address || '',
+        city: data.settings.city || '',
+        website: data.settings.website || '',
+        maxCapacity: data.settings.maxCapacity || '',
+        assistantName: data.settings.assistantName || '',
+        businessHours: data.settings.businessHours || '',
+      });
+    } catch (error) {
+      console.error('Error cargando configuración:', error);
+      setError('Error al cargar la configuración');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     setSaving(true);
-    
-    // TODO: Implementar actualización
-    setTimeout(() => {
+
+    try {
+      await api.updateSettings(formData);
+
+      if (formData.name) {
+        updateBusinessName(formData.name);
+      }
+      
+      setSuccess('Configuración actualizada correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error actualizando configuración:', error);
+      setError(error.message || 'Error al actualizar configuración');
+    } finally {
       setSaving(false);
-      alert('Configuración guardada (simulado)');
-    }, 1000);
+    }
   };
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-white">Cargando configuración...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Información del negocio</CardTitle>
-          <CardDescription>
-            Datos básicos de tu {user?.business?.config?.name?.toLowerCase() || 'negocio'}
+          <CardDescription className="text-gray-400">
+            Datos básicos de tu negocio
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm">
+                {success}
+              </div>
+            )}
+
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Nombre del negocio
+              <label className="text-sm font-medium text-gray-300">
+                Nombre del negocio *
               </label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ej: Restaurante El Buen Sabor"
+                placeholder="Ej: Bella Estética"
+                required
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Email de contacto
                 </label>
                 <Input
@@ -131,7 +206,7 @@ function GeneralSettings({ user }) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Teléfono
                 </label>
                 <Input
@@ -142,26 +217,75 @@ function GeneralSettings({ user }) {
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Dirección
-              </label>
-              <Input
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Calle Principal 123, Madrid"
-              />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-gray-300">
+                  Dirección
+                </label>
+                <Input
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Calle Principal 123"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-300">
+                  Ciudad
+                </label>
+                <Input
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Madrid"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Capacidad máxima (personas)
+              <label className="text-sm font-medium text-gray-300">
+                Sitio web
               </label>
               <Input
-                type="number"
-                value={formData.maxCapacity}
-                onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                placeholder="100"
+                type="url"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                placeholder="https://www.minegocio.com"
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-gray-300">
+                  Capacidad máxima
+                </label>
+                <Input
+                  type="number"
+                  value={formData.maxCapacity}
+                  onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                  placeholder="50"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-300">
+                  Nombre del asistente IA
+                </label>
+                <Input
+                  value={formData.assistantName}
+                  onChange={(e) => setFormData({ ...formData, assistantName: e.target.value })}
+                  placeholder="Sofía"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                Horario de atención
+              </label>
+              <Input
+                value={formData.businessHours}
+                onChange={(e) => setFormData({ ...formData, businessHours: e.target.value })}
+                placeholder="Lunes a Domingo 09:00-22:00"
               />
             </div>
 
@@ -180,21 +304,21 @@ function GeneralSettings({ user }) {
           <CardTitle>Información de la plataforma</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-sm text-gray-600">Tipo de negocio</span>
-            <span className="text-sm font-medium">
+          <div className="flex justify-between py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">Tipo de negocio</span>
+            <span className="text-sm font-medium text-white">
               {user?.business?.config?.name || 'N/A'}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-sm text-gray-600">URL de acceso</span>
-            <span className="text-sm font-medium text-blue-600">
+          <div className="flex justify-between py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">URL de acceso</span>
+            <span className="text-sm font-medium text-blue-400">
               {window.location.origin}/{user?.business?.slug || 'slug'}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-sm text-gray-600">Plan actual</span>
-            <span className="text-sm font-medium">Básico</span>
+          <div className="flex justify-between py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">Plan actual</span>
+            <span className="text-sm font-medium text-white">Básico</span>
           </div>
         </CardContent>
       </Card>
@@ -202,10 +326,387 @@ function GeneralSettings({ user }) {
   );
 }
 
+function ServicesSettings({ user }) {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getServices();
+      setServices(data.services || []);
+    } catch (error) {
+      console.error('Error cargando servicios:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (serviceId) => {
+    if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+
+    try {
+      await api.deleteService(serviceId);
+      await loadServices();
+    } catch (error) {
+      console.error('Error eliminando servicio:', error);
+      alert('Error al eliminar el servicio');
+    }
+  };
+
+  const handleToggleActive = async (service) => {
+    try {
+      await api.updateService(service.id, { isActive: !service.is_active });
+      await loadServices();
+    } catch (error) {
+      console.error('Error actualizando servicio:', error);
+      alert('Error al actualizar el servicio');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-white">Cargando servicios...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Servicios del negocio</CardTitle>
+              <CardDescription className="text-gray-400">
+                Gestiona los servicios que ofreces a tus clientes
+              </CardDescription>
+            </div>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo servicio
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {services.length === 0 ? (
+            <div className="text-center py-12">
+              <Scissors className="h-12 w-12 text-gray-400 mx-auto" />
+              <p className="mt-4 text-white">No hay servicios registrados</p>
+              <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
+                Crear primer servicio
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className={cn(
+                    'flex items-center justify-between rounded-lg border p-4 transition-colors',
+                    service.is_active
+                      ? 'border-gray-700 bg-[#1a2f38]'
+                      : 'border-gray-700 bg-gray-800/50 opacity-60'
+                  )}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {service.emoji && (
+                      <div className="text-3xl">{service.emoji}</div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-white">{service.name}</h4>
+                        {!service.is_active && (
+                          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                            Inactivo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1">{service.description}</p>
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        {service.price && (
+                          <span className="text-green-400 font-medium">
+                            €{service.price}
+                          </span>
+                        )}
+                        {service.duration_minutes && (
+                          <span className="text-gray-400">
+                            {service.duration_minutes} min
+                          </span>
+                        )}
+                        {service.category && (
+                          <span className="text-gray-400">
+                            {service.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleActive(service)}
+                    >
+                      {service.is_active ? 'Desactivar' : 'Activar'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingService(service)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(service.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Create/Edit Modal */}
+      {(showCreateModal || editingService) && (
+        <ServiceModal
+          service={editingService}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingService(null);
+          }}
+          onSuccess={() => {
+            loadServices();
+            setShowCreateModal(false);
+            setEditingService(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ServiceModal({ service, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: service?.name || '',
+    description: service?.description || '',
+    price: service?.price || '',
+    durationMinutes: service?.duration_minutes || 60,
+    category: service?.category || '',
+    emoji: service?.emoji || '',
+    displayOrder: service?.display_order || 0,
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!formData.name || !formData.description) {
+      setError('Nombre y descripción son requeridos');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (service) {
+        await api.updateService(service.id, formData);
+      } else {
+        await api.createService(formData);
+      }
+      onSuccess();
+    } catch (error) {
+      console.error('Error guardando servicio:', error);
+      setError(error.message || 'Error al guardar el servicio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">
+            {service ? 'Editar servicio' : 'Nuevo servicio'}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Nombre del servicio *
+            </label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ej: Corte de cabello"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Descripción *
+            </label>
+            <textarea
+              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
+              rows="3"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe el servicio..."
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Precio (€)
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="35.00"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Duración (min)
+              </label>
+              <Input
+                type="number"
+                value={formData.durationMinutes}
+                onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+                placeholder="60"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Categoría
+            </label>
+            <Input
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="Ej: Cabello, Uñas, Facial"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Emoji (opcional)
+            </label>
+            <Input
+              value={formData.emoji}
+              onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
+              placeholder="💇‍♀️"
+              maxLength={2}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Agrega un emoji para hacer más visual el servicio
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? 'Guardando...' : service ? 'Actualizar' : 'Crear'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function UsersSettings({ user }) {
-  const [users, setUsers] = useState([
-    { id: 1, name: user?.name || 'Usuario', email: user?.email || '', role: user?.role || 'ADMIN', isActive: true },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getBusinessUsers();
+      setUsers(data.users || []);
+    } catch (error) {
+      console.error('Error cargando usuarios:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+
+    try {
+      await api.deleteBusinessUser(userId);
+      await loadUsers();
+    } catch (error) {
+      console.error('Error eliminando usuario:', error);
+      alert(error.message || 'Error al eliminar el usuario');
+    }
+  };
+
+  const handleToggleActive = async (userId, currentStatus) => {
+    try {
+      await api.updateBusinessUser(userId, { isActive: !currentStatus });
+      await loadUsers();
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      alert('Error al actualizar el usuario');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-white">Cargando usuarios...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -214,11 +715,11 @@ function UsersSettings({ user }) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Usuarios del sistema</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 Gestiona quién tiene acceso al panel
               </CardDescription>
             </div>
-            <Button size="sm">
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Agregar usuario
             </Button>
@@ -227,25 +728,53 @@ function UsersSettings({ user }) {
         <CardContent>
           <div className="space-y-3">
             {users.map((u) => (
-              <div key={u.id} className="flex items-center justify-between rounded-lg border p-4">
+              <div
+                key={u.id}
+                className={cn(
+                  'flex items-center justify-between rounded-lg border p-4',
+                  u.is_active
+                    ? 'border-gray-700 bg-[#1a2f38]'
+                    : 'border-gray-700 bg-gray-800/50 opacity-60'
+                )}
+              >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                    <span className="font-bold text-blue-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500">
+                    <span className="font-semibold text-white">
                       {u.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <p className="font-semibold">{u.name}</p>
-                    <p className="text-sm text-gray-500">{u.email}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-white">{u.name}</p>
+                      {!u.is_active && (
+                        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                          Inactivo
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400">{u.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
                     {u.role}
                   </span>
-                  <Button size="sm" variant="outline">
-                    <Edit className="h-4 w-4" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleActive(u.id, u.is_active)}
+                  >
+                    {u.is_active ? 'Desactivar' : 'Activar'}
                   </Button>
+                  {u.id !== user?.id && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(u.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -259,62 +788,184 @@ function UsersSettings({ user }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <h4 className="font-semibold">ADMIN</h4>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="rounded-lg border border-gray-700 bg-[#1a2f38] p-4">
+              <h4 className="font-semibold text-white">ADMIN</h4>
+              <p className="mt-1 text-sm text-gray-400">
                 Acceso completo a todas las funciones del sistema
               </p>
             </div>
-            <div className="rounded-lg border p-4">
-              <h4 className="font-semibold">MANAGER</h4>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="rounded-lg border border-gray-700 bg-[#1a2f38] p-4">
+              <h4 className="font-semibold text-white">MANAGER</h4>
+              <p className="mt-1 text-sm text-gray-400">
                 Gestión de reservas, clientes y reportes
               </p>
             </div>
-            <div className="rounded-lg border p-4">
-              <h4 className="font-semibold">STAFF</h4>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="rounded-lg border border-gray-700 bg-[#1a2f38] p-4">
+              <h4 className="font-semibold text-white">STAFF</h4>
+              <p className="mt-1 text-sm text-gray-400">
                 Ver y gestionar reservas del día
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {showCreateModal && (
+        <CreateUserModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            loadUsers();
+            setShowCreateModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function HoursSettings({ user }) {
-  const terminology = user?.business?.terminology || {};
-  
+  const [hours, setHours] = useState({
+    1: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Lunes
+    2: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Martes
+    3: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Miércoles
+    4: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Jueves
+    5: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Viernes
+    6: { openTime: '10:00', closeTime: '20:00', isActive: true }, // Sábado
+    0: { openTime: '10:00', closeTime: '20:00', isActive: false }, // Domingo
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const days = [
+    { label: 'Lunes', value: 1 },
+    { label: 'Martes', value: 2 },
+    { label: 'Miércoles', value: 3 },
+    { label: 'Jueves', value: 4 },
+    { label: 'Viernes', value: 5 },
+    { label: 'Sábado', value: 6 },
+    { label: 'Domingo', value: 0 },
+  ];
+
+  useEffect(() => {
+    loadHours();
+  }, []);
+
+  const loadHours = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getBusinessHours();
+      if (data.hours && Object.keys(data.hours).length > 0) {
+        setHours(data.hours);
+      }
+    } catch (error) {
+      console.error('Error cargando horarios:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setError('');
+    setSuccess('');
+    setSaving(true);
+
+    try {
+      const hoursArray = Object.entries(hours).map(([dayOfWeek, data]) => ({
+        dayOfWeek: parseInt(dayOfWeek),
+        openTime: data.openTime,
+        closeTime: data.closeTime,
+        isActive: data.isActive,
+      }));
+
+      await api.updateBusinessHours(hoursArray);
+      setSuccess('Horarios actualizados correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error guardando horarios:', error);
+      setError('Error al guardar los horarios');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateHour = (dayValue, field, value) => {
+    setHours(prev => ({
+      ...prev,
+      [dayValue]: {
+        ...prev[dayValue],
+        [field]: value,
+      },
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-white">Cargando horarios...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Horario de atención</CardTitle>
-          <CardDescription>
-            Define los horarios en que aceptas {terminology.bookings?.toLowerCase() || 'reservas'}
+          <CardDescription className="text-gray-400">
+            Define los horarios en los que tu negocio está abierto
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day) => (
-              <div key={day} className="flex items-center gap-4">
-                <div className="w-32">
-                  <span className="font-medium">{day}</span>
-                </div>
-                <Input type="time" className="w-32" defaultValue="12:00" />
-                <span className="text-gray-500">-</span>
-                <Input type="time" className="w-32" defaultValue="23:00" />
-                <input type="checkbox" defaultChecked className="h-5 w-5" />
-                <span className="text-sm text-gray-600">Activo</span>
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm mb-4">
+              {success}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {days.map((day) => (
+              <div key={day.value} className="grid grid-cols-[120px_1fr_20px_1fr_auto_auto] items-center gap-3 rounded-lg border border-gray-700 bg-[#1a2f38] p-3">
+                <span className="font-medium text-white">{day.label}</span>
+                <Input
+                  type="time"
+                  className="w-32"
+                  value={hours[day.value]?.openTime || '10:00'}
+                  onChange={(e) => updateHour(day.value, 'openTime', e.target.value)}
+                  disabled={!hours[day.value]?.isActive}
+                />
+                <span className="text-gray-400">-</span>
+                <Input
+                  type="time"
+                  className="w-32"
+                  value={hours[day.value]?.closeTime || '20:00'}
+                  onChange={(e) => updateHour(day.value, 'closeTime', e.target.value)}
+                  disabled={!hours[day.value]?.isActive}
+                />
+                <input
+                  type="checkbox"
+                  checked={hours[day.value]?.isActive || false}
+                  onChange={(e) => updateHour(day.value, 'isActive', e.target.checked)}
+                  className="h-5 w-5"
+                />
+                <span className="text-sm text-gray-400">Activo</span>
               </div>
             ))}
           </div>
           <div className="mt-6 flex justify-end">
-            <Button>
+            <Button onClick={handleSave} disabled={saving}>
               <Save className="mr-2 h-4 w-4" />
-              Guardar horarios
+              {saving ? 'Guardando...' : 'Guardar horarios'}
             </Button>
           </div>
         </CardContent>
@@ -323,110 +974,133 @@ function HoursSettings({ user }) {
   );
 }
 
-function NotificationsSettings({ user }) {
-  const [settings, setSettings] = useState({
-    emailReservations: true,
-    whatsappConfirmations: true,
-    remindersBefore24h: true,
-    dailySummary: true,
-    vipAlerts: true,
+function CreateUserModal({ onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'STAFF',
   });
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('Nombre, email y contraseña son requeridos');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await api.createBusinessUser(formData);
+      onSuccess();
+    } catch (error) {
+      console.error('Error creando usuario:', error);
+      setError(error.message || 'Error al crear el usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferencias de notificaciones</CardTitle>
-          <CardDescription>
-            Configura cómo y cuándo quieres recibir notificaciones
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Notificar nuevas reservas por email</p>
-                <p className="text-sm text-gray-500">
-                  Recibe un email cada vez que haya una nueva reserva
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.emailReservations}
-                onChange={(e) => setSettings({ ...settings, emailReservations: e.target.checked })}
-                className="h-5 w-5"
-              />
-            </div>
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-md w-full mx-4 border border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Nuevo usuario</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Confirmaciones por WhatsApp</p>
-                <p className="text-sm text-gray-500">
-                  Enviar confirmaciones automáticas a los clientes
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.whatsappConfirmations}
-                onChange={(e) => setSettings({ ...settings, whatsappConfirmations: e.target.checked })}
-                className="h-5 w-5"
-              />
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+              {error}
             </div>
+          )}
 
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Recordatorios 24h antes</p>
-                <p className="text-sm text-gray-500">
-                  Enviar recordatorio automático al cliente un día antes
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.remindersBefore24h}
-                onChange={(e) => setSettings({ ...settings, remindersBefore24h: e.target.checked })}
-                className="h-5 w-5"
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Resumen diario</p>
-                <p className="text-sm text-gray-500">
-                  Recibe un resumen cada mañana de las reservas del día
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.dailySummary}
-                onChange={(e) => setSettings({ ...settings, dailySummary: e.target.checked })}
-                className="h-5 w-5"
-              />
-            </div>
-
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="font-medium">Alertas de clientes VIP</p>
-                <p className="text-sm text-gray-500">
-                  Notificación especial cuando un cliente VIP hace reserva
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.vipAlerts}
-                onChange={(e) => setSettings({ ...settings, vipAlerts: e.target.checked })}
-                className="h-5 w-5"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Nombre completo *
+            </label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Juan Pérez"
+              required
+            />
           </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button>
-              <Save className="mr-2 h-4 w-4" />
-              Guardar preferencias
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Email *
+            </label>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="usuario@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Contraseña *
+            </label>
+            <Input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Mínimo 8 caracteres"
+              required
+              minLength={8}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Teléfono
+            </label>
+            <Input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+34 600 123 456"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Rol *
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              required
+            >
+              <option value="STAFF">STAFF - Ver y gestionar citas</option>
+              <option value="MANAGER">MANAGER - Gestión completa</option>
+              <option value="ADMIN">ADMIN - Acceso total</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? 'Creando...' : 'Crear usuario'}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </form>
+      </div>
     </div>
   );
 }
@@ -441,7 +1115,7 @@ function SecuritySettings({ user }) {
 
   const handleChangePassword = (e) => {
     e.preventDefault();
-    alert('Cambio de contraseña (simulado)');
+    alert('Cambio de contraseña (por implementar)');
   };
 
   return (
@@ -449,14 +1123,14 @@ function SecuritySettings({ user }) {
       <Card>
         <CardHeader>
           <CardTitle>Cambiar contraseña</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-400">
             Actualiza tu contraseña regularmente para mantener tu cuenta segura
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Contraseña actual
               </label>
               <div className="relative">
@@ -480,7 +1154,7 @@ function SecuritySettings({ user }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Nueva contraseña
               </label>
               <Input
@@ -491,7 +1165,7 @@ function SecuritySettings({ user }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Confirmar nueva contraseña
               </label>
               <Input
@@ -517,10 +1191,10 @@ function SecuritySettings({ user }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-lg border border-gray-700 bg-[#1a2f38] p-4">
               <div>
-                <p className="font-medium">Esta sesión</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-white">Esta sesión</p>
+                <p className="text-sm text-gray-400">
                   Madrid, España • Ahora
                 </p>
               </div>
@@ -534,3 +1208,4 @@ function SecuritySettings({ user }) {
     </div>
   );
 };
+

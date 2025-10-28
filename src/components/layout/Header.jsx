@@ -7,7 +7,7 @@ export function Header() {
   const { toggleSidebar } = useUIStore();
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 lg:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-[#1a2f38] px-4 lg:px-6">
       {/* Left: Menu + Search */}
       <div className="flex items-center gap-4">
         {/* Botón hamburguesa (solo móvil) */}

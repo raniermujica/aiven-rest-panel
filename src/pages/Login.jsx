@@ -90,7 +90,7 @@ export function Login() {
 
             {/* Email Input */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="text-sm font-medium text-white">
                 Email
               </label>
               <Input
@@ -106,7 +106,7 @@ export function Login() {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="text-sm font-medium text-white">
                 Contraseña
               </label>
               <div className="relative">

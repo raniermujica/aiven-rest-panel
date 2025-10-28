@@ -88,7 +88,7 @@ export function TodayReservations() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando {terminology.bookings.toLowerCase()}...</p>
+          <p className="mt-4 text-white">Cargando {terminology.bookings.toLowerCase()}...</p>
         </div>
       </div>
     );
@@ -99,10 +99,10 @@ export function TodayReservations() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-white">
             {terminology.bookings} de Hoy
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-white mt-1">
             {new Date().toLocaleDateString('es-ES', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -190,11 +190,11 @@ export function TodayReservations() {
       {filteredAppointments.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-lg font-medium text-gray-900">
+            <AlertCircle className="h-12 w-12 text-white" />
+            <p className="mt-4 text-lg font-medium text-white">
               No hay {terminology.bookings.toLowerCase()} {filter !== 'all' && `con estado "${filter}"`}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-white">
               Las {terminology.bookings.toLowerCase()} aparecerán aquí cuando se creen
             </p>
           </CardContent>
@@ -218,7 +218,7 @@ function StatsCard({ title, value, icon: Icon, color }) {
     blue: 'bg-blue-100 text-blue-600',
     green: 'bg-green-100 text-green-600',
     yellow: 'bg-yellow-100 text-yellow-600',
-    gray: 'bg-gray-100 text-gray-600',
+    gray: 'bg-gray-100 text-black',
   };
 
   return (
@@ -226,7 +226,7 @@ function StatsCard({ title, value, icon: Icon, color }) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">{title}</p>
+            <p className="text-sm text-white">{title}</p>
             <p className="text-2xl font-bold mt-1">{value}</p>
           </div>
           <div className={cn('p-3 rounded-lg', colorClasses[color])}>
@@ -246,7 +246,7 @@ function FilterButton({ label, count, active, onClick }) {
         'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
         active
           ? 'bg-blue-600 text-white'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          : 'bg-gray-700 text-white hover:bg-gray-800'
       )}
     >
       {label} ({count})
@@ -300,7 +300,7 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-gray-400" />
+              <Clock className="h-5 w-5 text-white" />
               <span className="text-lg font-semibold">{timeStr}</span>
               <span className={cn('px-2 py-1 rounded-full text-xs font-medium', statusInfo.color)}>
                 <StatusIcon className="h-3 w-3 inline mr-1" />
@@ -309,22 +309,22 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
             </div>
 
             <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-gray-700">
+              <div className="flex items-center gap-2 text-white">
                 <User className="h-4 w-4" />
                 <span className="font-medium">{appointment.client_name}</span>
               </div>
               
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-white">
                 <Phone className="h-4 w-4" />
                 <span>{appointment.client_phone}</span>
               </div>
 
               {appointment.service_name && (
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-white">
                   <Star className="h-4 w-4" />
                   <span>{appointment.service_name}</span>
                   {appointment.duration_minutes && (
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-white">
                       ({appointment.duration_minutes} min)
                     </span>
                   )}
@@ -332,7 +332,7 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
               )}
 
               {appointment.notes && (
-                <div className="flex items-start gap-2 text-gray-600">
+                <div className="flex items-start gap-2 text-white">
                   <MessageSquare className="h-4 w-4 mt-0.5" />
                   <span className="text-sm">{appointment.notes}</span>
                 </div>

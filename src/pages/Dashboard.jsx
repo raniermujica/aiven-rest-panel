@@ -59,7 +59,7 @@ export function Dashboard() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando panel...</p>
+          <p className="mt-4 text-white">Cargando panel...</p>
         </div>
       </div>
     );
@@ -69,10 +69,10 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-white">
           Panel de Control
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-white mt-1">
           Bienvenido, {user?.name} - {user?.business?.name}
         </p>
       </div>
@@ -161,8 +161,8 @@ export function Dashboard() {
         <CardContent>
           {todayAppointments.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto" />
-              <p className="mt-4 text-gray-500">
+              <Calendar className="h-12 w-12 text-white mx-auto" />
+              <p className="mt-4 text-white">
                 No hay {terminology.bookings.toLowerCase()} para hoy
               </p>
               <Button
@@ -184,7 +184,7 @@ export function Dashboard() {
               {todayAppointments.length > 5 && (
                 <div className="text-center pt-3 border-t">
                   <button
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="text-sm text-blue-300 hover:text-blue-700"
                     onClick={() => navigate('/reservations/today')}
                   >
                     Ver {todayAppointments.length - 5} {terminology.bookings.toLowerCase()} más
@@ -226,7 +226,7 @@ function StatsCard({ title, value, icon: Icon, color, onClick }) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">{title}</p>
+            <p className="text-sm text-white">{title}</p>
             <p className="text-3xl font-bold mt-2">{value}</p>
           </div>
           <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
@@ -239,11 +239,12 @@ function StatsCard({ title, value, icon: Icon, color, onClick }) {
 }
 
 function QuickActionButton({ icon: Icon, label, description, onClick, color, disabled }) {
+  // ✅ CAMBIO 2: Colores unificados - mismo fondo que primera carta
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600 hover:bg-blue-100',
-    yellow: 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100',
-    purple: 'bg-purple-50 text-purple-600 hover:bg-purple-100',
-    gray: 'bg-gray-50 text-gray-400 cursor-not-allowed',
+    blue: 'bg-[#1a2f38] text-blue-400 hover:bg-[#09181f]',
+    yellow: 'bg-[#1a2f38] text-yellow-400 hover:bg-[#09181f]',
+    purple: 'bg-[#1a2f38] text-purple-400 hover:bg-[#09181f]',
+    gray: 'bg-[#1a2f38] text-gray-500 cursor-not-allowed opacity-60',
   };
 
   return (
@@ -251,18 +252,20 @@ function QuickActionButton({ icon: Icon, label, description, onClick, color, dis
       onClick={onClick}
       disabled={disabled}
       className={`
-        p-4 rounded-lg border-2 border-gray-200 
+        p-4 rounded-lg border border-gray-700
         transition-all text-left w-full
         ${disabled ? colorClasses.gray : colorClasses[color]}
       `}
     >
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-white">
+        {/* ✅ CAMBIO 3: Iconos con fondo más oscuro */}
+        <div className="p-2 rounded-lg bg-[#0a1820]">
           <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-gray-900">{label}</p>
-          <p className="text-sm text-gray-600 mt-1">{description}</p>
+          <p className="font-semibold text-white">{label}</p>
+          {/* ✅ CAMBIO 4: Descripción en gris claro */}
+          <p className="text-sm text-gray-400 mt-1">{description}</p>
         </div>
       </div>
     </button>
@@ -297,20 +300,21 @@ function AppointmentRow({ appointment, onClick }) {
 
   return (
     <div
-      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+      // ✅ CAMBIO 5: Fondo de filas de citas igual que botones
+      className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors cursor-pointer border border-gray-700"
       onClick={onClick}
     >
       <div className="flex items-center gap-4 flex-1">
         <div className="text-center">
-          <Clock className="h-5 w-5 text-gray-400 mx-auto" />
-          <span className="text-sm font-semibold text-gray-900 mt-1 block">
+          <Clock className="h-5 w-5 text-white mx-auto" />
+          <span className="text-sm font-semibold text-white mt-1 block">
             {timeStr}
           </span>
         </div>
         
         <div className="flex-1">
-          <p className="font-medium text-gray-900">{appointment.client_name}</p>
-          <p className="text-sm text-gray-600">
+          <p className="font-medium text-white">{appointment.client_name}</p>
+          <p className="text-sm text-gray-400">
             {appointment.service_name}
             {appointment.duration_minutes && ` • ${appointment.duration_minutes} min`}
           </p>
