@@ -43,8 +43,8 @@ export function TodayReservations() {
     try {
       setLoading(true);
       const [appointmentsData, statsData] = await Promise.all([
-        api.getTodayAppointments(),
-        api.getAppointmentStats(),
+        api.getTodayReservations(),
+        api.getReservationStats(),
       ]);
       
       setAppointments(appointmentsData.appointments || []);

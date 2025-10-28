@@ -77,15 +77,15 @@ class APIService {
   // Reservations
   async getReservations(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/reservations?${queryString}`);
+    return this.request(`/api/appointments?${queryString}`);
   }
 
   async getTodayReservations() {
-    return this.request('/api/reservations/today');
+    return this.request('/api/appointments/today');
   }
 
   async getReservationStats() {
-    return this.request('/api/reservations/stats');
+    return this.request('/api/appointments/stats');
   }
 
   async createReservation(data) {
@@ -95,7 +95,7 @@ class APIService {
     });
   }
 
-  async updateReservationStatus(reservationId, status) {
+  async updateAppointmentStatus(reservationId, status) {
     return this.request(`/api/reservations/${reservationId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
@@ -154,18 +154,39 @@ class APIService {
   }
 
   // Analytics
-  async getDashboardStats() {
-    return this.request('/api/analytics/dashboard');
+
+  async getOverviewStats() {
+    return this.request('/api/analytics/overview');
   }
 
-  async getMonthlyStats(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/analytics/monthly?${queryString}`);
+  async getAppointmentsByStatus(period = 'monthly') {
+    return this.request(`/api/analytics/appointments-status?period=${period}`);
   }
 
-  async getTopCustomers() {
-    return this.request('/api/analytics/top-customers');
+  async getTopServices(limit = 5) {
+    return this.request(`/api/analytics/top-services?limit=${limit}`);
   }
+
+  async getAppointmentsTimeline(days = 7) {
+    return this.request(`/api/analytics/appointments-timeline?days=${days}`);
+  }
+
+  async getRevenueStats(period = 'monthly') {
+    return this.request(`/api/analytics/revenue?period=${period}`);
+  }
+
+  // async getDashboardStats() {
+  //   return this.request('/api/analytics/dashboard');
+  // }
+
+  // async getMonthlyStats(params = {}) {
+  //   const queryString = new URLSearchParams(params).toString();
+  //   return this.request(`/api/analytics/monthly?${queryString}`);
+  // }
+
+  // async getTopCustomers() {
+  //   return this.request('/api/analytics/top-customers');
+  // }
 
   // Settings
   async getSettings() {

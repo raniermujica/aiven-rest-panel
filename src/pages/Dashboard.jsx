@@ -41,8 +41,8 @@ export function Dashboard() {
     try {
       setLoading(true);
       const [appointmentsData, statsData] = await Promise.all([
-        api.getTodayAppointments(),
-        api.getAppointmentStats(),
+        api.getTodayReservations(),
+        api.getReservationStats(),
       ]);
       
       setTodayAppointments(appointmentsData.appointments || []);
@@ -153,7 +153,7 @@ export function Dashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/reservations/today')}
+            onClick={() => navigate('/appointments/today')}
           >
             Ver Todas
           </Button>
@@ -178,14 +178,14 @@ export function Dashboard() {
                 <AppointmentRow
                   key={appointment.id}
                   appointment={appointment}
-                  onClick={() => navigate('/reservations/today')}
+                  onClick={() => navigate('/appointments/today')}
                 />
               ))}
               {todayAppointments.length > 5 && (
                 <div className="text-center pt-3 border-t">
                   <button
                     className="text-sm text-blue-300 hover:text-blue-700"
-                    onClick={() => navigate('/reservations/today')}
+                    onClick={() => navigate('/appointments/today')}
                   >
                     Ver {todayAppointments.length - 5} {terminology.bookings.toLowerCase()} más
                   </button>
@@ -239,7 +239,6 @@ function StatsCard({ title, value, icon: Icon, color, onClick }) {
 }
 
 function QuickActionButton({ icon: Icon, label, description, onClick, color, disabled }) {
-  // ✅ CAMBIO 2: Colores unificados - mismo fondo que primera carta
   const colorClasses = {
     blue: 'bg-[#1a2f38] text-blue-400 hover:bg-[#09181f]',
     yellow: 'bg-[#1a2f38] text-yellow-400 hover:bg-[#09181f]',
@@ -258,13 +257,11 @@ function QuickActionButton({ icon: Icon, label, description, onClick, color, dis
       `}
     >
       <div className="flex items-start gap-3">
-        {/* ✅ CAMBIO 3: Iconos con fondo más oscuro */}
         <div className="p-2 rounded-lg bg-[#0a1820]">
           <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1">
           <p className="font-semibold text-white">{label}</p>
-          {/* ✅ CAMBIO 4: Descripción en gris claro */}
           <p className="text-sm text-gray-400 mt-1">{description}</p>
         </div>
       </div>
@@ -300,7 +297,6 @@ function AppointmentRow({ appointment, onClick }) {
 
   return (
     <div
-      // ✅ CAMBIO 5: Fondo de filas de citas igual que botones
       className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors cursor-pointer border border-gray-700"
       onClick={onClick}
     >
