@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Calendar, 
-  Search, 
+import {
+  Calendar,
+  Search,
   Filter,
   Download,
   Eye,
@@ -44,11 +44,11 @@ export function AllReservations() {
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      
+
       const params = {
         date: selectedDate,
       };
-      
+
       if (statusFilter !== 'all') {
         params.status = statusFilter;
       }
@@ -74,7 +74,7 @@ export function AllReservations() {
 
   const handleDeleteAppointment = async (appointmentId) => {
     if (!confirm('¿Estás seguro de eliminar esta cita?')) return;
-    
+
     try {
       await api.deleteAppointment(appointmentId);
       await loadAppointments();
@@ -87,7 +87,7 @@ export function AllReservations() {
   // Filtrar por búsqueda
   const filteredAppointments = appointments.filter(apt => {
     if (!searchTerm) return true;
-    
+
     const search = searchTerm.toLowerCase();
     return (
       apt.client_name?.toLowerCase().includes(search) ||
@@ -98,30 +98,30 @@ export function AllReservations() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      pendiente: { 
-        label: 'Pendiente', 
-        color: 'bg-yellow-100 text-yellow-800', 
-        icon: Clock 
+      pendiente: {
+        label: 'Pendiente',
+        color: 'bg-yellow-100 text-yellow-800',
+        icon: Clock
       },
-      confirmado: { 
-        label: 'Confirmada', 
-        color: 'bg-green-100 text-green-800', 
-        icon: CheckCircle 
+      confirmado: {
+        label: 'Confirmada',
+        color: 'bg-green-100 text-green-800',
+        icon: CheckCircle
       },
-      completada: { 
-        label: 'Completada', 
-        color: 'bg-gray-100 text-gray-800', 
-        icon: CheckCircle 
+      completada: {
+        label: 'Completada',
+        color: 'bg-gray-100 text-gray-800',
+        icon: CheckCircle
       },
-      cancelada: { 
-        label: 'Cancelada', 
-        color: 'bg-red-100 text-red-800', 
-        icon: XCircle 
+      cancelada: {
+        label: 'Cancelada',
+        color: 'bg-red-100 text-red-800',
+        icon: XCircle
       },
-      no_show: { 
-        label: 'No Show', 
-        color: 'bg-red-100 text-red-800', 
-        icon: AlertCircle 
+      no_show: {
+        label: 'No Show',
+        color: 'bg-red-100 text-red-800',
+        icon: AlertCircle
       },
     };
     return statusMap[status] || statusMap.pendiente;
@@ -243,11 +243,11 @@ export function AllReservations() {
         <CardHeader>
           <CardTitle>
             {filteredAppointments.length} {terminology.bookings}
-            {selectedDate && ` - ${new Date(selectedDate).toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {selectedDate && ` - ${new Date(selectedDate).toLocaleDateString('es-ES', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}`}
           </CardTitle>
         </CardHeader>
@@ -318,8 +318,11 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
 
   // Formatear fecha y hora
   const appointmentDate = new Date(appointment.appointment_time);
-  const madridDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
-  const timeStr = madridDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
+    timeZone: 'Europe/Madrid',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   return (
     <div className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700">
@@ -376,7 +379,7 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
             Confirmar
           </Button>
         )}
-        
+
         {appointment.status === 'confirmado' && (
           <Button
             size="sm"

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Clock, 
-  User, 
-  Users as UsersIcon, 
-  Phone, 
-  CheckCircle, 
+import {
+  Clock,
+  User,
+  Users as UsersIcon,
+  Phone,
+  CheckCircle,
   AlertCircle,
   Star,
   AlertTriangle,
@@ -46,7 +46,7 @@ export function TodayReservations() {
         api.getTodayReservations(),
         api.getReservationStats(),
       ]);
-      
+
       setAppointments(appointmentsData.appointments || []);
       setStats(statsData.today || {});
     } catch (error) {
@@ -68,7 +68,7 @@ export function TodayReservations() {
 
   const handleDeleteAppointment = async (appointmentId) => {
     if (!confirm('¿Estás seguro de eliminar esta cita?')) return;
-    
+
     try {
       await api.deleteAppointment(appointmentId);
       await loadAppointments();
@@ -103,11 +103,11 @@ export function TodayReservations() {
             {terminology.bookings} de Hoy
           </h1>
           <p className="text-white mt-1">
-            {new Date().toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {new Date().toLocaleDateString('es-ES', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
@@ -177,8 +177,8 @@ export function TodayReservations() {
       {/* Appointments List */}
       <div className="grid gap-4">
         {filteredAppointments.map((appointment) => (
-          <AppointmentCard 
-            key={appointment.id} 
+          <AppointmentCard
+            key={appointment.id}
             appointment={appointment}
             onMarkStatus={handleMarkStatus}
             onDelete={handleDeleteAppointment}
@@ -291,8 +291,11 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
 
   // Formatear hora (convertir UTC a Madrid)
   const appointmentDate = new Date(appointment.appointment_time);
-  const madridDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
-  const timeStr = madridDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
+    timeZone: 'Europe/Madrid',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   return (
     <Card>
@@ -313,7 +316,7 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
                 <User className="h-4 w-4" />
                 <span className="font-medium">{appointment.client_name}</span>
               </div>
-              
+
               <div className="flex items-center gap-2 text-white">
                 <Phone className="h-4 w-4" />
                 <span>{appointment.client_phone}</span>
@@ -350,7 +353,7 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
                 Confirmar
               </Button>
             )}
-            
+
             {appointment.status === 'confirmado' && (
               <Button
                 size="sm"
