@@ -108,12 +108,23 @@ class APIService {
     return this.request(`/api/customers?${queryString}`);
   }
 
-  async getCustomer(customerId) {
-    return this.request(`/api/customers/${customerId}`);
-  }
+   async getCustomerProfile(customerId) {
+  const response = await this.request(`/api/customers/${customerId}/profile`);
+  return response;
+}
 
   async getCustomerStats() {
     return this.request('/api/customers/stats');
+  }
+
+  async toggleCustomerVip(customerId) { 
+  return this.request(`/api/customers/${customerId}/vip`, {
+    method: 'PATCH',
+  });
+}
+
+  async getCustomer(customerId) {
+    return this.request(`/api/customers/${customerId}`);
   }
 
   async createCustomer(data) {
@@ -274,6 +285,24 @@ class APIService {
       body: JSON.stringify(data),
     });
   }
+
+  async getAppointmentById(appointmentId) {
+  return this.request(`/api/appointments/${appointmentId}/details`);
+}
+
+async updateAppointment(appointmentId, data) {
+  return this.request(`/api/appointments/${appointmentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+async deleteAppointment(appointmentId) {
+  return this.request(`/api/appointments/${appointmentId}`, {
+    method: 'DELETE',
+  });
+}
+
 };
 
 export const api = new APIService();

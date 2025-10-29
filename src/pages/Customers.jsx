@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
+import {
   Search,
   Star,
   Phone,
@@ -25,20 +25,31 @@ import { useAuthStore } from '@/store/authStore';
 export function Customers() {
   const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [stats, setStats] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [searchTerm, setSearchTerm] = useState('');
   const [filterVip, setFilterVip] = useState(searchParams.get('filter') === 'vip');
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
   const terminology = user?.business?.terminology || {
     customer: 'Cliente',
     customers: 'Clientes',
   };
 
+  // useEffect(() => {
+  //   loadCustomers();
+  //   loadStats();
+  // }, [filterVip]);
   useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    if (!urlSearch && searchTerm) {
+      setSearchTerm('');
+    }
+
     loadCustomers();
     loadStats();
   }, [filterVip]);
@@ -47,11 +58,11 @@ export function Customers() {
     try {
       setLoading(true);
       const params = {};
-      
+
       if (searchTerm) {
         params.search = searchTerm;
       }
-      
+
       if (filterVip) {
         params.is_vip = 'true';
       }
@@ -77,6 +88,7 @@ export function Customers() {
   const handleSearch = (e) => {
     e.preventDefault();
     loadCustomers();
+    setSearchParams({})
   };
 
   const handleToggleVip = async (customerId) => {
@@ -106,7 +118,7 @@ export function Customers() {
   };
 
   const handleViewCustomer = (customer) => {
-    setSelectedCustomer(customer);
+    navigate(`/customers/${customer.id}`);
   };
 
   if (loading) {
@@ -169,19 +181,32 @@ export function Customers() {
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <form onSubmit={handleSearch} className="flex-1">
-              <div className="relative">
-                {/* ✅ CAMBIO 2: Icono en gris claro */}
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  type="text"
-                  placeholder={`Buscar ${terminology.customers.toLowerCase()}...`}
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder={`Buscar ${terminology.customers.toLowerCase()}...`}
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSearchParams({});
+                        loadCustomers();
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
-
             {/* VIP Filter */}
             <div className="flex gap-2">
               <Button
@@ -223,7 +248,7 @@ export function Customers() {
               {/* ✅ CAMBIO 3: Icono en gris claro */}
               <User className="h-12 w-12 text-gray-400 mx-auto" />
               <p className="mt-4 text-white">
-                No hay {terminology.customers.toLowerCase()} 
+                No hay {terminology.customers.toLowerCase()}
                 {filterVip && ' VIP'} {searchTerm && ' que coincidan con la búsqueda'}
               </p>
               <Button
@@ -594,7 +619,7 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
               <div className="bg-[#0a1820] p-4 rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">Primera Visita</p>
                 <p className="text-lg font-semibold text-white">
-                  {customer.first_visit_at 
+                  {customer.first_visit_at
                     ? new Date(customer.first_visit_at).toLocaleDateString('es-ES')
                     : 'N/A'}
                 </p>
@@ -625,8 +650,8 @@ function CustomerDetailModal({ customer, onClose, onUpdate }) {
                       <span className={cn(
                         'px-2 py-1 rounded-full text-xs',
                         apt.status === 'completada' ? 'bg-green-100 text-green-800' :
-                        apt.status === 'confirmado' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
+                          apt.status === 'confirmado' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
                       )}>
                         {apt.status}
                       </span>

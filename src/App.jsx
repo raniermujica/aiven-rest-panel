@@ -12,6 +12,8 @@ import { Settings } from './pages/Settings';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { useAuthStore } from './store/authStore';
 import { Calendar } from './pages/Calendar';
+import { CustomerProfile } from '@/pages/CustomerProfile';
+import { AppointmentDetail } from '@/pages/AppointmentDetail';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -61,13 +63,15 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/reservations/today" element={<TodayReservations />} />
                     <Route path="/reservations" element={<AllReservations />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/waitlist" element={<Waitlist />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/reservations/today" element={<TodayReservations />} />
+                    <Route path="/customers/:customerId" element={<CustomerProfile />} />
+                    <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

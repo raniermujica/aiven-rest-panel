@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
 import { adaptAppointmentsToReservations } from '@/utils/appointmentAdapter';
 
 export function TodayReservations() {
   const { user } = useAuthStore();
+  const navigate = useNavigate(); 
   const [filter, setFilter] = useState('all');
   const [appointments, setAppointments] = useState([]);
   const [stats, setStats] = useState(null);
@@ -56,18 +58,18 @@ export function TodayReservations() {
     }
   };
 
-  const handleMarkStatus = async (appointmentId, newStatus) => {
-    try {
-      await api.updateAppointmentStatus(appointmentId, newStatus);
-      await loadAppointments();
-    } catch (error) {
-      console.error('Error actualizando estado:', error);
-      alert('Error al actualizar el estado');
-    }
+  const handleNavigateToAppointment = (appointmentId) => {
+    navigate(`/appointments/${appointmentId}`);
   };
 
   const handleDeleteAppointment = async (appointmentId) => {
-    if (!confirm('¿Estás seguro de eliminar esta cita?')) return;
+    if (!confirm('⚠️ ¿Estás seguro de que deseas eliminar esta cita?')) {
+      return;
+    }
+    
+    if (!confirm('Esta acción NO se puede deshacer. ¿Confirmas la eliminación?')) {
+      return;
+    }
 
     try {
       await api.deleteAppointment(appointmentId);
@@ -180,7 +182,7 @@ export function TodayReservations() {
           <AppointmentCard
             key={appointment.id}
             appointment={appointment}
-            onMarkStatus={handleMarkStatus}
+            onNavigate={handleNavigateToAppointment}
             onDelete={handleDeleteAppointment}
             terminology={terminology}
           />
@@ -254,7 +256,7 @@ function FilterButton({ label, count, active, onClick }) {
   );
 }
 
-function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
+function AppointmentCard({ appointment, onNavigate, onDelete, terminology }) {
   const getStatusInfo = (status) => {
     const statusMap = {
       pendiente: {
@@ -298,7 +300,10 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
   });
 
   return (
-    <Card>
+    <Card 
+      className="cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => onNavigate(appointment.id)}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -344,34 +349,15 @@ function AppointmentCard({ appointment, onMarkStatus, onDelete, terminology }) {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-2">
-            {appointment.status === 'pendiente' && (
-              <Button
-                size="sm"
-                onClick={() => onMarkStatus(appointment.id, 'confirmado')}
-              >
-                Confirmar
-              </Button>
-            )}
-
-            {appointment.status === 'confirmado' && (
-              <Button
-                size="sm"
-                onClick={() => onMarkStatus(appointment.id, 'completada')}
-              >
-                Completar
-              </Button>
-            )}
-
-            {(appointment.status === 'pendiente' || appointment.status === 'confirmado') && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onMarkStatus(appointment.id, 'cancelada')}
-              >
-                Cancelar
-              </Button>
-            )}
+          <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onNavigate(appointment.id)}
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Ver Detalles
+            </Button>
 
             <Button
               size="sm"

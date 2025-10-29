@@ -19,11 +19,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
 
 export function AllReservations() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -62,18 +64,18 @@ export function AllReservations() {
     }
   };
 
-  const handleStatusChange = async (appointmentId, newStatus) => {
-    try {
-      await api.updateAppointmentStatus(appointmentId, newStatus);
-      await loadAppointments();
-    } catch (error) {
-      console.error('Error actualizando estado:', error);
-      alert('Error al actualizar el estado');
-    }
+  const handleNavigateToAppointment = (appointmentId) => {
+    navigate(`/appointments/${appointmentId}`);
   };
 
   const handleDeleteAppointment = async (appointmentId) => {
-    if (!confirm('¿Estás seguro de eliminar esta cita?')) return;
+    if (!confirm('⚠️ ¿Estás seguro de que deseas eliminar esta cita?')) {
+      return;
+    }
+    
+    if (!confirm('Esta acción NO se puede deshacer. ¿Confirmas la eliminación?')) {
+      return;
+    }
 
     try {
       await api.deleteAppointment(appointmentId);
@@ -254,7 +256,6 @@ export function AllReservations() {
         <CardContent>
           {filteredAppointments.length === 0 ? (
             <div className="text-center py-12">
-              {/* ✅ CAMBIO 6: Icono en gris claro */}
               <Calendar className="h-12 w-12 text-gray-400 mx-auto" />
               <p className="mt-4 text-white">
                 No hay {terminology.bookings.toLowerCase()} para esta fecha
@@ -272,7 +273,7 @@ export function AllReservations() {
                 <AppointmentCard
                   key={appointment.id}
                   appointment={appointment}
-                  onStatusChange={handleStatusChange}
+                  onNavigate={handleNavigateToAppointment}
                   onDelete={handleDeleteAppointment}
                   getStatusBadge={getStatusBadge}
                 />
@@ -312,7 +313,7 @@ function StatCard({ label, value, color }) {
   );
 }
 
-function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge }) {
+function AppointmentCard({ appointment, onNavigate, onDelete, getStatusBadge }) {
   const statusInfo = getStatusBadge(appointment.status);
   const StatusIcon = statusInfo.icon;
 
@@ -325,7 +326,10 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
   });
 
   return (
-    <div className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700">
+    <div 
+      className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700 cursor-pointer"
+      onClick={() => onNavigate(appointment.id)}
+    >
       <div className="flex items-center gap-4 flex-1">
         {/* Time */}
         <div className="text-center min-w-[80px]">
@@ -370,34 +374,15 @@ function AppointmentCard({ appointment, onStatusChange, onDelete, getStatusBadge
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 ml-4">
-        {appointment.status === 'pendiente' && (
-          <Button
-            size="sm"
-            onClick={() => onStatusChange(appointment.id, 'confirmado')}
-          >
-            Confirmar
-          </Button>
-        )}
-
-        {appointment.status === 'confirmado' && (
-          <Button
-            size="sm"
-            onClick={() => onStatusChange(appointment.id, 'completada')}
-          >
-            Completar
-          </Button>
-        )}
-
-        {(appointment.status === 'pendiente' || appointment.status === 'confirmado') && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onStatusChange(appointment.id, 'cancelada')}
-          >
-            Cancelar
-          </Button>
-        )}
+      <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onNavigate(appointment.id)}
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          Ver
+        </Button>
 
         <Button
           size="sm"

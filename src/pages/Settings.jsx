@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { api } from '@/services/api';
 import { 
   Building2, 
   Users, 
@@ -18,7 +19,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { api } from '@/services/api';
 import { cn } from '@/lib/utils';
 
 export function Settings() {
@@ -77,7 +77,7 @@ export function Settings() {
 }
 
 function GeneralSettings({ user }) {
-  const { updateBusinessName } = useAuthStore(); 
+  const { updateBusinessName } = useAuthStore();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -122,28 +122,55 @@ function GeneralSettings({ user }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setSaving(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setSuccess('');
+  setSaving(true);
 
-    try {
-      await api.updateSettings(formData);
+  try {
+    console.log('1. Guardando settings...');
+    await api.updateSettings(formData);
+    
+    console.log('2. Recargando usuario...');
+    // await refreshUser();
+    await updateBusinessName();
+    
+    console.log('3. Usuario actualizado en store');
+    console.log('3. Usuario actualizado:', user);
+    
+    setSuccess('Configuración actualizada correctamente');
+    setTimeout(() => setSuccess(''), 3000);
+  } catch (error) {
+    console.error('Error actualizando configuración:', error);
+    setError(error.message || 'Error al actualizar configuración');
+  } finally {
+    setSaving(false);
+  }
+};
 
-      if (formData.name) {
-        updateBusinessName(formData.name);
-      }
-      
-      setSuccess('Configuración actualizada correctamente');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Error actualizando configuración:', error);
-      setError(error.message || 'Error al actualizar configuración');
-    } finally {
-      setSaving(false);
-    }
-  };
+// const handleSubmit = async (e) => {
+//   // ... (código de saving)
+//   try {
+//     console.log('1. Guardando settings en BD...'); // (Mensaje actualizado)
+//     await api.updateSettings(formData);
+
+//     // --- 💡 INICIO DE LA CORRECCIÓN ---
+//     console.log('2. Actualizando nombre en el store local...'); // (Mensaje actualizado)
+//     updateBusinessName(formData.name); // <-- CAMBIO: Se usa la función correcta del store
+
+//     console.log('3. Store actualizado con:', formData.name); // (Mensaje actualizado)
+//     // --- FIN DE LA CORRECCIÓN ---
+
+//     setSuccess('Configuración actualizada correctamente');
+//        setTimeout(() => setSuccess(''), 3000);
+//   } catch (error) {
+//     console.error('Error actualizando configuración:', error);
+//     setError(error.message || 'Error al actualizar configuración');
+//   } finally {
+//     setSaving(false);
+//   }
+// };
   
   if (loading) {
     return (

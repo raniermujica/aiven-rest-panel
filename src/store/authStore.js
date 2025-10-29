@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '../services/api';
 
 export const useAuthStore = create(
   persist(
@@ -32,14 +33,14 @@ export const useAuthStore = create(
         });
       },
 
-      updateUser: (userData) => {
-        set((state) => ({
-          user: {
-            ...state.user,
-            ...userData,
-          },
-        }));
-      },
+      // updateUser: (userData) => {
+      //   set((state) => ({
+      //     user: {
+      //       ...state.user,
+      //       ...userData,
+      //     },
+      //   }));
+      // },
 
       updateBusinessName: (name) => {
         set((state) => ({
@@ -51,6 +52,16 @@ export const useAuthStore = create(
             },
           },
         }));
+      },
+
+      refreshUser: async () => {
+        try {
+          const data = await api.getMe();
+          set({ user: data.user });
+        } catch (error) {
+          console.error('Error refrescando usuario:', error);
+           throw error;
+        }
       },
 
       logout: () => {

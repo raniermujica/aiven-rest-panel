@@ -153,7 +153,7 @@ export function Dashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/appointments/today')}
+            onClick={() => navigate('/reservations')}
           >
             Ver Todas
           </Button>
@@ -178,7 +178,7 @@ export function Dashboard() {
                 <AppointmentRow
                   key={appointment.id}
                   appointment={appointment}
-                  onClick={() => navigate('/appointments/today')}
+                  onClick={() => navigate(`/appointments/${appointment.id}`)}
                 />
               ))}
               {todayAppointments.length > 5 && (
