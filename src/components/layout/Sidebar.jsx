@@ -90,7 +90,7 @@ export function Sidebar() {
     { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: CalendarDays },
     {name: 'Calendario', href: '/calendar', icon: CalendarDays },
     { name: 'Clientes', href: '/customers', icon: Users },
-    { name: 'Lista de espera', href: '/waitlist', icon: Clock },
+    // { name: 'Lista de espera', href: '/waitlist', icon: Clock },
     { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
     { name: 'Configuración', href: '/settings', icon: Settings },
   ];

@@ -112,7 +112,9 @@ export function TodayReservations() {
             })}
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button 
+        variant="outline"
+        onClick={() => setShowCreateModal(true)}>
           + Nueva {terminology.booking}
         </Button>
       </div>

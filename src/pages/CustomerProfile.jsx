@@ -28,7 +28,7 @@ export function CustomerProfile() {
   const { customerId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  
+
   const [customer, setCustomer] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [stats, setStats] = useState(null);
@@ -65,11 +65,8 @@ export function CustomerProfile() {
     }
   };
 
-  const handleModalClose = (didCreate) => {
+  const handleModalClose = () => {
     setShowCreateModal(false);
-    if (didCreate) {
-      loadCustomerProfile(); 
-    }
   };
 
   const handleSaveEdit = async () => {
@@ -157,14 +154,18 @@ export function CustomerProfile() {
                 <Edit className="h-4 w-4" />
                 Editar
               </Button>
-              <Button onClick={() => setShowCreateModal(true)} className="gap-2">
-              <CalendarPlus className="h-4 w-4" />
-              Agendar {terminology.booking}
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Agendar {terminology.booking}
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleDelete}
-                className="gap-2 text-red-500 hover:text-red-600"
+                className="gap-2 hover:text-white"
               >
                 <Trash2 className="h-4 w-4" />
                 Eliminar
@@ -205,19 +206,6 @@ export function CustomerProfile() {
               customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
             )}>
               {customer.name.charAt(0).toUpperCase()}
-              <CreateAppointmentModal
-        isOpen={showCreateModal}
-        onClose={handleModalClose} // Llama a la nueva función al cerrar
-        onSuccess={() => handleModalClose(true)} // Llama a la función y recarga
-
-        // Esta es la parte clave: precarga los datos del cliente
-        initialCustomer={{
-          id: customer.id,
-          name: customer.name,
-          phone: customer.phone,
-          email: customer.email
-        }}
-      />
             </div>
 
             {/* Info principal */}
@@ -314,7 +302,7 @@ export function CustomerProfile() {
               <StatCard
                 icon={Clock}
                 label="Última Visita"
-                value={stats.lastVisitDate 
+                value={stats.lastVisitDate
                   ? new Date(stats.lastVisitDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
                   : 'N/A'}
                 color="orange"
@@ -424,7 +412,7 @@ export function CustomerProfile() {
               <div className="space-y-3">
                 <InfoRow
                   label="Primera visita"
-                  value={stats?.firstVisit 
+                  value={stats?.firstVisit
                     ? new Date(stats.firstVisit).toLocaleDateString('es-ES')
                     : 'N/A'}
                 />
@@ -434,7 +422,7 @@ export function CustomerProfile() {
                 />
                 <InfoRow
                   label="Cliente desde"
-                  value={customer.first_visit_at 
+                  value={customer.first_visit_at
                     ? `${Math.floor((new Date() - new Date(customer.first_visit_at)) / (1000 * 60 * 60 * 24))} días`
                     : 'N/A'}
                 />
@@ -443,6 +431,21 @@ export function CustomerProfile() {
           </Card>
         </div>
       )}
+
+      {/* Modal de Nueva Cita */}
+      <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={handleModalClose}
+        onSuccess={() => {
+          handleModalClose();
+          loadCustomerProfile();
+        }}
+        initialCustomer={{
+          name: customer?.name || '',
+          phone: customer?.phone || '',
+          email: customer?.email || ''
+        }}
+      />
     </div>
   );
 }
@@ -493,14 +496,14 @@ function AppointmentItem({ appointment, terminology }) {
   };
 
   const date = new Date(appointment.appointment_time);
-  const dateStr = date.toLocaleDateString('es-ES', { 
-    day: 'numeric', 
-    month: 'short', 
-    year: 'numeric' 
+  const dateStr = date.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
   });
-  const timeStr = date.toLocaleTimeString('es-ES', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  const timeStr = date.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   return (

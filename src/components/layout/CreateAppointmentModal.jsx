@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'; // ✅ Agregar useCallback
+import { useState, useEffect, useCallback } from 'react';
 import { X, AlertCircle, CheckCircle, Clock, Plus, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
-export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
+export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCustomer = null }) {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,16 +34,16 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     service: 'Servicio',
   };
 
-  // Cargar servicios
+  // Cargar servicios y datos iniciales
   useEffect(() => {
     if (isOpen) {
       loadServices();
       
       const today = new Date().toISOString().split('T')[0];
       setFormData({
-        clientName: '',
-        clientPhone: '',
-        clientEmail: '',
+        clientName: initialCustomer?.name || '',
+        clientPhone: initialCustomer?.phone || '',
+        clientEmail: initialCustomer?.email || '',
         scheduledDate: today,
         appointmentTime: '10:00',
         notes: '',
@@ -53,7 +53,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
       setTempServiceId('');
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialCustomer]);
   
   const loadServices = async () => {
     try {
@@ -64,12 +64,12 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  // ✅ Calcular duración total del carrito
+  // Calcular duración total del carrito
   const getTotalDuration = useCallback(() => {
     return selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
   }, [selectedServices]);
 
-  // ✅ Agregar servicio al carrito
+  // Agregar servicio al carrito
   const handleAddService = () => {
     if (!tempServiceId) return;
     
@@ -92,12 +92,12 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     setTempServiceId('');
   };
 
-  // ✅ Eliminar servicio del carrito
+  // Eliminar servicio del carrito
   const handleRemoveService = (serviceId) => {
     setSelectedServices(selectedServices.filter(s => s.serviceId !== serviceId));
   };
 
-  // ✅ FUNCIÓN DE VERIFICACIÓN DE DISPONIBILIDAD (con useCallback)
+  // Verificación de disponibilidad
   const checkAvailability = useCallback(async () => {
     if (!formData.scheduledDate || !formData.appointmentTime || selectedServices.length === 0) {
       setAvailability(null);
@@ -124,12 +124,12 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     }
   }, [formData.scheduledDate, formData.appointmentTime, selectedServices]);
 
-  // ✅ Ejecutar verificación cuando cambian fecha/hora/servicios
+  // Ejecutar verificación cuando cambian fecha/hora/servicios
   useEffect(() => {
     checkAvailability();
   }, [checkAvailability]);
 
-  // ✅ Validación de email
+  // Validación de email
   const validateEmail = (email) => {
     if (!email) return true;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -257,7 +257,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             />
           </div>
 
-          {/* ✅ EMAIL */}
+          {/* EMAIL */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Email
