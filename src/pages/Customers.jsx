@@ -34,6 +34,7 @@ export function Customers() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const terminology = user?.business?.terminology || {
     customer: 'Cliente',
@@ -56,7 +57,9 @@ export function Customers() {
 
   const loadCustomers = async () => {
     try {
+      if (initialLoad) {
       setLoading(true);
+      }
       const params = {};
 
       if (searchTerm) {
@@ -73,6 +76,7 @@ export function Customers() {
       console.error('Error cargando clientes:', error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -335,53 +339,53 @@ function StatsCard({ title, value, icon: Icon, color }) {
 
 function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
   return (
-    // ✅ CAMBIO 6: Fondo oscuro como otras páginas
-    <div className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700">
-      <div className="flex items-center gap-4 flex-1">
+    <div className="flex items-start justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700 gap-3">
+      <div className="flex items-start gap-3 flex-1 min-w-0"> {/* ✅ min-w-0 para permitir truncate */}
         {/* Avatar */}
         <div className={cn(
-          'w-12 h-12 rounded-full flex items-center justify-center font-semibold',
+          'w-12 h-12 rounded-full flex items-center justify-center font-semibold flex-shrink-0',
           customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
         )}>
           {customer.name.charAt(0).toUpperCase()}
         </div>
 
         {/* Info */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-white">{customer.name}</span>
+        <div className="flex-1 min-w-0"> {/* ✅ min-w-0 importante para truncate */}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium text-white truncate">{customer.name}</span>
             {customer.is_vip && (
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
             )}
           </div>
-          <div className="flex items-center gap-4 mt-1">
-            <div className="flex items-center gap-1">
-              {/* ✅ CAMBIO 7: Iconos en gris claro */}
-              <Phone className="h-3 w-3 text-gray-400" />
-              <span className="text-sm text-gray-400">{customer.phone}</span>
+          
+          {/* Teléfono y Email en columna en móvil, fila en desktop */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
+            <div className="flex items-center gap-1 min-w-0">
+              <Phone className="h-3 w-3 text-gray-400 flex-shrink-0" />
+              <span className="text-sm text-gray-400 truncate">{customer.phone}</span>
             </div>
             {customer.email && (
-              <div className="flex items-center gap-1">
-                <Mail className="h-3 w-3 text-gray-400" />
-                <span className="text-sm text-gray-400">{customer.email}</span>
+              <div className="flex items-center gap-1 min-w-0">
+                <Mail className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                <span className="text-sm text-gray-400 truncate">{customer.email}</span>
               </div>
             )}
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="hidden md:flex items-center gap-6">
-          <div className="text-center">
-            <Calendar className="h-4 w-4 text-gray-400 mx-auto" />
-            <p className="text-xs text-gray-400 mt-1">
-              {customer.total_visits || 0} visitas
-            </p>
+          {/* Stats - Solo visible en desktop */}
+          <div className="hidden md:flex items-center gap-6 mt-2">
+            <div className="text-center">
+              <Calendar className="h-4 w-4 text-gray-400 mx-auto" />
+              <p className="text-xs text-gray-400 mt-1">
+                {customer.total_visits || 0} visitas
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 ml-4">
+      {/* Actions - Botones verticales en móvil, horizontales en desktop */}
+      <div className="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0">
         <Button
           size="sm"
           variant="outline"

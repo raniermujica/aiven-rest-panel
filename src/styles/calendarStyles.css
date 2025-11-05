@@ -1,0 +1,118 @@
+/* FullCalendar Core Styles */
+.fc {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: white;
+  border-radius: 8px;
+}
+
+.fc-view-harness {
+  background: white;
+}
+
+/* Toolbar */
+.fc-toolbar {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Botones */
+.fc-button {
+  background: #3b82f6;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.fc-button:hover {
+  background: #2563eb;
+}
+
+.fc-button-active {
+  background: #1d4ed8;
+}
+
+/* Días de la semana */
+.fc-col-header-cell {
+  background: #1f2937;
+  color: white;
+  padding: 1rem;
+  font-weight: 600;
+  border: none;
+}
+
+/* Celdas del calendario */
+.fc-daygrid-day {
+  border: 1px solid #e5e7eb;
+}
+
+.fc-daygrid-day:hover {
+  background: #f3f4f6;
+}
+
+.fc-day-today {
+  background: #dbeafe !important;
+}
+
+/* Eventos */
+.fc-event {
+  border-radius: 6px;
+  border: none;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 2px;
+}
+
+.fc-event:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.fc-event-time {
+  font-weight: 600;
+}
+
+.fc-event-title {
+  font-weight: 500;
+}
+
+/* TimeGrid (vista semanal) */
+.fc-timegrid-slot {
+  height: 3rem;
+  border-color: #e5e7eb;
+}
+
+.fc-timegrid-slot-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Scrollbar personalizado */
+.fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

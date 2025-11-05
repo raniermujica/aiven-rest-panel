@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/services/api';
-import { 
-  Building2, 
-  Users, 
+import {
+  Building2,
+  Users,
   Clock,
   Shield,
   Save,
@@ -16,7 +16,13 @@ import {
   Edit,
   Scissors,
   X,
-  AlertCircle
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  LogOut,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -28,6 +34,7 @@ export function Settings() {
   const tabs = [
     { id: 'general', label: 'General', icon: Building2 },
     { id: 'services', label: 'Servicios', icon: Scissors },
+    { id: 'agent', label: 'Agente IA', icon: Bot },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'hours', label: 'Horarios', icon: Clock },
     { id: 'security', label: 'Seguridad', icon: Shield },
@@ -45,18 +52,17 @@ export function Settings() {
 
       {/* Tabs */}
       <div className="border-b border-gray-700">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto"> 
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-400'
                     : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
-                }`}
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 {tab.label}
@@ -69,6 +75,7 @@ export function Settings() {
       {/* Tab Content */}
       {activeTab === 'general' && <GeneralSettings user={user} />}
       {activeTab === 'services' && <ServicesSettings user={user} />}
+      {activeTab === 'agent' && <AgentSettings user={user} />}
       {activeTab === 'users' && <UsersSettings user={user} />}
       {activeTab === 'hours' && <HoursSettings user={user} />}
       {activeTab === 'security' && <SecuritySettings user={user} />}
@@ -102,7 +109,7 @@ function GeneralSettings({ user }) {
     try {
       setLoading(true);
       const data = await api.getSettings();
-      
+
       setFormData({
         name: data.settings.name || '',
         email: data.settings.email || '',
@@ -122,56 +129,56 @@ function GeneralSettings({ user }) {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setSuccess('');
-  setSaving(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setSaving(true);
 
-  try {
-    console.log('1. Guardando settings...');
-    await api.updateSettings(formData);
-    
-    console.log('2. Recargando usuario...');
-    // await refreshUser();
-    await updateBusinessName();
-    
-    console.log('3. Usuario actualizado en store');
-    console.log('3. Usuario actualizado:', user);
-    
-    setSuccess('Configuración actualizada correctamente');
-    setTimeout(() => setSuccess(''), 3000);
-  } catch (error) {
-    console.error('Error actualizando configuración:', error);
-    setError(error.message || 'Error al actualizar configuración');
-  } finally {
-    setSaving(false);
-  }
-};
+    try {
+      console.log('1. Guardando settings...');
+      await api.updateSettings(formData);
 
-// const handleSubmit = async (e) => {
-//   // ... (código de saving)
-//   try {
-//     console.log('1. Guardando settings en BD...'); // (Mensaje actualizado)
-//     await api.updateSettings(formData);
+      console.log('2. Recargando usuario...');
+      // await refreshUser();
+      await updateBusinessName();
 
-//     // --- 💡 INICIO DE LA CORRECCIÓN ---
-//     console.log('2. Actualizando nombre en el store local...'); // (Mensaje actualizado)
-//     updateBusinessName(formData.name); // <-- CAMBIO: Se usa la función correcta del store
+      console.log('3. Usuario actualizado en store');
+      console.log('3. Usuario actualizado:', user);
 
-//     console.log('3. Store actualizado con:', formData.name); // (Mensaje actualizado)
-//     // --- FIN DE LA CORRECCIÓN ---
+      setSuccess('Configuración actualizada correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error actualizando configuración:', error);
+      setError(error.message || 'Error al actualizar configuración');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-//     setSuccess('Configuración actualizada correctamente');
-//        setTimeout(() => setSuccess(''), 3000);
-//   } catch (error) {
-//     console.error('Error actualizando configuración:', error);
-//     setError(error.message || 'Error al actualizar configuración');
-//   } finally {
-//     setSaving(false);
-//   }
-// };
-  
+  // const handleSubmit = async (e) => {
+  //   // ... (código de saving)
+  //   try {
+  //     console.log('1. Guardando settings en BD...'); // (Mensaje actualizado)
+  //     await api.updateSettings(formData);
+
+  //     // --- 💡 INICIO DE LA CORRECCIÓN ---
+  //     console.log('2. Actualizando nombre en el store local...'); // (Mensaje actualizado)
+  //     updateBusinessName(formData.name); // <-- CAMBIO: Se usa la función correcta del store
+
+  //     console.log('3. Store actualizado con:', formData.name); // (Mensaje actualizado)
+  //     // --- FIN DE LA CORRECCIÓN ---
+
+  //     setSuccess('Configuración actualizada correctamente');
+  //        setTimeout(() => setSuccess(''), 3000);
+  //   } catch (error) {
+  //     console.error('Error actualizando configuración:', error);
+  //     setError(error.message || 'Error al actualizar configuración');
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1230,6 +1237,276 @@ function SecuritySettings({ user }) {
               </span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AgentSettings({ user }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [status, setStatus] = useState(null); 
+  const [qrCode, setQrCode] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  const checkStatus = async () => {
+    try {
+      setError('');
+      const data = await api.getWhatsAppStatus();
+      setStatus(data);
+      if (data.isConnected) {
+        setQrCode(null); 
+      }
+      return data;
+    } catch (err) {
+      console.error('Error cargando estado:', err);
+      setError(err.message || 'Error al cargar el estado de WhatsApp');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkStatus();
+  }, []);
+
+  // Polling para actualizar el estado cuando se escanea el QR
+  useEffect(() => {
+    let intervalId = null;
+
+    // Polling solo si estamos esperando una conexión (QR visible o estado 'connecting')
+    const needsPolling = (qrCode || status?.state === 'connecting') && !status?.isConnected;
+
+    if (needsPolling) {
+      intervalId = setInterval(async () => {
+        console.log('Polling WhatsApp status...');
+        try {
+          const data = await api.getWhatsAppStatus();
+          setStatus(data); // El estado 'status' ahora contendrá { isConnected, instanceName, phoneNumber }
+          
+          if (data.isConnected) {
+            setQrCode(null); // Limpiar QR
+            setError('');
+            clearInterval(intervalId); 
+          }
+        } catch (err) {
+          console.error('Error polling status:', err);
+        }
+      }, 5000); // Poll cada 5 segundos
+    }
+
+    // Limpiar intervalo
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [qrCode, status]); 
+
+  // Handler para Iniciar Conexión / Pedir QR
+  const handleInitialize = async () => {
+    setIsInitializing(true);
+    setError('');
+    setQrCode(null);
+    try {
+      const data = await api.initializeWhatsApp();
+      
+      if (data.isConnected) {
+        setStatus({ isConnected: true, state: 'open' });
+        checkStatus(); // Llamar a checkStatus para obtener los detalles (nombre y número)
+      } else if (data.qrCode) {
+        setQrCode(data.qrCode);
+      } else if (data.isConnecting) {
+        setStatus({ isConnected: false, state: 'connecting' });
+      }
+      
+    } catch (err) {
+      console.error('Error inicializando:', err);
+      setError(err.message || 'Error al inicializar WhatsApp');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+  
+  // Handler para Refrescar QR (si el anterior expiró)
+  const handleRefreshQR = async () => {
+    setIsInitializing(true); 
+    setError('');
+    try {
+      const data = await api.refreshWhatsAppQR();
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+      }
+    } catch (err) {
+      console.error('Error refrescando QR:', err);
+      setError(err.message || 'Error al refrescar el QR');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  // Handler para Desconectar
+  const handleDisconnect = async () => {
+    if (!confirm('¿Estás seguro de que quieres desconectar el Agente IA? Dejará de responder por WhatsApp.')) {
+      return;
+    }
+    
+    setIsDisconnecting(true);
+    setError('');
+    try {
+      await api.disconnectWhatsApp();
+      await checkStatus(); // Refrescar el estado (debería ser 'close')
+      setQrCode(null);
+    } catch (err) {
+      console.error('Error desconectando:', err);
+      setError(err.message || 'Error al desconectar WhatsApp');
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  // Renderizado del loader principal
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto" />
+          <p className="mt-4 text-white">Cargando estado del Agente IA...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Conexión del Agente IA (WhatsApp)</CardTitle>
+          <CardDescription className="text-gray-400">
+            Conecta tu número de WhatsApp Business para que el agente IA pueda gestionar tus citas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+        
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* --- ESTADO: CONECTADO --- */}
+          {status?.isConnected ? (
+            <div className="p-6 rounded-lg border border-green-700 bg-green-900/50 text-center">
+              <CheckCircle2 className="h-16 w-16 text-green-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white">Agente Conectado</h3>
+              <p className="text-green-300 mt-2">
+                Tu Agente IA está activo y respondiendo en WhatsApp.
+              </p>
+              
+              {/* --- 💡 INICIO DE ACTUALIZACIÓN --- */}
+              {/* Esta es la parte que añadí */}
+              <div className="text-left max-w-sm mx-auto mt-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Instancia:</span>
+                  <span className="font-medium text-white">{status.instanceName || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Número:</span>
+                  <span className="font-medium text-white">{status.phoneNumber || 'Verificando...'}</span>
+                </div>
+              </div>
+              {/* --- 💡 FIN DE ACTUALIZACIÓN --- */}
+
+              <Button 
+                variant="destructive" 
+                className="mt-8" // <-- Margen actualizado
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
+              >
+                {isDisconnecting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="mr-2 h-4 w-4" />
+                )}
+                {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
+              </Button>
+            </div>
+          ) : (
+          
+            /* --- ESTADO: DESCONECTADO (Mostrando QR o Botón) --- */
+            <div className="p-6 rounded-lg border border-gray-700 bg-[#1a2f38] text-center">
+              
+              {/* --- Sub-estado: Mostrando QR --- */}
+              {qrCode ? (
+                <>
+                  <h3 className="text-xl font-semibold text-white">Escanea para Conectar</h3>
+                  <p className="text-gray-400 mt-2 mb-4">
+                    Abre WhatsApp en tu teléfono y escanea el código.
+                  </p>
+                  <div className="bg-white p-4 rounded-lg inline-block max-w-xs w-full">
+                    <img src={qrCode} alt="Código QR de WhatsApp" className="w-full h-full" />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-4">
+                    Este código expira. Si no funciona, refréscalo.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={handleRefreshQR}
+                    disabled={isInitializing}
+                  >
+                    {isInitializing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    {isInitializing ? 'Refrescando...' : 'Refrescar QR'}
+                  </Button>
+                </>
+              ) : 
+              
+              /* --- Sub-estado: Cargando QR o Conectando --- */
+              (isInitializing || status?.state === 'connecting') ? (
+                <>
+                  <Loader2 className="h-12 w-12 text-blue-500 mx-auto animate-spin" />
+                  <h3 className="text-xl font-semibold text-white mt-4">
+                    {status?.state === 'connecting' ? 'Conectando...' : 'Generando Código QR...'}
+                  </h3>
+                  <p className="text-gray-400 mt-2">
+                    {status?.state === 'connecting' 
+                      ? 'Conexión en progreso. Esto puede tardar un momento.' 
+                      : 'Solicitando un nuevo código QR a WhatsApp.'}
+                  </p>
+                </>
+              ) : 
+              
+              /* --- Sub-estado: Inicial (Desconectado) --- */
+              (
+                <>
+                  <Bot className="h-16 w-16 text-blue-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white">Agente Desconectado</h3>
+                  <p className="text-gray-400 mt-2">
+                    Presiona el botón para generar el código QR y vincular tu teléfono.
+                  </p>
+                  <Button 
+                    className="mt-6"
+                    onClick={handleInitialize}
+                    disabled={isInitializing}
+                  >
+                    {isInitializing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Bot className="mr-2 h-4 w-4" />
+                    )}
+                    {isInitializing ? 'Iniciando...' : 'Conectar Agente IA'}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

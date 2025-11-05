@@ -88,6 +88,7 @@ export function Sidebar() {
     { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
     { name: `${terminology.bookings} de hoy`, href: '/reservations/today', icon: Calendar },
     { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: CalendarDays },
+    {name: 'Calendario', href: '/calendar', icon: CalendarDays },
     { name: 'Clientes', href: '/customers', icon: Users },
     { name: 'Lista de espera', href: '/waitlist', icon: Clock },
     { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },

@@ -8,7 +8,7 @@ class APIService {
   getHeaders() {
     const token = localStorage.getItem('token');
     const businessSlug = localStorage.getItem('businessSlug');
-    
+
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -26,7 +26,7 @@ class APIService {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config = {
       ...options,
       headers: {
@@ -37,7 +37,7 @@ class APIService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Error en la petición');
@@ -108,20 +108,20 @@ class APIService {
     return this.request(`/api/customers?${queryString}`);
   }
 
-   async getCustomerProfile(customerId) {
-  const response = await this.request(`/api/customers/${customerId}/profile`);
-  return response;
-}
+  async getCustomerProfile(customerId) {
+    const response = await this.request(`/api/customers/${customerId}/profile`);
+    return response;
+  }
 
   async getCustomerStats() {
     return this.request('/api/customers/stats');
   }
 
-  async toggleCustomerVip(customerId) { 
-  return this.request(`/api/customers/${customerId}/vip`, {
-    method: 'PATCH',
-  });
-}
+  async toggleCustomerVip(customerId) {
+    return this.request(`/api/customers/${customerId}/vip`, {
+      method: 'PATCH',
+    });
+  }
 
   async getCustomer(customerId) {
     return this.request(`/api/customers/${customerId}`);
@@ -170,34 +170,21 @@ class APIService {
     return this.request('/api/analytics/overview');
   }
 
-  async getAppointmentsByStatus(period = 'monthly') {
-    return this.request(`/api/analytics/appointments-status?period=${period}`);
+  getAppointmentsByStatus(period, startDate, endDate) {
+    return this.request(`/api/analytics/appointments-status?period=${period}&startDate=${startDate}&endDate=${endDate}`);
   }
 
-  async getTopServices(limit = 5) {
-    return this.request(`/api/analytics/top-services?limit=${limit}`);
+  getTopServices(limit = 5, startDate, endDate) {
+    return this.request(`/api/analytics/top-services?limit=${limit}&startDate=${startDate}&endDate=${endDate}`);
   }
 
-  async getAppointmentsTimeline(days = 7) {
-    return this.request(`/api/analytics/appointments-timeline?days=${days}`);
+  getAppointmentsTimeline(days = 7, startDate, endDate) {
+    return this.request(`/api/analytics/appointments-timeline?days=${days}&startDate=${startDate}&endDate=${endDate}`);
   }
 
-  async getRevenueStats(period = 'monthly') {
-    return this.request(`/api/analytics/revenue?period=${period}`);
+  getRevenueStats(startDate, endDate) {
+    return this.request(`/api/analytics/revenue?startDate=${startDate}&endDate=${endDate}`);
   }
-
-  // async getDashboardStats() {
-  //   return this.request('/api/analytics/dashboard');
-  // }
-
-  // async getMonthlyStats(params = {}) {
-  //   const queryString = new URLSearchParams(params).toString();
-  //   return this.request(`/api/analytics/monthly?${queryString}`);
-  // }
-
-  // async getTopCustomers() {
-  //   return this.request('/api/analytics/top-customers');
-  // }
 
   // Settings
   async getSettings() {
@@ -287,21 +274,59 @@ class APIService {
   }
 
   async getAppointmentById(appointmentId) {
-  return this.request(`/api/appointments/${appointmentId}/details`);
-}
+    return this.request(`/api/appointments/${appointmentId}/details`);
+  }
 
-async updateAppointment(appointmentId, data) {
-  return this.request(`/api/appointments/${appointmentId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
+  async updateAppointment(appointmentId, data) {
+    return this.request(`/api/appointments/${appointmentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
 
-async deleteAppointment(appointmentId) {
-  return this.request(`/api/appointments/${appointmentId}`, {
-    method: 'DELETE',
-  });
-}
+  async deleteAppointment(appointmentId) {
+    return this.request(`/api/appointments/${appointmentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // --- FUNCIONES DE WHATSAPP ---
+  async initializeWhatsApp() {
+    return this.request('/api/whatsapp/initialize', {
+      method: 'POST',
+    });
+  }
+
+  async getWhatsAppStatus() {
+    return this.request('/api/whatsapp/status');
+  }
+
+  async refreshWhatsAppQR() {
+    return this.request('/api/whatsapp/refresh-qr', {
+      method: 'POST',
+    });
+  }
+
+  async disconnectWhatsApp() {
+    return this.request('/api/whatsapp/disconnect', {
+      method: 'POST',
+    });
+  }
+
+  async deleteWhatsAppInstance() {
+    return this.request('/api/whatsapp/delete', {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+ * Enviar email de confirmación de cita
+ */
+  async sendAppointmentConfirmation(appointmentId) {
+    return this.request(`/api/emails/send-confirmation/${appointmentId}`, {
+      method: 'POST',
+    });
+  }
 
 };
 

@@ -14,6 +14,8 @@ import { useAuthStore } from './store/authStore';
 import { Calendar } from './pages/Calendar';
 import { CustomerProfile } from '@/pages/CustomerProfile';
 import { AppointmentDetail } from '@/pages/AppointmentDetail';
+import CalendarView from './components/calendar/CalendarView';
+import './styles/calendarStyles.css';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -61,7 +63,7 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<Navigate to="/login" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/reservations" element={<AllReservations />} />
                     <Route path="/customers" element={<Customers />} />
@@ -72,6 +74,7 @@ function App() {
                     <Route path="/reservations/today" element={<TodayReservations />} />
                     <Route path="/customers/:customerId" element={<CustomerProfile />} />
                     <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />
+                    <Route path="/calendar" element={<CalendarView />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

@@ -35,6 +35,49 @@ export function Analytics() {
     customers: 'Clientes',
   };
 
+  // Calcular rango de fechas según periodo
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    switch (period) {
+      case 'week':
+        // Últimos 7 días
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'month':
+        // Mes actual (desde el día 1 hasta hoy)
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'year':
+        // Año actual (desde enero 1 hasta hoy)
+        startDate = new Date(now.getFullYear(), 0, 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      default:
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        endDate = new Date(now);
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+    };
+  };
+
   useEffect(() => {
     loadAnalytics();
   }, [period]);
@@ -43,6 +86,8 @@ export function Analytics() {
     try {
       setLoading(true);
       
+      const { startDate, endDate } = getDateRange();
+
       const [
         overviewData,
         statusDataRes,
@@ -51,10 +96,10 @@ export function Analytics() {
         revenueData,
       ] = await Promise.all([
         api.getOverviewStats(),
-        api.getAppointmentsByStatus(period),
-        api.getTopServices(5),
-        api.getAppointmentsTimeline(7),
-        api.getRevenueStats(),
+        api.getAppointmentsByStatus(period, startDate, endDate),
+        api.getTopServices(5, startDate, endDate),
+        api.getAppointmentsTimeline(period === 'week' ? 7 : period === 'month' ? 30 : 365, startDate, endDate),
+        api.getRevenueStats(startDate, endDate),
       ]);
 
       setStats(overviewData);
@@ -69,12 +114,25 @@ export function Analytics() {
     }
   };
 
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 'week':
+        return 'Últimos 7 Días';
+      case 'month':
+        return 'Este Mes';
+      case 'year':
+        return 'Este Año';
+      default:
+        return '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando estadísticas...</p>
+          <p className="mt-4 text-white">Cargando estadísticas...</p>
         </div>
       </div>
     );
@@ -90,8 +148,8 @@ export function Analytics() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Estadísticas</h1>
-          <p className="text-white mt-1">
-            Análisis del rendimiento de tu negocio
+          <p className="text-gray-400 mt-1">
+            Análisis del rendimiento de tu negocio - {getPeriodLabel()}
           </p>
         </div>
 
@@ -121,7 +179,7 @@ export function Analytics() {
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats - Siempre muestran datos generales */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
@@ -151,31 +209,29 @@ export function Analytics() {
         </div>
       )}
 
-      {/* Second Row Stats */}
+      {/* Second Row Stats - Filtradas por periodo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatsCard
+          title={`${terminology.bookings} (${getPeriodLabel()})`}
+          value={totalAppointmentsByStatus}
+          icon={Calendar}
+          color="blue"
+        />
         {stats && (
-          <>
-            <StatsCard
-              title={`Nuevos ${terminology.customers} Este Mes`}
-              value={stats.customers?.newThisMonth || 0}
-              icon={Users}
-              color="blue"
-            />
-            <StatsCard
-              title={`${terminology.customers} VIP`}
-              value={stats.customers?.vip || 0}
-              icon={Star}
-              color="yellow"
-            />
-          </>
+          <StatsCard
+            title={`${terminology.customers} VIP`}
+            value={stats.customers?.vip || 0}
+            icon={Star}
+            color="yellow"
+          />
         )}
         {revenue && (
           <StatsCard
-            title="Ingresos Estimados (Mes)"
+            title={`Ingresos (${getPeriodLabel()})`}
             value={`€${revenue.estimatedRevenue?.toFixed(2) || 0}`}
             icon={DollarSign}
             color="green"
-            subtitle={`${revenue.completedAppointments} citas completadas`}
+            subtitle={`${revenue.completedAppointments || 0} citas completadas`}
           />
         )}
       </div>
@@ -187,11 +243,11 @@ export function Analytics() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              {terminology.bookings} por Estado
+              {terminology.bookings} por Estado ({getPeriodLabel()})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {statusData && (
+            {statusData && totalAppointmentsByStatus > 0 ? (
               <div className="space-y-4">
                 <StatusBar
                   label="Confirmadas"
@@ -229,6 +285,10 @@ export function Analytics() {
                   icon={XCircle}
                 />
               </div>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-8">
+                No hay citas en este periodo
+              </p>
             )}
           </CardContent>
         </Card>
@@ -238,12 +298,12 @@ export function Analytics() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              Servicios Más Solicitados
+              Servicios Más Solicitados ({getPeriodLabel()})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {topServices.length === 0 ? (
-              <p className="text-sm text-white text-center py-8">
+              <p className="text-sm text-gray-400 text-center py-8">
                 No hay datos suficientes
               </p>
             ) : (
@@ -281,27 +341,30 @@ export function Analytics() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            {terminology.bookings} de los Últimos 7 Días
+            Línea de tiempo ({getPeriodLabel()})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {timeline.length === 0 ? (
-            <p className="text-sm text-white text-center py-8">
+            <p className="text-sm text-gray-400 text-center py-8">
               No hay datos suficientes
             </p>
           ) : (
             <div className="space-y-4">
-              {timeline.map((day, index) => {
+              {timeline.slice(0, period === 'week' ? 7 : period === 'month' ? 30 : 12).map((day, index) => {
                 const date = new Date(day.date);
-                const dayName = date.toLocaleDateString('es-ES', { weekday: 'short' });
-                const dayNumber = date.getDate();
+                const dayName = date.toLocaleDateString('es-ES', { 
+                  weekday: period === 'year' ? undefined : 'short',
+                  month: period === 'year' ? 'short' : undefined,
+                  day: 'numeric'
+                });
                 const maxValue = Math.max(...timeline.map(d => d.total), 1);
 
                 return (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium text-white capitalize">
-                        {dayName} {dayNumber}
+                        {dayName}
                       </span>
                       <span className="text-white">{day.total} citas</span>
                     </div>

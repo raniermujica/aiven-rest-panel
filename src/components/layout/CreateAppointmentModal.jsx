@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react'; // ✅ Agregar useCallback
+import { X, AlertCircle, CheckCircle, Clock, Plus, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/services/api';
@@ -14,16 +14,19 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   const [availability, setAvailability] = useState(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   
+  const [selectedServices, setSelectedServices] = useState([]);
+  
   const [formData, setFormData] = useState({
     clientName: '',
     clientPhone: '',
+    clientEmail: '',
     scheduledDate: '',
     appointmentTime: '',
-    serviceName: '',
-    serviceId: null,
-    durationMinutes: 60,
     notes: '',
   });
+
+  const [sendEmailConfirmation, setSendEmailConfirmation] = useState(true);
+  const [tempServiceId, setTempServiceId] = useState('');
 
   const terminology = user?.business?.terminology || {
     booking: 'Cita',
@@ -36,14 +39,19 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       loadServices();
       
-      // Set default date to today
       const today = new Date().toISOString().split('T')[0];
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
+        clientName: '',
+        clientPhone: '',
+        clientEmail: '',
         scheduledDate: today,
         appointmentTime: '10:00',
-      }));
+        notes: '',
+      });
       setAvailability(null);
+      setSelectedServices([]);
+      setTempServiceId('');
+      setError('');
     }
   }, [isOpen]);
   
@@ -56,24 +64,55 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  // Check availability cuando cambia fecha/hora/duración
-  useEffect(() => {
-    if (formData.scheduledDate && formData.appointmentTime && formData.durationMinutes) {
-      checkAvailability();
-    }
-  }, [formData.scheduledDate, formData.appointmentTime, formData.durationMinutes]);
+  // ✅ Calcular duración total del carrito
+  const getTotalDuration = useCallback(() => {
+    return selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
+  }, [selectedServices]);
 
-  const checkAvailability = async () => {
-    if (!formData.scheduledDate || !formData.appointmentTime) return;
+  // ✅ Agregar servicio al carrito
+  const handleAddService = () => {
+    if (!tempServiceId) return;
+    
+    const service = services.find(s => s.id === tempServiceId);
+    if (!service) return;
+
+    if (selectedServices.find(s => s.serviceId === service.id)) {
+      setError('Este servicio ya está agregado');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    setSelectedServices([...selectedServices, {
+      serviceId: service.id,
+      serviceName: service.name,
+      durationMinutes: service.duration_minutes || 60,
+      price: service.price || 0,
+    }]);
+
+    setTempServiceId('');
+  };
+
+  // ✅ Eliminar servicio del carrito
+  const handleRemoveService = (serviceId) => {
+    setSelectedServices(selectedServices.filter(s => s.serviceId !== serviceId));
+  };
+
+  // ✅ FUNCIÓN DE VERIFICACIÓN DE DISPONIBILIDAD (con useCallback)
+  const checkAvailability = useCallback(async () => {
+    if (!formData.scheduledDate || !formData.appointmentTime || selectedServices.length === 0) {
+      setAvailability(null);
+      return;
+    }
 
     try {
       setCheckingAvailability(true);
       
-      // Pasar hora en formato correcto
+      const totalDuration = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
+      
       const result = await api.checkAppointmentAvailability(
         formData.scheduledDate,
         formData.appointmentTime,
-        formData.durationMinutes
+        totalDuration
       );
       
       setAvailability(result);
@@ -83,86 +122,103 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     } finally {
       setCheckingAvailability(false);
     }
+  }, [formData.scheduledDate, formData.appointmentTime, selectedServices]);
+
+  // ✅ Ejecutar verificación cuando cambian fecha/hora/servicios
+  useEffect(() => {
+    checkAvailability();
+  }, [checkAvailability]);
+
+  // ✅ Validación de email
+  const validateEmail = (email) => {
+    if (!email) return true;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleServiceChange = (e) => {
-    const serviceId = e.target.value;
-    const service = services.find(s => s.id === serviceId);
-    
-    setFormData({
-      ...formData,
-      serviceId: serviceId || null,
-      serviceName: service?.name || '',
-      durationMinutes: service?.duration_minutes || 60,
-    });
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
-
-  // Validaciones
-  if (!formData.clientName || !formData.clientPhone) {
-    setError('Nombre y teléfono del cliente son requeridos');
-    setLoading(false);
-    return;
-  }
-
-  if (!formData.scheduledDate || !formData.appointmentTime) {
-    setError('Fecha y hora son requeridas');
-    setLoading(false);
-    return;
-  }
-
-  // Validar disponibilidad
-  if (availability && !availability.available) {
-    setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
-    setLoading(false);
-    return;
-  }
-
-  try {
-    await api.createAppointment({
-      clientName: formData.clientName,
-      clientPhone: formData.clientPhone,
-      scheduledDate: formData.scheduledDate,        // YYYY-MM-DD
-      appointmentTime: formData.appointmentTime,      // HH:MM
-      serviceName: formData.serviceName || 'Servicio',
-      serviceId: formData.serviceId,
-      durationMinutes: formData.durationMinutes,
-      notes: formData.notes,
-    });
-
-    onSuccess();
-  } catch (error) {
-    console.error('Error creando cita:', error);
-    
-    if (error.response?.status === 409) {
-      setError(error.response.data.message || 'Ya existe una cita en ese horario');
-    } else {
-      setError(error.message || 'Error al crear la cita');
+    // Validaciones
+    if (!formData.clientName || !formData.clientPhone) {
+      setError('Nombre y teléfono del cliente son requeridos');
+      setLoading(false);
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+
+    if (formData.clientEmail && !validateEmail(formData.clientEmail)) {
+      setError('El formato del email no es válido');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.scheduledDate || !formData.appointmentTime) {
+      setError('Fecha y hora son requeridas');
+      setLoading(false);
+      return;
+    }
+
+    if (selectedServices.length === 0) {
+      setError('Debes agregar al menos un servicio');
+      setLoading(false);
+      return;
+    }
+
+    // Validar disponibilidad
+    if (availability && !availability.available) {
+      setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.createAppointment({
+        clientName: formData.clientName,
+        clientPhone: formData.clientPhone,
+        clientEmail: formData.clientEmail || null,
+        scheduledDate: formData.scheduledDate,
+        appointmentTime: formData.appointmentTime,
+        services: selectedServices, 
+        notes: formData.notes,
+      });
+
+      // Enviar email de confirmación si está activado y hay email
+      if (sendEmailConfirmation && formData.clientEmail && response.appointment?.id) {
+        try {
+          await api.sendAppointmentConfirmation(response.appointment.id);
+          console.log('✅ Email de confirmación enviado');
+        } catch (emailError) {
+          console.error('⚠️ Error enviando email:', emailError);
+        }
+      }
+
+      onSuccess();
+    } catch (error) {
+      console.error('Error creando cita:', error);
+      
+      if (error.response?.status === 409) {
+        setError(error.response.data.message || 'Ya existe una cita en ese horario');
+      } else {
+        setError(error.message || 'Error al crear la cita');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
+  const totalDuration = getTotalDuration();
+  const totalPrice = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
+
   return (
-    // ✅ CAMBIO 1: Overlay más oscuro
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      {/* ✅ CAMBIO 2: Modal con fondo oscuro */}
-      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
-        {/* ✅ CAMBIO 3: Header con border gris */}
+      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <h2 className="text-xl font-semibold text-white">Nueva {terminology.booking}</h2>
-          {/* ✅ CAMBIO 4: Botón cerrar en gris */}
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -177,7 +233,6 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
           {/* Cliente */}
           <div>
-            {/* ✅ CAMBIO 5: Labels en gris claro */}
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Nombre del {terminology.customer} *
             </label>
@@ -202,26 +257,97 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             />
           </div>
 
-          {/* Servicio */}
+          {/* ✅ EMAIL */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              {terminology.service}
+              Email
             </label>
-            {/* ✅ CAMBIO 6: Select con fondo oscuro */}
-            <select
-              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.serviceId || ''}
-              onChange={handleServiceChange}
-            >
-              <option value="">Seleccionar servicio</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.emoji && `${service.emoji} `}
-                  {service.name} ({service.duration_minutes} min
-                  {service.price && ` - €${service.price}`})
-                </option>
-              ))}
-            </select>
+            <Input
+              type="email"
+              value={formData.clientEmail}
+              onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+              placeholder="juan@example.com"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              📧 Se enviará confirmación por email si se proporciona
+            </p>
+          </div>
+
+          {/* SERVICIOS */}
+          <div className="border-t border-gray-700 pt-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Servicios *
+            </label>
+            
+            <div className="flex gap-2 mb-3">
+              <select
+                className="flex-1 px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={tempServiceId}
+                onChange={(e) => setTempServiceId(e.target.value)}
+              >
+                <option value="">Seleccionar servicio</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.emoji && `${service.emoji} `}
+                    {service.name} ({service.duration_minutes} min
+                    {service.price && ` - €${service.price}`})
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                onClick={handleAddService}
+                disabled={!tempServiceId}
+                className="flex-shrink-0"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Agregar
+              </Button>
+            </div>
+
+            {selectedServices.length > 0 && (
+              <div className="bg-[#0a1820] border border-gray-700 rounded-lg p-3 space-y-2">
+                <p className="text-xs font-medium text-gray-400 mb-2">
+                  Servicios seleccionados ({selectedServices.length})
+                </p>
+                {selectedServices.map((service, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-[#1a2f38] p-3 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-white text-sm">{service.serviceName}</p>
+                      <p className="text-xs text-gray-400">
+                        {service.durationMinutes} min
+                        {service.price > 0 && ` • €${service.price}`}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveService(service.serviceId)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                
+                <div className="border-t border-gray-700 pt-2 mt-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Duración total:</span>
+                    <span className="font-semibold text-white">{totalDuration} min</span>
+                  </div>
+                  {totalPrice > 0 && (
+                    <div className="flex justify-between text-sm mt-1">
+                      <span className="text-gray-400">Precio total:</span>
+                      <span className="font-semibold text-green-400">€{totalPrice.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Fecha y Hora */}
@@ -253,8 +379,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           {/* Availability Check */}
-          {formData.scheduledDate && formData.appointmentTime && (
-            // ✅ CAMBIO 7: Indicador de disponibilidad con fondos oscuros
+          {formData.scheduledDate && formData.appointmentTime && selectedServices.length > 0 && (
             <div className={cn(
               'p-3 rounded-lg text-sm flex items-start gap-2 border',
               checkingAvailability ? 'bg-gray-800/50 text-gray-300 border-gray-700' :
@@ -271,11 +396,10 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
                   <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-green-200">Horario disponible</p>
-                    {availability.total_appointments_that_day > 0 && (
-                      <p className="text-xs mt-1 text-green-400">
-                        {availability.total_appointments_that_day} cita(s) ese día
-                      </p>
-                    )}
+                    <p className="text-xs text-green-400 mt-1">
+                      Duración: {totalDuration} min ({formData.appointmentTime} - 
+                      {new Date(new Date(`2000-01-01T${formData.appointmentTime}`).getTime() + totalDuration * 60000).toTimeString().slice(0, 5)})
+                    </p>
                   </div>
                 </>
               ) : (
@@ -283,12 +407,6 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
                   <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-red-200">Horario no disponible</p>
-                    {availability?.has_conflict && availability?.conflicting_appointment && (
-                      <p className="text-xs mt-1 text-red-400">
-                        Conflicto con: {availability.conflicting_appointment.client_name} 
-                        {' '}({availability.conflicting_appointment.duration} min)
-                      </p>
-                    )}
                     {availability?.business_hours_message && (
                       <p className="text-xs mt-1 text-red-400">{availability.business_hours_message}</p>
                     )}
@@ -303,7 +421,6 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Notas
             </label>
-            {/* ✅ CAMBIO 8: Textarea con fondo oscuro */}
             <textarea
               className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
               rows="3"
@@ -312,6 +429,23 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
               placeholder="Información adicional..."
             />
           </div>
+
+          {/* Checkbox Email */}
+          {formData.clientEmail && (
+            <div className="flex items-center space-x-2 bg-blue-900/20 border border-blue-700/30 p-3 rounded-lg">
+              <input
+                type="checkbox"
+                id="sendEmail"
+                checked={sendEmailConfirmation}
+                onChange={(e) => setSendEmailConfirmation(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="sendEmail" className="text-sm text-gray-300 cursor-pointer flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Enviar email de confirmación al cliente
+              </label>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
@@ -325,7 +459,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             </Button>
             <Button
               type="submit"
-              disabled={loading || checkingAvailability || (availability && !availability.available)}
+              disabled={loading || checkingAvailability || selectedServices.length === 0 || (availability && !availability.available)}
               className="flex-1"
             >
               {loading ? 'Creando...' : 'Crear ' + terminology.booking}

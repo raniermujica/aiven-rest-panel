@@ -20,7 +20,6 @@ import { api } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
-import { adaptAppointmentsToReservations } from '@/utils/appointmentAdapter';
 
 export function TodayReservations() {
   const { user } = useAuthStore();
@@ -327,10 +326,16 @@ function AppointmentCard({ appointment, onNavigate, onDelete, terminology }) {
                 <span>{appointment.client_phone}</span>
               </div>
 
+              {/* ✅ MODIFICADO: Mostrar servicio + indicador */}
               {appointment.service_name && (
                 <div className="flex items-center gap-2 text-white">
                   <Star className="h-4 w-4" />
                   <span>{appointment.service_name}</span>
+                  {appointment.services_count > 1 && (
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
+                      +{appointment.services_count - 1} servicio{appointment.services_count > 2 ? 's' : ''}
+                    </span>
+                  )}
                   {appointment.duration_minutes && (
                     <span className="text-sm text-white">
                       ({appointment.duration_minutes} min)

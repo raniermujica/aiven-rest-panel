@@ -205,106 +205,108 @@ function CreateBusinessForm({ onClose, onSuccess }) {
 
   if (success) {
     return (
-      <Card className="fixed inset-0 z-50 m-4 overflow-y-auto md:m-auto md:max-w-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-6 w-6" />
-            ¡Negocio creado exitosamente!
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg bg-green-50 p-4">
-            <h3 className="font-semibold text-green-900">Información del negocio</h3>
-            <div className="mt-2 space-y-1 text-sm text-green-800">
-              <p><strong>Nombre:</strong> {success.business.name}</p>
-              <p><strong>Tipo:</strong> {BUSINESS_TYPES[success.business.type]?.name}</p>
-              <p><strong>Slug:</strong> {success.business.slug}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <Card className="w-full max-w-2xl bg-[#1a2f38] border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-400">
+              <CheckCircle className="h-6 w-6" />
+              ¡Negocio creado exitosamente!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-green-900/20 border border-green-700 p-4">
+              <h3 className="font-semibold text-green-400">Información del negocio</h3>
+              <div className="mt-2 space-y-1 text-sm text-green-300">
+                <p><strong>Nombre:</strong> {success.business.name}</p>
+                <p><strong>Tipo:</strong> {BUSINESS_TYPES[success.business.type]?.name}</p>
+                <p><strong>Slug:</strong> {success.business.slug}</p>
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-lg bg-blue-50 p-4">
-            <h3 className="font-semibold text-blue-900">Credenciales del administrador</h3>
-            <div className="mt-2 space-y-1 text-sm text-blue-800">
-              <p><strong>Nombre:</strong> {success.admin.name}</p>
-              <p><strong>Email:</strong> {success.admin.email}</p>
-              <p><strong>Contraseña temporal:</strong> {success.admin.temporaryPassword}</p>
+            <div className="rounded-lg bg-blue-900/20 border border-blue-700 p-4">
+              <h3 className="font-semibold text-blue-400">Credenciales del administrador</h3>
+              <div className="mt-2 space-y-1 text-sm text-blue-300">
+                <p><strong>Nombre:</strong> {success.admin.name}</p>
+                <p><strong>Email:</strong> {success.admin.email}</p>
+                <p><strong>Contraseña temporal:</strong> {success.admin.temporaryPassword}</p>
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-lg bg-purple-50 p-4">
-            <h3 className="font-semibold text-purple-900">URL de acceso</h3>
-            <div className="mt-2 flex items-center gap-2">
-              <Input 
-                value={success.business.url} 
-                readOnly 
-                className="bg-white"
-              />
-              <Button
-                size="sm"
-                variant="outline"
+            <div className="rounded-lg bg-purple-900/20 border border-purple-700 p-4">
+              <h3 className="font-semibold text-purple-400">URL de acceso</h3>
+              <div className="mt-2 flex items-center gap-2">
+                <Input 
+                  value={success.business.url} 
+                  readOnly 
+                  className="bg-[#102027] border-gray-600 text-white"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(success.business.url);
+                    alert('URL copiada al portapapeles');
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1"
                 onClick={() => {
-                  navigator.clipboard.writeText(success.business.url);
-                  alert('URL copiada al portapapeles');
+                  onSuccess();
+                  onClose();
                 }}
               >
-                <Copy className="h-4 w-4" />
+                Cerrar
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.open(success.business.url, '_blank')}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Abrir panel
               </Button>
             </div>
-          </div>
-
-          <div className="flex gap-3">
-            <Button 
-              className="flex-1"
-              onClick={() => {
-                onSuccess();
-                onClose();
-              }}
-            >
-              Cerrar
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => window.open(success.business.url, '_blank')}
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Abrir panel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl bg-[#1a2f38] border-gray-700">
         <CardHeader>
-          <CardTitle>Crear nuevo negocio</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">Crear nuevo negocio</CardTitle>
+          <CardDescription className="text-gray-400">
             Configura un nuevo negocio y crea el usuario administrador
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+              <div className="rounded-lg bg-red-900/20 border border-red-700 p-3 text-sm text-red-300">
                 {error}
               </div>
             )}
 
             {/* Tipo de negocio */}
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Tipo de negocio *
               </label>
               <select
                 value={formData.businessType}
                 onChange={(e) => handleChange('businessType', e.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                className="mt-1 w-full rounded-md border border-gray-600 bg-[#102027] text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
                 {Object.entries(BUSINESS_TYPES).map(([key, config]) => (
-                  <option key={key} value={key}>
+                  <option key={key} value={key} className="bg-[#102027]">
                     {config.name}
                   </option>
                 ))}
@@ -313,52 +315,55 @@ function CreateBusinessForm({ onClose, onSuccess }) {
 
             {/* Nombre del negocio */}
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Nombre del negocio *
               </label>
               <Input
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Ej: Restaurante El Buen Sabor"
+                className="bg-[#102027] border-gray-600 text-white"
                 required
               />
             </div>
 
             {/* Slug */}
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-300">
                 Slug (URL única) *
               </label>
               <Input
                 value={formData.slug}
                 onChange={(e) => handleChange('slug', e.target.value)}
                 placeholder="ej: buen-sabor"
+                className="bg-[#102027] border-gray-600 text-white"
                 required
               />
-              <p className="mt-1 text-xs text-white">
+              <p className="mt-1 text-xs text-gray-400">
                 URL: {window.location.origin}/{formData.slug || 'slug'}
               </p>
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="mb-3 font-semibold">Datos del administrador</h3>
+            <div className="border-t border-gray-700 pt-4">
+              <h3 className="mb-3 font-semibold text-white">Datos del administrador</h3>
 
               {/* Nombre admin */}
               <div className="mb-3">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Nombre completo *
                 </label>
                 <Input
                   value={formData.adminName}
                   onChange={(e) => handleChange('adminName', e.target.value)}
                   placeholder="Juan Pérez"
+                  className="bg-[#102027] border-gray-600 text-white"
                   required
                 />
               </div>
 
               {/* Email admin */}
               <div className="mb-3">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Email *
                 </label>
                 <Input
@@ -366,13 +371,14 @@ function CreateBusinessForm({ onClose, onSuccess }) {
                   value={formData.adminEmail}
                   onChange={(e) => handleChange('adminEmail', e.target.value)}
                   placeholder="admin@negocio.com"
+                  className="bg-[#102027] border-gray-600 text-white"
                   required
                 />
               </div>
 
               {/* Password admin */}
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Contraseña temporal *
                 </label>
                 <Input
@@ -380,6 +386,7 @@ function CreateBusinessForm({ onClose, onSuccess }) {
                   value={formData.adminPassword}
                   onChange={(e) => handleChange('adminPassword', e.target.value)}
                   placeholder="Mínimo 8 caracteres"
+                  className="bg-[#102027] border-gray-600 text-white"
                   minLength={8}
                   required
                 />
@@ -415,14 +422,14 @@ function BusinessCard({ business }) {
   const config = BUSINESS_TYPES[business.business_type] || BUSINESS_TYPES.restaurant;
   
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
+    <div className="flex items-center justify-between rounded-lg border border-gray-700 bg-[#1a2f38] p-4">
       <div className="flex items-center gap-4">
         <div className={`flex h-12 w-12 items-center justify-center rounded-lg bg-${config.color}-100`}>
           <Building2 className={`h-6 w-6 text-${config.color}-600`} />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-semibold">{business.name}</p>
+            <p className="font-semibold text-white">{business.name}</p>
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               business.is_active 
                 ? 'bg-green-100 text-green-700' 
@@ -431,7 +438,7 @@ function BusinessCard({ business }) {
               {business.is_active ? 'Activo' : 'Inactivo'}
             </span>
           </div>
-          <div className="mt-1 flex items-center gap-3 text-sm text-white">
+          <div className="mt-1 flex items-center gap-3 text-sm text-gray-400">
             <span>{config.name}</span>
             <span>•</span>
             <span>{business.url}</span>

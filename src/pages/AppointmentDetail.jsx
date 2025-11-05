@@ -18,7 +18,8 @@ import {
   CheckCircle,
   AlertCircle,
   Star,
-  History
+  History,
+  Package // ✅ NUEVO icono para servicios
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
@@ -51,6 +52,7 @@ export function AppointmentDetail() {
     try {
       setLoading(true);
       const data = await api.getAppointmentById(appointmentId);
+      console.log('Appointment data:', data); // ✅ Debug
       setAppointment(data.appointment);
       setCustomer(data.customer);
       setCustomerHistory(data.customerHistory || []);
@@ -131,9 +133,9 @@ export function AppointmentDetail() {
       <div className="text-center py-12">
         <p className="text-white">Cita no encontrada</p>
         <Button 
-        variant="outline"
-        onClick={() => navigate('/dashboard')} 
-        className="mt-4">
+          variant="outline"
+          onClick={() => navigate('/dashboard')} 
+          className="mt-4">
           Volver
         </Button>
       </div>
@@ -152,6 +154,17 @@ export function AppointmentDetail() {
     minute: '2-digit',
     timeZone: 'Europe/Madrid'
   });
+
+  // ✅ NUEVO: Determinar qué mostrar en el título
+  const servicesCount = appointment.services?.length || 0;
+  const displayTitle = servicesCount > 1 
+    ? `${servicesCount} Servicios` 
+    : appointment.service_name;
+
+  // ✅ NUEVO: Calcular totales
+  const totalPrice = appointment.services?.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0) || 0;
+  const totalDuration = appointment.duration_minutes || 
+    appointment.services?.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -184,7 +197,7 @@ export function AppointmentDetail() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                {appointment.service_name}
+                {displayTitle}
               </h1>
               <div className="flex items-center gap-4 text-gray-400">
                 <div className="flex items-center gap-2">
@@ -194,8 +207,8 @@ export function AppointmentDetail() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   <span>{timeStr}</span>
-                  {appointment.duration_minutes && (
-                    <span className="text-sm">({appointment.duration_minutes} min)</span>
+                  {totalDuration > 0 && (
+                    <span className="text-sm">({totalDuration} min)</span>
                   )}
                 </div>
               </div>
@@ -203,6 +216,52 @@ export function AppointmentDetail() {
 
             <StatusBadge status={appointment.status} />
           </div>
+
+          {/* ✅ NUEVO: Lista de Servicios */}
+          {appointment.services && appointment.services.length > 0 && (
+            <div className="mb-6 bg-[#0a1820] p-4 rounded-lg border border-gray-700">
+              <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Servicios Incluidos
+              </h3>
+              <div className="space-y-2">
+                {appointment.services.map((service, index) => (
+                  <div 
+                    key={service.id || index}
+                    className="flex items-center justify-between p-3 bg-[#1a2f38] rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium text-white">{service.service_name}</p>
+                      <p className="text-sm text-gray-400">
+                        {service.duration_minutes} minutos
+                      </p>
+                    </div>
+                    {service.price > 0 && (
+                      <p className="text-green-400 font-semibold">
+                        €{parseFloat(service.price).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Totales */}
+              {servicesCount > 1 && (
+                <div className="border-t border-gray-700 mt-3 pt-3 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Duración total:</span>
+                    <span className="font-semibold text-white">{totalDuration} min</span>
+                  </div>
+                  {totalPrice > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Precio total estimado:</span>
+                      <span className="font-semibold text-green-400">€{totalPrice.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Status Actions */}
           <div className="flex gap-2 mb-6">

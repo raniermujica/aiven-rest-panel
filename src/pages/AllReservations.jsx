@@ -32,6 +32,7 @@ export function AllReservations() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const terminology = user?.business?.terminology || {
     booking: 'Cita',
@@ -45,8 +46,9 @@ export function AllReservations() {
 
   const loadAppointments = async () => {
     try {
-      setLoading(true);
-
+      if (initialLoad) {
+        setLoading(true);
+      }
       const params = {
         date: selectedDate,
       };
@@ -61,6 +63,7 @@ export function AllReservations() {
       console.error('Error cargando citas:', error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -72,7 +75,7 @@ export function AllReservations() {
     if (!confirm('⚠️ ¿Estás seguro de que deseas eliminar esta cita?')) {
       return;
     }
-    
+
     if (!confirm('Esta acción NO se puede deshacer. ¿Confirmas la eliminación?')) {
       return;
     }
@@ -326,7 +329,7 @@ function AppointmentCard({ appointment, onNavigate, onDelete, getStatusBadge }) 
   });
 
   return (
-    <div 
+    <div
       className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700 cursor-pointer"
       onClick={() => onNavigate(appointment.id)}
     >
@@ -352,10 +355,16 @@ function AppointmentCard({ appointment, onNavigate, onDelete, getStatusBadge }) 
         </div>
 
         {/* Service */}
-        <div className="hidden md:block flex-1">
+        <div className="hidden md:block flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-white">{appointment.service_name}</span>
+            <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
+            <span className="text-sm text-white truncate">{appointment.service_name}</span>
+            {/* ✅ AGREGADO: Indicador de servicios adicionales */}
+            {appointment.services_count > 1 && (
+              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full flex-shrink-0">
+                +{appointment.services_count - 1}
+              </span>
+            )}
           </div>
           {appointment.duration_minutes && (
             <p className="text-xs text-gray-400 mt-1 ml-6">
