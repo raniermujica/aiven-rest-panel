@@ -15,7 +15,7 @@ import { Calendar } from './pages/Calendar';
 import { CustomerProfile } from '@/pages/CustomerProfile';
 import { AppointmentDetail } from '@/pages/AppointmentDetail';
 import CalendarView from './components/calendar/CalendarView';
-import './styles/calendarStyles.css';
+
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();

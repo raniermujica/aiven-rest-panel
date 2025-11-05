@@ -290,6 +290,13 @@ class APIService {
     });
   }
 
+  async getCalendarReservations(startDate, endDate) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    return this.request(`/api/appointments?${params.toString()}`);
+  }
+
   // --- FUNCIONES DE WHATSAPP ---
   async initializeWhatsApp() {
     return this.request('/api/whatsapp/initialize', {

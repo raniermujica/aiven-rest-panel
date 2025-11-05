@@ -10,44 +10,70 @@ import '../../styles/calendarStyles.css';
 
 export default function CalendarView() {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAppointments();
+    loadAppointments();
   }, []);
 
-  const fetchAppointments = async () => {
+  const loadAppointments = async () => {
     try {
       setLoading(true);
-      const data = await api.getReservations();
-      setAppointments(data.reservations || []);
+      
+      // Igual que AllReservations - traer todas sin filtro
+      const data = await api.getReservations({});
+      
+      console.log('📅 Datos del backend:', data);
+      console.log('📊 Appointments:', data.appointments);
+      
+      // Convertir a formato FullCalendar
+      const calendarEvents = (data.appointments || []).map(apt => {
+        console.log('🔄 Procesando:', apt);
+        
+        // Fecha y hora de inicio
+        const startDate = new Date(apt.appointment_time);
+        
+        // Calcular fin
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + (apt.duration_minutes || 60));
+        
+        return {
+          id: String(apt.id),
+          title: `${apt.client_name} - ${apt.service_name}`,
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          backgroundColor: getStatusColor(apt.status),
+          borderColor: getStatusColor(apt.status),
+          extendedProps: {
+            status: apt.status,
+            customerName: apt.client_name,
+            customerPhone: apt.client_phone,
+            service: apt.service_name,
+            duration: apt.duration_minutes
+          }
+        };
+      });
+      
+      console.log('✅ Eventos generados:', calendarEvents);
+      setEvents(calendarEvents);
+      
     } catch (error) {
-      console.error('Error cargando citas:', error);
+      console.error('❌ Error cargando citas:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const events = appointments.map(apt => ({
-    id: apt.id,
-    title: `${apt.customer_name} - ${apt.service}`,
-    start: `${apt.date}T${apt.time}`,
-    end: calculateEndTime(apt.date, apt.time, apt.duration),
-    extendedProps: {
-      status: apt.status,
-      customerName: apt.customer_name,
-      customerPhone: apt.customer_phone,
-      service: apt.service,
-      duration: apt.duration,
-      notes: apt.notes
-    }
-  }));
-
-  const calculateEndTime = (date, time, duration) => {
-    const start = new Date(`${date}T${time}`);
-    start.setMinutes(start.getMinutes() + duration);
-    return start.toISOString();
+  const getStatusColor = (status) => {
+    const colors = {
+      'confirmado': '#10b981',
+      'pendiente': '#f59e0b', 
+      'completada': '#8b5cf6',
+      'cancelada': '#ef4444',
+      'no_show': '#ef4444'
+    };
+    return colors[status] || '#6b7280';
   };
 
   const handleEventClick = (info) => {
@@ -66,7 +92,9 @@ export default function CalendarView() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Calendario de Citas</h1>
-        <p className="mt-1 text-sm text-gray-500">Vista completa de todas las citas programadas</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {events.length} citas programadas
+        </p>
       </div>
 
       <div className="rounded-lg bg-white p-6 shadow">
@@ -79,36 +107,32 @@ export default function CalendarView() {
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
           }}
+          buttonText={{
+            today: 'Hoy',
+            week: 'Semana',
+            day: 'Día'
+          }}
           slotMinTime="08:00:00"
           slotMaxTime="22:00:00"
           allDaySlot={false}
           height="auto"
-          contentHeight={700}
           slotDuration="00:30:00"
           slotLabelInterval="01:00"
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
           nowIndicator={true}
           editable={false}
           selectable={true}
-          selectMirror={true}
-          dayMaxEvents={true}
           weekends={true}
           events={events}
           eventClick={handleEventClick}
-          eventContent={(eventInfo) => (
-            <div className="p-1 text-xs">
-              <div className="font-semibold">{eventInfo.timeText}</div>
-              <div className="truncate">{eventInfo.event.title}</div>
-            </div>
-          )}
-          eventClassNames={(arg) => {
-            const status = arg.event.extendedProps.status;
-            return [
-              'border-l-4 cursor-pointer',
-              status === 'confirmada' ? 'border-green-500 bg-green-50' :
-              status === 'pendiente' ? 'border-yellow-500 bg-yellow-50' :
-              status === 'completada' ? 'border-purple-500 bg-purple-50' :
-              'border-red-500 bg-red-50'
-            ];
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
           }}
         />
       </div>

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Star,
   Phone,
+  CalendarPlus,
   Mail,
   Calendar,
   DollarSign,
@@ -21,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
 
 export function CustomerProfile() {
   const { customerId } = useParams();
@@ -34,6 +36,7 @@ export function CustomerProfile() {
   const [activeTab, setActiveTab] = useState('info');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const terminology = user?.business?.terminology || {
     customer: 'Cliente',
@@ -59,6 +62,13 @@ export function CustomerProfile() {
       navigate('/customers');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = (didCreate) => {
+    setShowCreateModal(false);
+    if (didCreate) {
+      loadCustomerProfile(); 
     }
   };
 
@@ -147,6 +157,10 @@ export function CustomerProfile() {
                 <Edit className="h-4 w-4" />
                 Editar
               </Button>
+              <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+              <CalendarPlus className="h-4 w-4" />
+              Agendar {terminology.booking}
+            </Button>
               <Button
                 variant="outline"
                 onClick={handleDelete}
@@ -191,6 +205,19 @@ export function CustomerProfile() {
               customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
             )}>
               {customer.name.charAt(0).toUpperCase()}
+              <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={handleModalClose} // Llama a la nueva función al cerrar
+        onSuccess={() => handleModalClose(true)} // Llama a la función y recarga
+
+        // Esta es la parte clave: precarga los datos del cliente
+        initialCustomer={{
+          id: customer.id,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email
+        }}
+      />
             </div>
 
             {/* Info principal */}
