@@ -331,78 +331,89 @@ function AppointmentCard({ appointment, onNavigate, onDelete, getStatusBadge }) 
   });
 
   return (
-    <div
-      className="flex items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700 cursor-pointer"
-      onClick={() => onNavigate(appointment.id)}
-    >
-      <div className="flex items-center gap-4 flex-1">
-        {/* Time */}
-        <div className="text-center min-w-[80px]">
-          <Clock className="h-5 w-5 text-gray-400 mx-auto" />
-          <span className="text-sm font-semibold text-white mt-1 block">
-            {timeStr}
-          </span>
-        </div>
+  <div
+    className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-[#1a2f38] rounded-lg hover:bg-[#09181f] transition-colors border border-gray-700 cursor-pointer gap-4"
+    onClick={() => onNavigate(appointment.id)}
+  >
+    <div className="flex items-center gap-4 flex-1 min-w-0">
+      {/* Time */}
+      <div className="text-center min-w-[80px]">
+        <Clock className="h-5 w-5 text-gray-400 mx-auto" />
+        <span className="text-sm font-semibold text-white mt-1 block">
+          {timeStr}
+        </span>
+      </div>
 
-        {/* Client Info */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-400" />
-            <span className="font-medium text-white">{appointment.client_name}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <Phone className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-400">{appointment.client_phone}</span>
-          </div>
+      {/* Client Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-gray-400" />
+          <span className="font-medium text-white truncate">{appointment.client_name}</span>
         </div>
-
-        {/* Service */}
-        <div className="hidden md:block flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
-            <span className="text-sm text-white truncate">{appointment.service_name}</span>
-            {/* ✅ AGREGADO: Indicador de servicios adicionales */}
-            {appointment.services_count > 1 && (
-              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full flex-shrink-0">
-                +{appointment.services_count - 1}
-              </span>
-            )}
-          </div>
-          {appointment.duration_minutes && (
-            <p className="text-xs text-gray-400 mt-1 ml-6">
-              {appointment.duration_minutes} minutos
-            </p>
+        <div className="flex items-center gap-2 mt-1">
+          <Phone className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-400 truncate">{appointment.client_phone}</span>
+        </div>
+        
+        {/* Service - Ahora visible en mobile */}
+        <div className="flex items-center gap-2 mt-2 md:hidden">
+          <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-white truncate">{appointment.service_name}</span>
+          {appointment.services_count > 1 && (
+            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full flex-shrink-0">
+              +{appointment.services_count - 1}
+            </span>
           )}
         </div>
-
-        {/* Status */}
-        <div className="min-w-[120px]">
-          <span className={cn('px-3 py-1 rounded-full text-xs font-medium inline-flex items-center', statusInfo.color)}>
-            <StatusIcon className="h-3 w-3 mr-1" />
-            {statusInfo.label}
-          </span>
-        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onNavigate(appointment.id)}
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          Ver
-        </Button>
+      {/* Service - Desktop only */}
+      <div className="hidden md:block flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-white truncate">{appointment.service_name}</span>
+          {appointment.services_count > 1 && (
+            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full flex-shrink-0">
+              +{appointment.services_count - 1}
+            </span>
+          )}
+        </div>
+        {appointment.duration_minutes && (
+          <p className="text-xs text-gray-400 mt-1 ml-6">
+            {appointment.duration_minutes} minutos
+          </p>
+        )}
+      </div>
 
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => onDelete(appointment.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      {/* Status */}
+      <div className="min-w-[120px]">
+        <span className={cn('px-3 py-1 rounded-full text-xs font-medium inline-flex items-center', statusInfo.color)}>
+          <StatusIcon className="h-3 w-3 mr-1" />
+          {statusInfo.label}
+        </span>
       </div>
     </div>
-  );
+
+    {/* Actions */}
+    <div className="flex items-center gap-2 w-full md:w-auto md:ml-4" onClick={(e) => e.stopPropagation()}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => onNavigate(appointment.id)}
+        className="flex-1 md:flex-none"
+      >
+        <Eye className="h-4 w-4 mr-1" />
+        Ver
+      </Button>
+
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => onDelete(appointment.id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+);
 };

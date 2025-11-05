@@ -19,7 +19,7 @@ import {
   AlertCircle,
   Star,
   History,
-  Package // ✅ NUEVO icono para servicios
+  Package 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
@@ -29,7 +29,7 @@ export function AppointmentDetail() {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  
+
   const [appointment, setAppointment] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [customerHistory, setCustomerHistory] = useState([]);
@@ -132,9 +132,9 @@ export function AppointmentDetail() {
     return (
       <div className="text-center py-12">
         <p className="text-white">Cita no encontrada</p>
-        <Button 
+        <Button
           variant="outline"
-          onClick={() => navigate('/dashboard')} 
+          onClick={() => navigate('/dashboard')}
           className="mt-4">
           Volver
         </Button>
@@ -143,27 +143,27 @@ export function AppointmentDetail() {
   }
 
   const appointmentDate = new Date(appointment.appointment_time);
-  const dateStr = appointmentDate.toLocaleDateString('es-ES', { 
+  const dateStr = appointmentDate.toLocaleDateString('es-ES', {
     weekday: 'long',
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
-  const timeStr = appointmentDate.toLocaleTimeString('es-ES', { 
-    hour: '2-digit', 
+  const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Europe/Madrid'
   });
 
-  // ✅ NUEVO: Determinar qué mostrar en el título
+  // Determinar qué mostrar en el título
   const servicesCount = appointment.services?.length || 0;
-  const displayTitle = servicesCount > 1 
-    ? `${servicesCount} Servicios` 
+  const displayTitle = servicesCount > 1
+    ? `${servicesCount} Servicios`
     : appointment.service_name;
 
-  // ✅ NUEVO: Calcular totales
+  // NUEVO: Calcular totales
   const totalPrice = appointment.services?.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0) || 0;
-  const totalDuration = appointment.duration_minutes || 
+  const totalDuration = appointment.duration_minutes ||
     appointment.services?.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0;
 
   return (
@@ -183,7 +183,7 @@ export function AppointmentDetail() {
           <Button
             variant="outline"
             onClick={handleDelete}
-            className="gap-2 text-red-500 hover:text-red-600"
+            className="gap-2 "
           >
             <Trash2 className="h-4 w-4" />
             Eliminar
@@ -194,19 +194,19 @@ export function AppointmentDetail() {
       {/* Main Info Card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
                 {displayTitle}
               </h1>
-              <div className="flex items-center gap-4 text-gray-400">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-gray-400">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="capitalize">{dateStr}</span>
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span className="capitalize text-sm md:text-base">{dateStr}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{timeStr}</span>
+                  <Clock className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm md:text-base">{timeStr}</span>
                   {totalDuration > 0 && (
                     <span className="text-sm">({totalDuration} min)</span>
                   )}
@@ -214,10 +214,12 @@ export function AppointmentDetail() {
               </div>
             </div>
 
-            <StatusBadge status={appointment.status} />
+            <div className="flex-shrink-0">
+              <StatusBadge status={appointment.status} />
+            </div>
           </div>
 
-          {/* ✅ NUEVO: Lista de Servicios */}
+          {/* Lista de Servicios */}
           {appointment.services && appointment.services.length > 0 && (
             <div className="mb-6 bg-[#0a1820] p-4 rounded-lg border border-gray-700">
               <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
@@ -226,7 +228,7 @@ export function AppointmentDetail() {
               </h3>
               <div className="space-y-2">
                 {appointment.services.map((service, index) => (
-                  <div 
+                  <div
                     key={service.id || index}
                     className="flex items-center justify-between p-3 bg-[#1a2f38] rounded-lg"
                   >
@@ -244,7 +246,7 @@ export function AppointmentDetail() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Totales */}
               {servicesCount > 1 && (
                 <div className="border-t border-gray-700 mt-3 pt-3 space-y-1">
@@ -306,7 +308,7 @@ export function AppointmentDetail() {
                 <DollarSign className="h-5 w-5 text-green-500" />
                 <span className="text-gray-400">Monto pagado:</span>
               </div>
-              
+
               {!isEditingAmount ? (
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-bold text-white">
@@ -512,10 +514,10 @@ function StatusBadge({ status }) {
 
 function HistoryItem({ appointment }) {
   const date = new Date(appointment.appointment_time);
-  const dateStr = date.toLocaleDateString('es-ES', { 
-    day: 'numeric', 
-    month: 'short', 
-    year: 'numeric' 
+  const dateStr = date.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
   });
 
   return (

@@ -52,7 +52,7 @@ export function Settings() {
 
       {/* Tabs */}
       <div className="border-b border-gray-700">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto"> 
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -60,8 +60,8 @@ export function Settings() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
                   }`}
               >
                 <Icon className="h-5 w-5" />
@@ -969,30 +969,36 @@ function HoursSettings({ user }) {
 
           <div className="space-y-3">
             {days.map((day) => (
-              <div key={day.value} className="grid grid-cols-[120px_1fr_20px_1fr_auto_auto] items-center gap-3 rounded-lg border border-gray-700 bg-[#1a2f38] p-3">
+              <div key={day.value} className="flex flex-col md:grid md:grid-cols-[120px_1fr_20px_1fr_auto_auto] items-start md:items-center gap-3 rounded-lg border border-gray-700 bg-[#1a2f38] p-3">
                 <span className="font-medium text-white">{day.label}</span>
-                <Input
-                  type="time"
-                  className="w-32"
-                  value={hours[day.value]?.openTime || '10:00'}
-                  onChange={(e) => updateHour(day.value, 'openTime', e.target.value)}
-                  disabled={!hours[day.value]?.isActive}
-                />
-                <span className="text-gray-400">-</span>
-                <Input
-                  type="time"
-                  className="w-32"
-                  value={hours[day.value]?.closeTime || '20:00'}
-                  onChange={(e) => updateHour(day.value, 'closeTime', e.target.value)}
-                  disabled={!hours[day.value]?.isActive}
-                />
-                <input
-                  type="checkbox"
-                  checked={hours[day.value]?.isActive || false}
-                  onChange={(e) => updateHour(day.value, 'isActive', e.target.checked)}
-                  className="h-5 w-5"
-                />
-                <span className="text-sm text-gray-400">Activo</span>
+
+                <div className="flex items-center gap-3 w-full md:contents">
+                  <Input
+                    type="time"
+                    className="flex-1 md:w-32"
+                    value={hours[day.value]?.openTime || '10:00'}
+                    onChange={(e) => updateHour(day.value, 'openTime', e.target.value)}
+                    disabled={!hours[day.value]?.isActive}
+                  />
+                  <span className="text-gray-400">-</span>
+                  <Input
+                    type="time"
+                    className="flex-1 md:w-32"
+                    value={hours[day.value]?.closeTime || '20:00'}
+                    onChange={(e) => updateHour(day.value, 'closeTime', e.target.value)}
+                    disabled={!hours[day.value]?.isActive}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={hours[day.value]?.isActive || false}
+                    onChange={(e) => updateHour(day.value, 'isActive', e.target.checked)}
+                    className="h-5 w-5"
+                  />
+                  <span className="text-sm text-gray-400">Activo</span>
+                </div>
               </div>
             ))}
           </div>
@@ -1246,7 +1252,7 @@ function SecuritySettings({ user }) {
 function AgentSettings({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [status, setStatus] = useState(null); 
+  const [status, setStatus] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -1257,7 +1263,7 @@ function AgentSettings({ user }) {
       const data = await api.getWhatsAppStatus();
       setStatus(data);
       if (data.isConnected) {
-        setQrCode(null); 
+        setQrCode(null);
       }
       return data;
     } catch (err) {
@@ -1285,11 +1291,11 @@ function AgentSettings({ user }) {
         try {
           const data = await api.getWhatsAppStatus();
           setStatus(data); // El estado 'status' ahora contendrá { isConnected, instanceName, phoneNumber }
-          
+
           if (data.isConnected) {
             setQrCode(null); // Limpiar QR
             setError('');
-            clearInterval(intervalId); 
+            clearInterval(intervalId);
           }
         } catch (err) {
           console.error('Error polling status:', err);
@@ -1303,7 +1309,7 @@ function AgentSettings({ user }) {
         clearInterval(intervalId);
       }
     };
-  }, [qrCode, status]); 
+  }, [qrCode, status]);
 
   // Handler para Iniciar Conexión / Pedir QR
   const handleInitialize = async () => {
@@ -1312,7 +1318,7 @@ function AgentSettings({ user }) {
     setQrCode(null);
     try {
       const data = await api.initializeWhatsApp();
-      
+
       if (data.isConnected) {
         setStatus({ isConnected: true, state: 'open' });
         checkStatus(); // Llamar a checkStatus para obtener los detalles (nombre y número)
@@ -1321,7 +1327,7 @@ function AgentSettings({ user }) {
       } else if (data.isConnecting) {
         setStatus({ isConnected: false, state: 'connecting' });
       }
-      
+
     } catch (err) {
       console.error('Error inicializando:', err);
       setError(err.message || 'Error al inicializar WhatsApp');
@@ -1329,10 +1335,10 @@ function AgentSettings({ user }) {
       setIsInitializing(false);
     }
   };
-  
+
   // Handler para Refrescar QR (si el anterior expiró)
   const handleRefreshQR = async () => {
-    setIsInitializing(true); 
+    setIsInitializing(true);
     setError('');
     try {
       const data = await api.refreshWhatsAppQR();
@@ -1352,7 +1358,7 @@ function AgentSettings({ user }) {
     if (!confirm('¿Estás seguro de que quieres desconectar el Agente IA? Dejará de responder por WhatsApp.')) {
       return;
     }
-    
+
     setIsDisconnecting(true);
     setError('');
     try {
@@ -1389,7 +1395,7 @@ function AgentSettings({ user }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-        
+
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
               <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -1405,7 +1411,7 @@ function AgentSettings({ user }) {
               <p className="text-green-300 mt-2">
                 Tu Agente IA está activo y respondiendo en WhatsApp.
               </p>
-              
+
               {/* --- 💡 INICIO DE ACTUALIZACIÓN --- */}
               {/* Esta es la parte que añadí */}
               <div className="text-left max-w-sm mx-auto mt-6 space-y-2 text-sm">
@@ -1420,8 +1426,8 @@ function AgentSettings({ user }) {
               </div>
               {/* --- 💡 FIN DE ACTUALIZACIÓN --- */}
 
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 className="mt-8" // <-- Margen actualizado
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
@@ -1435,10 +1441,10 @@ function AgentSettings({ user }) {
               </Button>
             </div>
           ) : (
-          
+
             /* --- ESTADO: DESCONECTADO (Mostrando QR o Botón) --- */
             <div className="p-6 rounded-lg border border-gray-700 bg-[#1a2f38] text-center">
-              
+
               {/* --- Sub-estado: Mostrando QR --- */}
               {qrCode ? (
                 <>
@@ -1452,8 +1458,8 @@ function AgentSettings({ user }) {
                   <p className="text-xs text-gray-500 mt-4">
                     Este código expira. Si no funciona, refréscalo.
                   </p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="mt-4"
                     onClick={handleRefreshQR}
                     disabled={isInitializing}
@@ -1466,45 +1472,45 @@ function AgentSettings({ user }) {
                     {isInitializing ? 'Refrescando...' : 'Refrescar QR'}
                   </Button>
                 </>
-              ) : 
-              
-              /* --- Sub-estado: Cargando QR o Conectando --- */
-              (isInitializing || status?.state === 'connecting') ? (
-                <>
-                  <Loader2 className="h-12 w-12 text-blue-500 mx-auto animate-spin" />
-                  <h3 className="text-xl font-semibold text-white mt-4">
-                    {status?.state === 'connecting' ? 'Conectando...' : 'Generando Código QR...'}
-                  </h3>
-                  <p className="text-gray-400 mt-2">
-                    {status?.state === 'connecting' 
-                      ? 'Conexión en progreso. Esto puede tardar un momento.' 
-                      : 'Solicitando un nuevo código QR a WhatsApp.'}
-                  </p>
-                </>
-              ) : 
-              
-              /* --- Sub-estado: Inicial (Desconectado) --- */
-              (
-                <>
-                  <Bot className="h-16 w-16 text-blue-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white">Agente Desconectado</h3>
-                  <p className="text-gray-400 mt-2">
-                    Presiona el botón para generar el código QR y vincular tu teléfono.
-                  </p>
-                  <Button 
-                    className="mt-6"
-                    onClick={handleInitialize}
-                    disabled={isInitializing}
-                  >
-                    {isInitializing ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Bot className="mr-2 h-4 w-4" />
-                    )}
-                    {isInitializing ? 'Iniciando...' : 'Conectar Agente IA'}
-                  </Button>
-                </>
-              )}
+              ) :
+
+                /* --- Sub-estado: Cargando QR o Conectando --- */
+                (isInitializing || status?.state === 'connecting') ? (
+                  <>
+                    <Loader2 className="h-12 w-12 text-blue-500 mx-auto animate-spin" />
+                    <h3 className="text-xl font-semibold text-white mt-4">
+                      {status?.state === 'connecting' ? 'Conectando...' : 'Generando Código QR...'}
+                    </h3>
+                    <p className="text-gray-400 mt-2">
+                      {status?.state === 'connecting'
+                        ? 'Conexión en progreso. Esto puede tardar un momento.'
+                        : 'Solicitando un nuevo código QR a WhatsApp.'}
+                    </p>
+                  </>
+                ) :
+
+                  /* --- Sub-estado: Inicial (Desconectado) --- */
+                  (
+                    <>
+                      <Bot className="h-16 w-16 text-blue-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white">Agente Desconectado</h3>
+                      <p className="text-gray-400 mt-2">
+                        Presiona el botón para generar el código QR y vincular tu teléfono.
+                      </p>
+                      <Button
+                        className="mt-6"
+                        onClick={handleInitialize}
+                        disabled={isInitializing}
+                      >
+                        {isInitializing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Bot className="mr-2 h-4 w-4" />
+                        )}
+                        {isInitializing ? 'Iniciando...' : 'Conectar Agente IA'}
+                      </Button>
+                    </>
+                  )}
             </div>
           )}
         </CardContent>

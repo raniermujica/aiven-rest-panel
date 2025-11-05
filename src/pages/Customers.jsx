@@ -321,73 +321,74 @@ function StatsCard({ title, value, icon: Icon, color }) {
 
 function CustomerCard({ customer, onToggleVip, onView, onDelete }) {
   return (
-    <div className="bg-[#0a1820] p-4 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className={cn(
-            'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold',
-            customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
-          )}>
-            {customer.name.charAt(0).toUpperCase()}
-          </div>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-white">{customer.name}</h3>
-              {customer.is_vip && (
-                <Star className="h-4 w-4 text-yellow-500 fill-current" />
-              )}
-            </div>
-
-            <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
-              {customer.phone && (
-                <div className="flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  <span>{customer.phone}</span>
-                </div>
-              )}
-              {customer.email && (
-                <div className="flex items-center gap-1">
-                  <Mail className="h-3 w-3" />
-                  <span>{customer.email}</span>
-                </div>
-              )}
-            </div>
-          </div>
+  <div className="bg-[#0a1820] p-4 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className={cn(
+          'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0',
+          customer.is_vip ? 'bg-yellow-500 text-white' : 'bg-blue-500 text-white'
+        )}>
+          {customer.name.charAt(0).toUpperCase()}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onView(customer)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onToggleVip(customer.id)}
-          >
-            {customer.is_vip ? (
-              <StarOff className="h-4 w-4" />
-            ) : (
-              <Star className="h-4 w-4" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-white truncate">{customer.name}</h3>
+            {customer.is_vip && (
+              <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
             )}
-          </Button>
+          </div>
 
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => onDelete(customer.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mt-1 text-sm text-gray-400">
+            {customer.phone && (
+              <div className="flex items-center gap-1">
+                <Phone className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{customer.phone}</span>
+              </div>
+            )}
+            {customer.email && (
+              <div className="flex items-center gap-1">
+                <Mail className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{customer.email}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <div className="flex items-center gap-2 w-full md:w-auto">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onView(customer)}
+          className="flex-1 md:flex-none"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onToggleVip(customer.id)}
+        >
+          {customer.is_vip ? (
+            <StarOff className="h-4 w-4" />
+          ) : (
+            <Star className="h-4 w-4" />
+          )}
+        </Button>
+
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => onDelete(customer.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
-  );
+  </div>
+);
 }
 
 function CreateCustomerModal({ isOpen, onClose, onSuccess }) {
