@@ -185,7 +185,7 @@ export function Dashboard() {
                 <div className="text-center pt-3 border-t">
                   <button
                     className="text-sm text-blue-300 hover:text-blue-700"
-                    onClick={() => navigate('/appointments/today')}
+                    onClick={() => navigate('/reservations')}
                   >
                     Ver {todayAppointments.length - 5} {terminology.bookings.toLowerCase()} más
                   </button>

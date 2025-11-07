@@ -184,14 +184,14 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCust
       });
 
       // Enviar email de confirmación si está activado y hay email
-      if (sendEmailConfirmation && formData.clientEmail && response.appointment?.id) {
-        try {
-          await api.sendAppointmentConfirmation(response.appointment.id);
-          console.log('✅ Email de confirmación enviado');
-        } catch (emailError) {
-          console.error('⚠️ Error enviando email:', emailError);
-        }
-      }
+      // if (sendEmailConfirmation && formData.clientEmail && response.appointment?.id) {
+      //   try {
+      //     await api.sendAppointmentConfirmation(response.appointment.id);
+      //     console.log('✅ Email de confirmación enviado');
+      //   } catch (emailError) {
+      //     console.error('⚠️ Error enviando email:', emailError);
+      //   }
+      // }
 
       onSuccess();
     } catch (error) {

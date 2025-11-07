@@ -95,6 +95,7 @@ function GeneralSettings({ user }) {
     maxCapacity: '',
     assistantName: '',
     businessHours: '',
+    config: {},
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,6 +121,7 @@ function GeneralSettings({ user }) {
         maxCapacity: data.settings.maxCapacity || '',
         assistantName: data.settings.assistantName || '',
         businessHours: data.settings.businessHours || '',
+        config: data.settings.config || {}
       });
     } catch (error) {
       console.error('Error cargando configuración:', error);
@@ -310,6 +312,27 @@ function GeneralSettings({ user }) {
                   placeholder="Sofía"
                 />
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                Citas simultáneas (Nº de empleados)
+              </label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.config?.max_appointments_per_slot || 1}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  config: {
+                    ...formData.config,
+                    max_appointments_per_slot: parseInt(e.target.value, 10) || 1
+                  }
+                })}
+                placeholder="1"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Define cuántas citas se pueden agendar en la misma franja horaria.
+              </p>
             </div>
 
             <div>
