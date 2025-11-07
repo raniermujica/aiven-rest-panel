@@ -102,6 +102,39 @@ function GeneralSettings({ user }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const defaultConfig = {
+    terminology: {
+      booking: "Cita",
+      service: "Servicio",
+      bookings: "Citas",
+      customer: "Cliente",
+      services: "Servicios",
+      customers: "Clientes"
+    },
+    max_party_size: 12,
+    min_party_size: 1,
+    assistant_config: {
+      name: "Asistente",
+      tone: "amigable y profesional",
+      personality_traits: ["servicial", "eficiente"]
+    },
+    auto_unblock_hours: 4,
+    require_confirmation: true,
+    booking_buffer_minutes: 15,
+    business_hours_detailed: {
+      friday: { open: "09:00", close: "20:00", closed: false },
+      monday: { open: "09:00", close: "20:00", closed: false },
+      sunday: { open: null, close: null, closed: true },
+      tuesday: { open: "09:00", close: "20:00", closed: false },
+      saturday: { open: "10:00", close: "18:00", closed: false },
+      thursday: { open: "09:00", close: "20:00", closed: false },
+      wednesday: { open: "09:00", close: "20:00", closed: false }
+    },
+    max_appointments_per_slot: 1, // Default 1
+    allow_same_day_reservations: true,
+    email_required_for_reservations: false
+  };
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -110,6 +143,26 @@ function GeneralSettings({ user }) {
     try {
       setLoading(true);
       const data = await api.getSettings();
+
+      const loadedConfig = data.settings.config || {};
+
+      const mergedConfig = {
+        ...defaultConfig, 
+        ...loadedConfig,  
+        
+        terminology: {
+          ...defaultConfig.terminology,
+          ...(loadedConfig.terminology || {}),
+        },
+        assistant_config: {
+          ...defaultConfig.assistant_config,
+          ...(loadedConfig.assistant_config || {}),
+        },
+        business_hours_detailed: {
+          ...defaultConfig.business_hours_detailed,
+          ...(loadedConfig.business_hours_detailed || {}),
+        },
+      };
 
       setFormData({
         name: data.settings.name || '',
@@ -121,7 +174,7 @@ function GeneralSettings({ user }) {
         maxCapacity: data.settings.maxCapacity || '',
         assistantName: data.settings.assistantName || '',
         businessHours: data.settings.businessHours || '',
-        config: data.settings.config || {}
+        config: mergedConfig,
       });
     } catch (error) {
       console.error('Error cargando configuración:', error);
@@ -1541,4 +1594,3 @@ function AgentSettings({ user }) {
     </div>
   );
 };
-
