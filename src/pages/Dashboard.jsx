@@ -37,6 +37,10 @@ export function Dashboard() {
     loadDashboardData();
   }, []);
 
+  console.log('👤 User en Dashboard:', user);
+console.log('🏢 Business en Dashboard:', user?.business);
+console.log('📝 Nombre del negocio:', user?.business?.name);
+
   const loadDashboardData = async () => {
     try {
       setLoading(true);

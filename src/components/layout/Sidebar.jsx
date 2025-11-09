@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
+import { hasPermission, PERMISSIONS } from '@/utils/permissions';
 import {
   LayoutDashboard,
   Calendar,
@@ -48,18 +49,6 @@ export function Sidebar() {
     return colors[user?.business?.type] || 'bg-gray-900';
   };
 
-  // Obtener icono según tipo de negocio
-  const getBusinessIcon = () => {
-    const icons = {
-      restaurant: UtensilsCrossed,
-      beauty_salon: Sparkles,
-      aesthetic_clinic: Sparkles,
-      dental_clinic: Activity,
-      barbershop: Scissors,
-    };
-    return icons[user?.business?.type] || UtensilsCrossed;
-  };
-
   // Obtener el emoji del icono
   const getBusinessEmoji = () => {
     const emojis = {
@@ -84,16 +73,56 @@ export function Sidebar() {
     return names[user?.business?.type] || 'Negocio';
   };
 
+  // Navegación con permisos
   const navigation = [
-    { name: 'Panel de Control', href: '/dashboard', icon: LayoutDashboard },
-    { name: `${terminology.bookings} de hoy`, href: '/reservations/today', icon: Calendar },
-    { name: `Todas las ${terminology.bookings.toLowerCase()}`, href: '/reservations', icon: CalendarDays },
-    {name: 'Calendario', href: '/calendar', icon: CalendarDays },
-    { name: 'Clientes', href: '/customers', icon: Users },
-    // { name: 'Lista de espera', href: '/waitlist', icon: Clock },
-    { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
-    { name: 'Configuración', href: '/settings', icon: Settings },
+    { 
+      name: 'Panel de Control', 
+      href: '/dashboard', 
+      icon: LayoutDashboard,
+      permission: PERMISSIONS.VIEW_DASHBOARD
+    },
+    { 
+      name: `${terminology.bookings} de hoy`, 
+      href: '/reservations/today', 
+      icon: Calendar,
+      permission: PERMISSIONS.VIEW_TODAY_APPOINTMENTS
+    },
+    { 
+      name: `Todas las ${terminology.bookings.toLowerCase()}`, 
+      href: '/reservations', 
+      icon: CalendarDays,
+      permission: PERMISSIONS.VIEW_ALL_APPOINTMENTS
+    },
+    {
+      name: 'Calendario', 
+      href: '/calendar', 
+      icon: CalendarDays,
+      permission: PERMISSIONS.VIEW_CALENDAR
+    },
+    { 
+      name: 'Clientes', 
+      href: '/customers', 
+      icon: Users,
+      permission: PERMISSIONS.VIEW_CUSTOMERS
+    },
+    { 
+      name: 'Estadísticas', 
+      href: '/analytics', 
+      icon: BarChart3,
+      permission: PERMISSIONS.VIEW_ANALYTICS
+    },
+    { 
+      name: 'Configuración', 
+      href: '/settings', 
+      icon: Settings,
+      permission: PERMISSIONS.VIEW_SETTINGS
+    },
   ];
+
+  // Filtrar navegación según permisos
+  const visibleNavigation = navigation.filter(item => 
+    hasPermission(user?.role, item.permission)
+  );
 
   return (
     <>
@@ -132,7 +161,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
 

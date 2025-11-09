@@ -15,29 +15,31 @@ import { Calendar } from './pages/Calendar';
 import { CustomerProfile } from '@/pages/CustomerProfile';
 import { AppointmentDetail } from '@/pages/AppointmentDetail';
 import CalendarView from './components/calendar/CalendarView';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PERMISSIONS } from './utils/permissions';
 
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-}
+// function ProtectedRoute({ children }) {
+//   const { isAuthenticated } = useAuthStore();
+
+//   if (!isAuthenticated) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   return children;
+// }
 
 function SuperAdminRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore();
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   if (!user?.isSuperAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 }
 
@@ -75,6 +77,14 @@ function App() {
                     <Route path="/customers/:customerId" element={<CustomerProfile />} />
                     <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />
                     <Route path="/calendar" element={<CalendarView />} />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute permission={PERMISSIONS.VIEW_SETTINGS}>
+                          <Settings />
+                        </ProtectedRoute>
+                      }
+                    />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

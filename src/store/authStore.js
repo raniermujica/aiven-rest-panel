@@ -10,44 +10,31 @@ export const useAuthStore = create(
       businessSlug: null,
       isAuthenticated: false,
 
-      setAuth: (token, user, businessSlug) => {
+      login: (userData, token) => {
+        console.log('🔐 Login en authStore - userData:', userData);
+        console.log('🏢 Business:', userData.business);
+        
+        const businessSlug = userData.business?.slug || null;
+        
         localStorage.setItem('token', token);
-        localStorage.setItem('businessSlug', businessSlug);
+        if (businessSlug) {
+          localStorage.setItem('businessSlug', businessSlug);
+        }
+        
         set({
           token,
-          user,
+          user: userData,
           businessSlug,
           isAuthenticated: true,
         });
       },
-
-      login: (user, token) => {
-        const businessSlug = user.business?.slug;
-        localStorage.setItem('token', token);
-        localStorage.setItem('businessSlug', businessSlug);
-        set({
-          token,
-          user,
-          businessSlug,
-          isAuthenticated: true,
-        });
-      },
-
-      // updateUser: (userData) => {
-      //   set((state) => ({
-      //     user: {
-      //       ...state.user,
-      //       ...userData,
-      //     },
-      //   }));
-      // },
 
       updateBusinessName: (name) => {
         set((state) => ({
           user: {
             ...state.user,
             business: {
-              ...state.user.business,
+              ...state.user?.business,
               name: name,
             },
           },
@@ -57,10 +44,15 @@ export const useAuthStore = create(
       refreshUser: async () => {
         try {
           const data = await api.getMe();
-          set({ user: data.user });
+          console.log('♻️ Refresh user - data:', data);
+          
+          set((state) => ({ 
+            user: data.user,
+            businessSlug: data.user?.business?.slug || state.businessSlug
+          }));
         } catch (error) {
           console.error('Error refrescando usuario:', error);
-           throw error;
+          throw error;
         }
       },
 
