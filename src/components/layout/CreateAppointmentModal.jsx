@@ -6,7 +6,8 @@ import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
-export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCustomer = null }) {
+
+export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCustomer = null, initialDate = null, initialTime = null }) {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,25 +36,25 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCust
   };
 
   // Cargar servicios y datos iniciales
-  useEffect(() => {
-    if (isOpen) {
-      loadServices();
-      
-      const today = new Date().toISOString().split('T')[0];
-      setFormData({
-        clientName: initialCustomer?.name || '',
-        clientPhone: initialCustomer?.phone || '',
-        clientEmail: initialCustomer?.email || '',
-        scheduledDate: today,
-        appointmentTime: '10:00',
-        notes: '',
-      });
+useEffect(() => {
+  if (isOpen) {
+    loadServices();
+    
+    const today = new Date().toISOString().split('T')[0];
+    setFormData({
+      clientName: initialCustomer?.name || '',
+      clientPhone: initialCustomer?.phone || '',
+      clientEmail: initialCustomer?.email || '',
+      scheduledDate: initialDate || today,
+      appointmentTime: initialTime || '10:00',
+      notes: '',
+    });
       setAvailability(null);
       setSelectedServices([]);
       setTempServiceId('');
       setError('');
     }
-  }, [isOpen, initialCustomer]);
+  }, [isOpen, initialCustomer, initialDate, initialTime]);
   
   const loadServices = async () => {
     try {
@@ -213,7 +214,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCust
   const totalPrice = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 h-screen = height: 100vh width: 100vw">
       <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
@@ -275,13 +276,13 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCust
 
           {/* SERVICIOS */}
           <div className="border-t border-gray-700 pt-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2 ">
               Servicios *
             </label>
             
             <div className="flex gap-2 mb-3">
               <select
-                className="flex-1 px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               className="flex-1 min-w-0 px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={tempServiceId}
                 onChange={(e) => setTempServiceId(e.target.value)}
               >

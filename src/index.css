@@ -4,41 +4,61 @@
 @tailwind utilities;
 /* stylelint-enable at-rule-no-unknown */
 
+/* ============================================ */
+/* RESET PARA OCUPAR 100% DE LA VISTA */
+/* ============================================ */
+html, body, #root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 :root {
   --color-primary: rgb(37, 99, 235);
   --color-primary-hover: rgb(29, 78, 216);
   --color-sidebar: rgb(17, 24, 39);
 }
+
 .dark {
-    --background: 0 0% 0%; /* Negro */
-    --foreground: 0 0% 100%; /* Blanco */
-    
-    --card: 0 0% 7%; /* Gris muy oscuro */
-    --card-foreground: 0 0% 100%;
-    
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 100%;
-    
-    --primary: var(--color-primary);
-    --primary-foreground: 0 0% 100%;
-    
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 70%;
-    
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 100%;
-    
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 30%;
-  }
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 100%;
+  
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 100%;
+  
+  --primary: var(--color-primary);
+  --primary-foreground: 0 0% 100%;
+  
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 70%;
+  
+  --accent: 0 0% 15%;
+  --accent-foreground: 0 0% 100%;
+  
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 0 0% 30%;
+}
 
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-[#102027] text-white;
+    /* CAMBIADO: Removido bg-[#102027] para que no interfiera con el Layout */
+    @apply text-white;
+    background-color: #102027; /* Movido a CSS normal */
+    height: 100vh;
+    overflow: hidden;
   }
 }
 
@@ -51,4 +71,4 @@ button[class*="bg-blue-"],
 button[class*="bg-blue-"]:hover,
 .btn-primary:hover {
   background-color: var(--color-primary-hover) !important;
-};
+}

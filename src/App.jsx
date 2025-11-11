@@ -10,24 +10,12 @@ import { Waitlist } from './pages/Waitlist';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { SuperAdmin } from './pages/SuperAdmin';
-import { useAuthStore } from './store/authStore';
-import { Calendar } from './pages/Calendar';
 import { CustomerProfile } from '@/pages/CustomerProfile';
 import { AppointmentDetail } from '@/pages/AppointmentDetail';
 import CalendarView from './components/calendar/CalendarView';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PERMISSIONS } from './utils/permissions';
-
-
-// function ProtectedRoute({ children }) {
-//   const { isAuthenticated } = useAuthStore();
-
-//   if (!isAuthenticated) {
-//     return <Navigate to="/login" replace />;
-//   }
-
-//   return children;
-// }
+import { useAuthStore } from './store/authStore';
 
 function SuperAdminRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -45,7 +33,7 @@ function SuperAdminRoute({ children }) {
 
 function App() {
   return (
-    <BrowserRouter >
+    <BrowserRouter>
       <ThemeProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -65,17 +53,15 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/reservations" element={<AllReservations />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/waitlist" element={<Waitlist />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/calendar" element={<Calendar />} />
                     <Route path="/reservations/today" element={<TodayReservations />} />
+                    <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/:customerId" element={<CustomerProfile />} />
                     <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />
+                    <Route path="/waitlist" element={<Waitlist />} />
+                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/calendar" element={<CalendarView />} />
                     <Route
                       path="/settings"

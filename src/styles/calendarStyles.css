@@ -1,67 +1,157 @@
-FullCalendar Core Styles
-
+/* FullCalendar Core Styles */
 .fc {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: white;
+  background: #d9d9d9;
   border-radius: 8px;
 }
 
 .fc-view-harness {
-  background: white;
+  background: #d9d9d9;
 }
 
 /* Toolbar */
 .fc-toolbar {
-  background: #f9fafb;
+  background: #1a2f38;
   padding: 1rem;
   border-radius: 8px 8px 0 0;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 2px solid #0f1c24;
+  margin-bottom: 0 !important;
 }
 
 .fc-toolbar-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
+  text-transform: capitalize;
 }
 
 /* Botones */
 .fc-button {
-  background: #3b82f6;
+  background: #ec4899;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-weight: 500;
   transition: all 0.2s;
+  color: white !important;
 }
 
 .fc-button:hover {
-  background: #2563eb;
+  background: #db2777;
 }
 
 .fc-button-active {
-  background: #1d4ed8;
+  background: #be185d !important;
 }
 
-/* Días de la semana */
+.fc-button:disabled {
+  background: #6b7280;
+  opacity: 0.5;
+}
+
+/* Días de la semana - Header */
 .fc-col-header-cell {
   background: #1f2937;
   color: white;
-  padding: 1rem;
+  padding: 0.5rem;
+  height: 40px;
+  min-height: 40px;
   font-weight: 600;
   border: none;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.fc-col-header-cell-cushion {
+  color: white;
+  text-transform: capitalize;
+}
+
+/* Día actual - Solo sombreado de fondo en vista mensual */
+.fc-day-today {
+  background: rgba(236, 72, 153, 0.12) !important;
+  position: relative;
+}
+
+.fc-day-today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(236, 72, 153, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header del día actual en vista semanal/diaria */
+.fc-col-header-cell.fc-day-today {
+  background: #ec4899 !important;
+  color: white !important;
+}
+
+/* Número del día actual en vista mensual - SIN círculo */
+.fc-day-today .fc-daygrid-day-number {
+  background: transparent !important;
+  color: #111827 !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  font-weight: 700 !important;
+}
+
+/* Asegurar que el contador esté visible */
+.fc-day-today .custom-event-counter {
+  position: relative;
+  z-index: 1;
+}
+
+.fc-day-today .fc-daygrid-day-top {
+  position: relative;
+  z-index: 1;
 }
 
 /* Celdas del calendario */
 .fc-daygrid-day {
   border: 1px solid #e5e7eb;
+  background: white;
 }
 
 .fc-daygrid-day:hover {
-  background: #f3f4f6;
+  background: #f9fafb;
+  cursor: pointer;
 }
 
-.fc-day-today {
-  background: #dbeafe !important;
+/* TimeGrid (vista semanal) */
+.fc-timegrid-slot {
+  height: 3rem;
+  border-color: #e5e7eb;
+  background: white;
+}
+
+.fc-timegrid-slot:hover {
+  background: #fef3f9;
+}
+
+.fc-timegrid-slot-label {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Línea de hora actual - sin círculo */
+.fc-timegrid-now-indicator-line {
+  border-color: #ec4899;
+  border-width: 2px;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  display: none;
 }
 
 /* Eventos */
@@ -73,30 +163,183 @@ FullCalendar Core Styles
   cursor: pointer;
   transition: all 0.2s;
   margin: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .fc-event:hover {
-  opacity: 0.9;
+  opacity: 0.85;
   transform: scale(1.02);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .fc-event-time {
   font-weight: 600;
+  font-size: 11px;
 }
 
 .fc-event-title {
   font-weight: 500;
+  font-size: 12px;
+  white-space: normal;
+  line-height: 1.3;
 }
 
-/* TimeGrid (vista semanal) */
-.fc-timegrid-slot {
-  height: 3rem;
-  border-color: #e5e7eb;
+.fc-event-main-frame {
+  padding: 2px;
 }
 
-.fc-timegrid-slot-label {
+/* Vista mensual - FORZAR COLORES */
+.fc-daygrid-event {
+  margin: 2px !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border: none !important;
+  opacity: 1 !important;
+}
+
+.fc-daygrid-event .fc-event-main {
+  color: white !important;
+}
+
+.fc-daygrid-event-harness {
+  margin: 2px 0 !important;
+}
+
+.fc-daygrid-event .fc-event-time,
+.fc-daygrid-event .fc-event-title {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fc-daygrid-event-dot {
+  display: none !important;
+}
+
+/* Vista de mes - hacer eventos más visibles */
+.fc-dayGridMonth-view .fc-event {
+  font-size: 12px !important;
+  padding: 4px 6px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  min-height: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fc-dayGridMonth-view .fc-event-time,
+.fc-dayGridMonth-view .fc-event-title {
+  color: white !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fc-dayGridMonth-view .fc-event:hover {
+  opacity: 0.95 !important;
+  transform: scale(1.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Asegurar que el background-color se aplique */
+.fc-h-event {
+  border: none !important;
+  background: inherit !important;
+}
+
+.fc-h-event .fc-event-main {
+  color: white !important;
+  background: inherit !important;
+}
+
+.fc-daygrid-day-number {
+  padding: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Ocultar eventos en vista mensual */
+.fc-dayGridMonth-view .fc-daygrid-event-harness {
+  display: none;
+}
+
+/* Ajustar altura de celdas en vista mensual - FORZADO */
+.fc-dayGridMonth-view .fc-daygrid-day-frame {
+  min-height: 100px !important;
+  max-height: 100px !important;
+  height: 100px !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day {
+  min-height: 100px !important;
+  max-height: 100px !important;
+  height: 100px !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-events {
+  display: none !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-bottom {
+  display: none !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-body-unbalanced .fc-daygrid-day-frame {
+  min-height: 100px !important;
+  max-height: 100px !important;
+}
+
+.fc-dayGridMonth-view tbody tr {
+  height: 100px !important;
+}
+
+.fc-dayGridMonth-view .fc-scrollgrid-sync-table tbody tr {
+  height: 100px !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-top {
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+/* Contador de eventos en vista mensual */
+.custom-event-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-top: auto;
+  margin-bottom: auto;
+  flex-grow: 1;
+}
+
+.event-count {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ec4899;
+  line-height: 1;
+}
+
+.event-label {
+  font-size: 10px;
   color: #6b7280;
-  font-size: 0.875rem;
+  text-transform: lowercase;
+  margin-top: 2px;
+}
+
+/* Más eventos en vista mensual */
+.fc-daygrid-more-link {
+  color: #ec4899;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.fc-daygrid-more-link:hover {
+  color: #db2777;
+  background: rgba(236, 72, 153, 0.1);
 }
 
 /* Scrollbar personalizado */
@@ -107,6 +350,7 @@ FullCalendar Core Styles
 
 .fc-scroller::-webkit-scrollbar-track {
   background: #f3f4f6;
+  border-radius: 4px;
 }
 
 .fc-scroller::-webkit-scrollbar-thumb {
@@ -116,4 +360,61 @@ FullCalendar Core Styles
 
 .fc-scroller::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Popover de eventos (tooltip) */
+.fc-popover {
+  background: #1f2937;
+  border: 1px solid #374151;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.fc-popover-header {
+  background: #111827;
+  color: white;
+  padding: 8px 12px;
+}
+
+.fc-popover-body {
+  color: white;
+}
+
+/* Líneas de división */
+.fc-scrollgrid {
+  border-color: #e5e7eb !important;
+}
+
+.fc-scrollgrid td,
+.fc-scrollgrid th {
+  border-color: #e5e7eb !important;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .fc-toolbar {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.25rem;
+  }
+  
+  .fc-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+  }
+  
+  .fc-event-title {
+    font-size: 11px;
+  }
+}
+
+/* Slots clickeables destacados */
+.fc-timegrid-slot:hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(236, 72, 153, 0.05);
+  pointer-events: none;
 }
