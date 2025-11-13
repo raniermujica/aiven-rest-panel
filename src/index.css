@@ -7,12 +7,14 @@
 /* ============================================ */
 /* RESET PARA OCUPAR 100% DE LA VISTA */
 /* ============================================ */
-html, body, #root {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+html, body {
   margin: 0;
   padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100vw;
 }
 
 * {
@@ -57,7 +59,7 @@ html, body, #root {
     /* CAMBIADO: Removido bg-[#102027] para que no interfiera con el Layout */
     @apply text-white;
     background-color: #102027; /* Movido a CSS normal */
-    height: 100vh;
+    /* height: 100vh; */
     /* overflow: auto; */
   }
 }

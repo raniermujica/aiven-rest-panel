@@ -113,7 +113,7 @@ export default function Demo() {
   const faqs = [
     {
       q: '🚀 ¿Cómo funciona el panel de gestión?',
-      a: 'Centraliza todas tus citas en un solo lugar. Verás en tiempo real las reservas hechas por tu Agente IA en WhatsApp, las que añadas manualmente desde el panel y las que lleguen desde Google o tus redes sociales. Además, podrás consultar el historial completo de cada cliente y sus servicios.'
+      a: 'Centraliza todas tus citas en un solo lugar. Verás en tiempo real las reservas hechas por tu Agente IA en WhatsApp, las que añadas manualmente desde el panel y las que lleguen desde Google o tus redes sociales. Además podrás consultar el historial completo de cada cliente y sus últimas visitas.'
     },
     {
       q: '🗓️ ¿Cómo puedo visualizar mis citas?',
@@ -121,7 +121,7 @@ export default function Demo() {
     },
     {
       q: '👥 ¿Me ayuda con la gestión de clientes?',
-      a: '¡Por supuesto! Cada cliente que agenda (sea por IA o manualmente) se guarda automáticamente en tu base de datos. Podrás consultar su historial completo de visitas, servicios preferidos y datos de contacto. Además, puedes marcar clientes como VIP para ofrecerles un trato preferencial o aplicar promociones especiales.'
+      a: '¡Por supuesto! Cada cliente que agendas (sea por IA o manualmente) se guarda automáticamente en tu base de datos. Podrás consultar su historial completo de visitas, servicios preferidos y datos de contacto. Además, puedes marcar clientes como VIP para ofrecerles un trato preferencial o aplicar promociones especiales.'
     },
     {
       q: '⚙️ ¿Es difícil de configurar?',
@@ -193,55 +193,51 @@ export default function Demo() {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         {/* Sidebar izquierdo - 1/4 */}
-        <div className="w-1/4 bg-gray-900 px-12 py-16 flex flex-col items-center justify-center border-r border-gray-700 padding-2px">
-          <div className="text-center space-y-6">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-pink-500/10 mb-4">
-              <Calendar className="h-10 w-10 text-pink-500" />
-            </div>
+       <div className="w-1/4 bg-gray-900 px-10 py-10 flex flex-col items-center justify-between border-r border-gray-700">
+  <div className="flex flex-col items-center text-center space-y-4">
+    {/* Icono y título */}
+    <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-pink-500/10 mb-2">
+      <Calendar className="h-8 w-8 text-pink-500" />
+    </div>
 
-            <h1 className="text-2xl font-bold text-white">
-              Bella Estética
-            </h1>
+    <h1 className="text-xl font-bold text-white">Esthétique La Belle Époque</h1>
 
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <p className="text-sm text-gray-300 mb-4">
-                Escanea el QR para agendar
-              </p>
+    {/* QR y botón */}
+    <div className="bg-gray-800 p-5 rounded-lg w-full">
+      <p className="text-sm text-gray-300 mb-3">Escanea el QR para agendar</p>
 
-              {/* QR Code */}
-              <div className="bg-white p-4 rounded-lg mb-4">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappLink)}`}
-                  alt="QR WhatsApp"
-                  className="w-full h-auto"
-                />
-              </div>
+      <div className="bg-white p-3 rounded-lg mb-3">
+        <img
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(whatsappLink)}`}
+          alt="QR WhatsApp"
+          className="w-full h-auto"
+        />
+      </div>
 
-              <div className="text-xs text-gray-400 mb-4">o</div>
+      <div className="text-xs text-gray-400 mb-3">o</div>
 
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-green-600"
-              >
-                <Smartphone className="h-5 w-5" />
-                Abrir WhatsApp Web
-              </a>
-            </div>
+      <a
+        href={whatsappLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-green-600"
+      >
+        <Smartphone className="h-4 w-4" />
+        Abrir WhatsApp Web
+      </a>
+    </div>
 
-            <div className="bg-pink-500/10 p-4 rounded-lg text-left">
-              <p className="text-xs text-pink-300 font-semibold mb-2">
-                💡 Instrucciones:
-              </p>
-              <ol className="text-xs text-gray-300 space-y-2">
-                <li>1. Escanea el QR o haz clic en el botón</li>
-                <li>2. Pide una cita al Agente IA</li>
-                <li>3. ¡Mira cómo aparece aquí! →</li>
-              </ol>
-            </div>
-          </div>
-        </div>
+    {/* Instrucciones */}
+    <div className="bg-pink-500/10 p-3 rounded-lg text-left w-full">
+      <p className="text-xs text-pink-300 font-semibold mb-1">💡 Instrucciones:</p>
+      <ol className="text-xs text-gray-300 space-y-1">
+        <li>1. Escanea el QR o haz clic en el botón</li>
+        <li>2. Pide una cita al Agente IA</li>
+        <li>3. ¡Mira cómo aparece aquí! →</li>
+      </ol>
+    </div>
+  </div>
+</div>
 
         {/* Contenido principal - 3/4 */}
         <div className="w-3/4 overflow-y-auto">
@@ -252,7 +248,7 @@ export default function Demo() {
             </h2>
 
             <p className="text-gray-300 mb-4">
-              Estás viendo un panel de demostración de "Bella Estética".
+              Estás viendo un panel de demostración de "Esthétique La Belle Époque".
             </p>
 
             <p className="text-white font-semibold mb-4">
@@ -265,7 +261,7 @@ export default function Demo() {
                   1
                 </span>
                 <span>
-                  <strong className="text-white">Inicia una conversación:</strong> Haz clic en el botón de WhatsApp o escanea el QR para hablar con nuestro Agente IA. Pídele una cita (ej: "Quiero una limpieza facial para mañana por la tarde").
+                  <strong className="text-white">Inicia una conversación:</strong> Haz clic en el botón de WhatsApp o escanea el QR para hablar con nuestro Agente IA. Pídele una cita (ej: "Quiero una limpieza facial para mañana por la tarde"). Pídele información sobre los servicios de la estética o sobre cualquier cosa que te gustaría saber.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -435,7 +431,7 @@ export default function Demo() {
             <div className="mx-auto max-w-md">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-4">
-                  ✨ ¿Listo para automatizar tu negocio?
+                   ¿Listo para automatizar tu negocio?
                 </h2>
                 <p className="text-gray-300">
                   Rellena el formulario y te activamos una prueba gratuita de 7 días.
@@ -569,7 +565,7 @@ export default function Demo() {
           </div>
 
           <h1 className="mb-4 text-4xl font-bold text-white">
-            Bella Estética
+            Esthétique La Belle Époque
           </h1>
 
           {/* Introducción */}
@@ -592,7 +588,7 @@ export default function Demo() {
                   1
                 </span>
                 <span>
-                  <strong className="text-white">Inicia una conversación:</strong> Haz clic en el botón de WhatsApp para hablar con nuestro Agente IA. Pídele una cita (ej: "Quiero un masaje para mañana por la tarde").
+                  <strong className="text-white">Inicia una conversación:</strong> Haz clic en el botón de WhatsApp o escanea el QR para hablar con nuestro Agente IA. Pídele una cita (ej: "Quiero una limpieza facial para mañana por la tarde"). Pídele información sobre los servicios de la estética o sobre cualquier cosa que te gustaría saber.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -788,7 +784,7 @@ export default function Demo() {
         <div className="mx-auto max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-4">
-              ✨ ¿Listo para automatizar tu negocio?
+               ¿Listo para automatizar tu negocio?
             </h2>
             <p className="text-gray-300">
               Rellena el formulario y te activamos una prueba gratuita de 7 días.
@@ -904,7 +900,7 @@ export default function Demo() {
       {/* Footer */}
       <div className="bg-black px-6 py-8 text-center">
         <p className="text-gray-500">
-          © 2024 Agent Paul. Todos los derechos reservados.
+          © 2025 Agent Paul. Todos los derechos reservados.
         </p>
       </div>
     </div>
