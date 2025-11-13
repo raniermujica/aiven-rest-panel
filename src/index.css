@@ -1,24 +1,13 @@
-/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* stylelint-enable at-rule-no-unknown */
 
-/* ============================================ */
-/* RESET PARA OCUPAR 100% DE LA VISTA */
-/* ============================================ */
-html, body {
-  margin: 0;
-  padding: 0;
-}
 
-#root {
-  min-height: 100vh;
-  width: 100vw;
-}
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
@@ -30,41 +19,35 @@ html, body {
 .dark {
   --background: 0 0% 0%;
   --foreground: 0 0% 100%;
-  
   --card: 0 0% 7%;
   --card-foreground: 0 0% 100%;
-  
   --popover: 0 0% 7%;
   --popover-foreground: 0 0% 100%;
-  
   --primary: var(--color-primary);
   --primary-foreground: 0 0% 100%;
-  
   --muted: 0 0% 15%;
   --muted-foreground: 0 0% 70%;
-  
   --accent: 0 0% 15%;
   --accent-foreground: 0 0% 100%;
-  
   --border: 0 0% 20%;
   --input: 0 0% 20%;
   --ring: 0 0% 30%;
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    /* CAMBIADO: Removido bg-[#102027] para que no interfiera con el Layout */
     @apply text-white;
-    background-color: #102027; /* Movido a CSS normal */
-    /* height: 100vh; */
-    /* overflow: auto; */
+    background-color: #102027;
   }
 }
 
-/* Estilos para botones primarios dinámicos */
+/* Layout del panel - altura fija */
+.layout-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
 button[class*="bg-blue-"],
 .btn-primary {
   background-color: var(--color-primary) !important;
