@@ -193,51 +193,51 @@ export default function Demo() {
     return (
       <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         {/* Sidebar izquierdo - 1/4 */}
-       <div className="w-1/4 bg-gray-900 px-10 py-10 flex flex-col items-center justify-between border-r border-gray-700">
-  <div className="flex flex-col items-center text-center space-y-4">
-    {/* Icono y título */}
-    <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-pink-500/10 mb-2">
-      <Calendar className="h-8 w-8 text-pink-500" />
-    </div>
+        <div className="w-1/4 bg-gray-900 px-10 py-10 flex flex-col items-center justify-between border-r border-gray-700">
+          <div className="flex flex-col items-center text-center space-y-4">
+            {/* Icono y título */}
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-pink-500/10 mb-2">
+              <Calendar className="h-8 w-8 text-pink-500" />
+            </div>
 
-    <h1 className="text-xl font-bold text-white">Esthétique La Belle Époque</h1>
+            <h1 className="text-xl font-bold text-white">Esthétique La Belle Époque</h1>
 
-    {/* QR y botón */}
-    <div className="bg-gray-800 p-5 rounded-lg w-full">
-      <p className="text-sm text-gray-300 mb-3">Escanea el QR para agendar</p>
+            {/* QR y botón */}
+            <div className="bg-gray-800 p-5 rounded-lg w-full">
+              <p className="text-sm text-gray-300 mb-3">Escanea el QR para agendar</p>
 
-      <div className="bg-white p-3 rounded-lg mb-3">
-        <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(whatsappLink)}`}
-          alt="QR WhatsApp"
-          className="w-full h-auto"
-        />
-      </div>
+              <div className="bg-white p-3 rounded-lg mb-3">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(whatsappLink)}`}
+                  alt="QR WhatsApp"
+                  className="w-full h-auto"
+                />
+              </div>
 
-      <div className="text-xs text-gray-400 mb-3">o</div>
+              <div className="text-xs text-gray-400 mb-3">o</div>
 
-      <a
-        href={whatsappLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-green-600"
-      >
-        <Smartphone className="h-4 w-4" />
-        Abrir WhatsApp Web
-      </a>
-    </div>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-green-600"
+              >
+                <Smartphone className="h-4 w-4" />
+                Abrir WhatsApp Web
+              </a>
+            </div>
 
-    {/* Instrucciones */}
-    <div className="bg-pink-500/10 p-3 rounded-lg text-left w-full">
-      <p className="text-xs text-pink-300 font-semibold mb-1">💡 Instrucciones:</p>
-      <ol className="text-xs text-gray-300 space-y-1">
-        <li>1. Escanea el QR o haz clic en el botón</li>
-        <li>2. Pide una cita al Agente IA</li>
-        <li>3. ¡Mira cómo aparece aquí! →</li>
-      </ol>
-    </div>
-  </div>
-</div>
+            {/* Instrucciones */}
+            <div className="bg-pink-500/10 p-3 rounded-lg text-left w-full">
+              <p className="text-xs text-pink-300 font-semibold mb-1">💡 Instrucciones:</p>
+              <ol className="text-xs text-gray-300 space-y-1">
+                <li>1. Escanea el QR o haz clic en el botón</li>
+                <li>2. Pide una cita al Agente IA</li>
+                <li>3. ¡Mira cómo aparece aquí! →</li>
+              </ol>
+            </div>
+          </div>
+        </div>
 
         {/* Contenido principal - 3/4 */}
         <div className="w-3/4 overflow-y-auto">
@@ -395,8 +395,8 @@ export default function Demo() {
                     <div
                       key={index}
                       className={`rounded-lg p-6 ${plan.popular
-                          ? 'bg-gradient-to-br from-pink-500 to-pink-600 ring-4 ring-pink-400'
-                          : 'bg-gray-700'
+                        ? 'bg-gradient-to-br from-pink-500 to-pink-600 ring-4 ring-pink-400'
+                        : 'bg-gray-700'
                         }`}
                     >
                       {plan.popular && (
@@ -431,7 +431,7 @@ export default function Demo() {
             <div className="mx-auto max-w-md">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-4">
-                   ¿Listo para automatizar tu negocio?
+                  ¿Listo para automatizar tu negocio?
                 </h2>
                 <p className="text-gray-300">
                   Rellena el formulario y te activamos una prueba gratuita de 7 días.
@@ -556,7 +556,7 @@ export default function Demo() {
   }
   // VERSIÓN MÓVIL
   return (
-   <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Hero Section */}
       <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="text-center max-w-2xl">
@@ -612,6 +612,11 @@ export default function Demo() {
             <Smartphone className="h-6 w-6" />
             Abrir WhatsApp
           </a>
+
+          {/* Instrucción adicional */}
+          <p className="mt-4 text-sm text-gray-400">
+            💡 Tip: Después de agendar, regresa aquí para ver tu cita en tiempo real
+          </p>
 
           <div className="mt-16 animate-bounce">
             <ArrowDown className="mx-auto h-8 w-8 text-gray-400" />
@@ -748,8 +753,8 @@ export default function Demo() {
                 <div
                   key={index}
                   className={`rounded-lg p-6 ${plan.popular
-                      ? 'bg-gradient-to-br from-pink-500 to-pink-600 ring-4 ring-pink-400'
-                      : 'bg-gray-700'
+                    ? 'bg-gradient-to-br from-pink-500 to-pink-600 ring-4 ring-pink-400'
+                    : 'bg-gray-700'
                     }`}
                 >
                   {plan.popular && (
@@ -784,7 +789,7 @@ export default function Demo() {
         <div className="mx-auto max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-4">
-               ¿Listo para automatizar tu negocio?
+              ¿Listo para automatizar tu negocio?
             </h2>
             <p className="text-gray-300">
               Rellena el formulario y te activamos una prueba gratuita de 7 días.
