@@ -69,11 +69,11 @@ export function CalendarGrid({ currentDate, view, onSlotClick, appointments = []
     const totalMinutes = hour * 60 + minute;
     const slotIndex = totalMinutes / 30;
 
-    const top = slotIndex * 60; // 60px por slot
+    const top = slotIndex * 60; 
 
     return {
       top: `${top}px`,
-      gridColumn: dayIndex + 2, // +2 porque la columna 1 es la de horas
+      gridColumn: dayIndex + 2, 
       zIndex: 5
     };
   };

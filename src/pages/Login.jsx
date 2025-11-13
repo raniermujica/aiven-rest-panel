@@ -68,7 +68,7 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
           {/* Logo */}
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-purple-600 p-3">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d9d9d9] p-3">
             <img src="/paul-logo.png" alt="Agent Paul Logo" className="h-full w-full" />
           </div>
 

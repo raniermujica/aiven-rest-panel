@@ -6,6 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import { api } from '../../services/api';
+import { supabase } from '../../config/supabase';
 import '../../styles/calendarStyles.css';
 import { CreateAppointmentModal } from '../layout/CreateAppointmentModal';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,88 @@ export default function CalendarView() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+          filter: `restaurant_id=eq.0649df2c-d1ad-41e0-a1f8-40b6cbd15adb`
+        },
+        (payload) => {
+          console.log('🔄 Cambio detectado:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            const newApt = payload.new;
+            const startDate = new Date(newApt.appointment_time);
+            const endDate = new Date(startDate);
+            endDate.setMinutes(endDate.getMinutes() + (newApt.duration_minutes || 60));
+
+            const newEvent = {
+              id: String(newApt.id),
+              title: `${newApt.client_name} - ${newApt.service_name}`,
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: getStatusColor(newApt.status),
+              borderColor: getStatusColor(newApt.status),
+              extendedProps: {
+                status: newApt.status,
+                customerName: newApt.client_name,
+                customerPhone: newApt.client_phone,
+                service: newApt.service_name,
+                duration: newApt.duration_minutes,
+                statusLabel: getStatusLabel(newApt.status)
+              }
+            };
+
+            setEvents(prev => [...prev, newEvent]);
+          }
+
+          if (payload.eventType === 'UPDATE') {
+            const updatedApt = payload.new;
+            const startDate = new Date(updatedApt.appointment_time);
+            const endDate = new Date(startDate);
+            endDate.setMinutes(endDate.getMinutes() + (updatedApt.duration_minutes || 60));
+
+            setEvents(prev =>
+              prev.map(event =>
+                event.id === String(updatedApt.id)
+                  ? {
+                    ...event,
+                    title: `${updatedApt.client_name} - ${updatedApt.service_name}`,
+                    start: startDate.toISOString(),
+                    end: endDate.toISOString(),
+                    backgroundColor: getStatusColor(updatedApt.status),
+                    borderColor: getStatusColor(updatedApt.status),
+                    extendedProps: {
+                      status: updatedApt.status,
+                      customerName: updatedApt.client_name,
+                      customerPhone: updatedApt.client_phone,
+                      service: updatedApt.service_name,
+                      duration: updatedApt.duration_minutes,
+                      statusLabel: getStatusLabel(updatedApt.status)
+                    }
+                  }
+                  : event
+              )
+            );
+          }
+
+          if (payload.eventType === 'DELETE') {
+            setEvents(prev => prev.filter(event => event.id !== String(payload.old.id)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleDatesSet = async (dateInfo) => {
     try {

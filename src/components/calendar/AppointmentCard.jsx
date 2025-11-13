@@ -33,9 +33,7 @@ export function AppointmentCard({ appointment, onClick }) {
   const colorClass = getServiceColor(appointment.service);
   const statusClass = getStatusStyle(appointment.status);
 
-  // Calcular altura según duración (1 slot = 30 min = 60px)
-  const height = (appointment.duration / 30) * 60 - 8; // -8 para padding
-
+  const height = (appointment.duration / 30) * 60 - 8; 
   return (
     <div
       className={`

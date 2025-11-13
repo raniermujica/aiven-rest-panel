@@ -10,7 +10,7 @@ export function Layout({ children }) {
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden lg:ml-64">
         {/* Header - altura fija, sin scroll */}
-        <Header className="flex-shrink-0" />
+        {/* <Header className="flex-shrink-0" /> */}
 
         {/* Page content - resto del espacio con scroll interno */}
         <main className="flex-1 overflow-y-auto">

@@ -58,7 +58,7 @@ html, body, #root {
     @apply text-white;
     background-color: #102027; /* Movido a CSS normal */
     height: 100vh;
-    overflow: hidden;
+    /* overflow: auto; */
   }
 }
 
