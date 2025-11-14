@@ -39,7 +39,7 @@ export default function Demo() {
           event: '*',
           schema: 'public',
           table: 'appointments',
-          filter: 'restaurant_id=eq.db63ea52-be46-42f7-b577-ac5e498c5013'
+          filter: 'restaurant_id=db63ea52-be46-42f7-b577-ac5e498c5013'
         },
         (payload) => {
           console.log('🔄 Nueva cita:', payload);
