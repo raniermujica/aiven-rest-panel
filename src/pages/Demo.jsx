@@ -575,7 +575,7 @@ export default function Demo() {
             </h2>
 
             <p className="mb-4 text-gray-300">
-              Estás viendo un panel de demostración de "Bella Estética".
+              Estás viendo un panel de demostración de "Esthétique La Belle Époque".
             </p>
 
             <p className="mb-4 text-white font-semibold">
