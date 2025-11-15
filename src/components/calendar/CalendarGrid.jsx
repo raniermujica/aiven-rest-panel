@@ -121,7 +121,7 @@ export function CalendarGrid({ currentDate, view, onSlotClick, appointments = []
                 <div className={`border-r border-b p-2 text-center ${
                   isFullHour ? 'bg-gray-50 border-gray-300' : 'border-gray-100'
                 }`}
-                style={{ minHeight: '60px' }}>
+                style={{ minHeight: '84px' }}>
                   <span className={`text-xs font-medium ${
                     isFullHour ? 'text-gray-700' : 'text-gray-400'
                   }`}>

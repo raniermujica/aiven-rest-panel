@@ -367,6 +367,7 @@ export default function CalendarView() {
           allDaySlot={false}
           height="auto"
           slotDuration="00:30:00"
+          slotMinHeight={200}
           slotLabelInterval="01:00"
           slotLabelFormat={{
             hour: '2-digit',
