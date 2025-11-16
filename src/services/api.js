@@ -335,46 +335,6 @@ class APIService {
       method: 'POST',
     });
   }
-
-  // Public instance
-  // Obtener servicios del negocio
-  async getServices(businessSlug) {
-    try {
-      const response = await this.client.get(`/api/public/${businessSlug}/services`);
-      return response.data;
-    } catch (error) {
-      console.error('Error obteniendo servicios:', error);
-      throw error;
-    }
-  }
-
-  // Verificar disponibilidad
-  async checkAvailability(businessSlug, date, serviceId, durationMinutes) {
-    try {
-      const response = await this.client.post(
-        `/api/public/${businessSlug}/check-availability`,
-        { date, serviceId, durationMinutes }
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error verificando disponibilidad:', error);
-      throw error;
-    }
-  }
-
-  // Crear cita
-  async createAppointment(businessSlug, appointmentData) {
-    try {
-      const response = await this.client.post(
-        `/api/public/${businessSlug}/appointments`,
-        appointmentData
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error creando cita:', error);
-      throw error;
-    }
-  }
 };
 
   export const api = new APIService();
