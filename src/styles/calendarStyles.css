@@ -425,3 +425,67 @@
   pointer-events: none;
 }
 
+/* Indicador de días bloqueados en vista mensual */
+.blocked-day-indicator {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #dc2626;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+/* Eventos de bloqueo - forzar visibilidad */
+.fc-block-event {
+  pointer-events: all !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Asegurar que los bloques de fondo sean visibles en todas las vistas */
+.fc-timegrid .fc-bg-event {
+  opacity: 0.4 !important;
+  z-index: 1 !important;
+}
+
+.fc-daygrid .fc-bg-event {
+  opacity: 0.3 !important;
+  z-index: 1 !important;
+}
+
+/* Citas normales por encima de bloqueos */
+.fc-event:not(.fc-bg-event) {
+  z-index: 2 !important;
+}
+
+/* Hover en días bloqueados */
+.fc-day.fc-day-blocked {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* Mejorar visibilidad del número de día cuando está bloqueado */
+.fc-daygrid-day-number.text-red-600 {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Número del día bloqueado */
+.fc-daygrid-day-number.blocked-day-number {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Opcional: Agregar fondo rojo sutil a toda la celda */
+.fc-day:has(.blocked-day-number) {
+  background: rgba(236, 65, 65, 0.05);
+}

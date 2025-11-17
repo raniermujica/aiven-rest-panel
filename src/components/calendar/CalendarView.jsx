@@ -9,15 +9,19 @@ import { api } from '../../services/api';
 import { supabase } from '../../config/supabase';
 import '../../styles/calendarStyles.css';
 import { CreateAppointmentModal } from '../layout/CreateAppointmentModal';
+import { BlockSlotModal } from '@/components/calendar/BlockSlotModal';
 import { Button } from '@/components/ui/button';
-import { Plus, Circle } from 'lucide-react';
+import { Plus, Circle, Ban } from 'lucide-react';
 
 export default function CalendarView() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedBlockDate, setSelectedBlockDate] = useState(null);
+  const [selectedBlockTime, setSelectedBlockTime] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const calendarRef = useRef(null);
 
@@ -59,9 +63,12 @@ export default function CalendarView() {
         endDate: endDate.toISOString().split('T')[0]
       };
 
-      const data = await api.getReservations(params);
+      // Cargar citas
+      const appointmentsData = await api.getReservations(params);
+      console.log('📅 Citas cargadas:', appointmentsData);
 
-      const calendarEvents = (data.appointments || []).map(apt => {
+      // Convertir citas a eventos
+      const appointmentEvents = (appointmentsData.appointments || []).map(apt => {
         const startDate = new Date(apt.appointment_time);
         const endDate = new Date(startDate);
         endDate.setMinutes(endDate.getMinutes() + (apt.duration_minutes || 60));
@@ -74,6 +81,7 @@ export default function CalendarView() {
           backgroundColor: getStatusColor(apt.status),
           borderColor: getStatusColor(apt.status),
           extendedProps: {
+            type: 'appointment',
             status: apt.status,
             customerName: apt.client_name,
             customerPhone: apt.client_phone,
@@ -84,10 +92,39 @@ export default function CalendarView() {
         };
       });
 
-      setEvents(calendarEvents);
+      // Intentar cargar bloqueos (no romper si falla)
+      let blockEvents = [];
+      try {
+        const blocksData = await api.getBlockedSlots(
+          params.startDate,
+          params.endDate
+        );
+        console.log('🚫 Bloqueos cargados:', blocksData);
+
+        blockEvents = (blocksData.blockedSlots || []).map(block => ({
+          id: `block-${block.id}`,
+          title: block.reason || 'Bloqueado',
+          start: block.blocked_from,
+          end: block.blocked_until,
+          backgroundColor: '#ef4444',
+          borderColor: '#dc2626',
+          display: 'background',
+          extendedProps: {
+            type: 'block',
+            blockId: block.id,
+            blockType: block.block_type,
+            reason: block.reason
+          }
+        }));
+      } catch (blockError) {
+        console.warn('⚠️ Error cargando bloqueos (continuando sin ellos):', blockError);
+      }
+
+      console.log('✅ Total eventos:', appointmentEvents.length + blockEvents.length);
+      setEvents([...appointmentEvents, ...blockEvents]);
 
     } catch (error) {
-      console.error('❌ Error cargando citas:', error);
+      console.error('❌ Error cargando datos:', error);
     } finally {
       setLoading(false);
     }
@@ -121,6 +158,7 @@ export default function CalendarView() {
               backgroundColor: getStatusColor(newApt.status),
               borderColor: getStatusColor(newApt.status),
               extendedProps: {
+                type: 'appointment',
                 status: newApt.status,
                 customerName: newApt.client_name,
                 customerPhone: newApt.client_phone,
@@ -150,6 +188,7 @@ export default function CalendarView() {
                     backgroundColor: getStatusColor(updatedApt.status),
                     borderColor: getStatusColor(updatedApt.status),
                     extendedProps: {
+                      type: 'appointment',
                       status: updatedApt.status,
                       customerName: updatedApt.client_name,
                       customerPhone: updatedApt.client_phone,
@@ -182,9 +221,10 @@ export default function CalendarView() {
         endDate: dateInfo.endStr.split('T')[0]
       };
 
-      const data = await api.getReservations(params);
+      // Cargar citas
+      const appointmentsData = await api.getReservations(params);
 
-      const calendarEvents = (data.appointments || []).map(apt => {
+      const appointmentEvents = (appointmentsData.appointments || []).map(apt => {
         const startDate = new Date(apt.appointment_time);
         const endDate = new Date(startDate);
         endDate.setMinutes(endDate.getMinutes() + (apt.duration_minutes || 60));
@@ -197,6 +237,7 @@ export default function CalendarView() {
           backgroundColor: getStatusColor(apt.status),
           borderColor: getStatusColor(apt.status),
           extendedProps: {
+            type: 'appointment',
             status: apt.status,
             customerName: apt.client_name,
             customerPhone: apt.client_phone,
@@ -207,9 +248,33 @@ export default function CalendarView() {
         };
       });
 
-      setEvents(calendarEvents);
+      // Cargar bloqueos
+      let blockEvents = [];
+      try {
+        const blocksData = await api.getBlockedSlots(params.startDate, params.endDate);
+
+        blockEvents = (blocksData.blockedSlots || []).map(block => ({
+          id: `block-${block.id}`,
+          title: block.reason || 'Bloqueado',
+          start: block.blocked_from,
+          end: block.blocked_until,
+          backgroundColor: '#ef4444',
+          borderColor: '#dc2626',
+          display: 'background',
+          extendedProps: {
+            type: 'block',
+            blockId: block.id,
+            blockType: block.block_type,
+            reason: block.reason
+          }
+        }));
+      } catch (blockError) {
+        console.warn('⚠️ Error cargando bloqueos:', blockError);
+      }
+
+      setEvents([...appointmentEvents, ...blockEvents]);
     } catch (error) {
-      console.error('Error recargando citas:', error);
+      console.error('❌ Error recargando eventos:', error);
     }
   };
 
@@ -236,11 +301,16 @@ export default function CalendarView() {
   };
 
   const handleEventClick = (info) => {
-    navigate(`/appointments/${info.event.id}`);
+    // Solo navegar si es una cita, no un bloqueo
+    if (info.event.extendedProps.type === 'appointment') {
+      navigate(`/appointments/${info.event.id}`);
+    } else if (info.event.extendedProps.type === 'block') {
+      // Opcional: Mostrar detalles del bloqueo o permitir editar/eliminar
+      console.log('Bloqueo clickeado:', info.event.extendedProps);
+    }
   };
 
   const handleDateClick = (info) => {
-    // Solo permitir crear citas en vista semanal y diaria
     const currentView = info.view.type;
 
     if (currentView === 'dayGridMonth') {
@@ -254,6 +324,23 @@ export default function CalendarView() {
       time: info.dateStr.split('T')[1]?.substring(0, 5) || '09:00'
     });
     setShowCreateModal(true);
+  };
+
+  const handleBlockSlot = (date, time = null) => {
+    setSelectedBlockDate(date);
+    setSelectedBlockTime(time);
+    setBlockModalOpen(true);
+  };
+
+  const handleSaveBlock = async (blockData) => {
+    try {
+      await api.createBlockedSlot(blockData);
+      loadAppointments(); // Recargar eventos
+      console.log('✅ Bloqueo creado exitosamente');
+    } catch (error) {
+      console.error('❌ Error creando bloqueo:', error);
+      throw error;
+    }
   };
 
   const handleCreateSuccess = () => {
@@ -277,6 +364,11 @@ export default function CalendarView() {
       return null;
     }
 
+    // No renderizar contenido HTML para eventos de fondo (bloqueos)
+    if (eventInfo.event.display === 'background') {
+      return null;
+    }
+
     return {
       html: `
       <div class="fc-event-main-frame">
@@ -288,24 +380,35 @@ export default function CalendarView() {
   };
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Calendario de Citas</h1>
           <p className="mt-1 text-sm text-gray-300">
-            {events.length} {events.length === 1 ? 'cita programada' : 'citas programadas'}
+            {events.filter(e => e.extendedProps?.type === 'appointment').length} {events.filter(e => e.extendedProps?.type === 'appointment').length === 1 ? 'cita programada' : 'citas programadas'}
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => setShowCreateModal(true)}
-          className="text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Cita
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleBlockSlot(new Date())}
+            className="text-white gap-2"
+          >
+            <Ban className="h-4 w-4" />
+            Bloquear horario
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowCreateModal(true)}
+            className="text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Cita
+          </Button>
+        </div>
       </div>
 
       {/* Leyenda de Estados */}
@@ -330,10 +433,14 @@ export default function CalendarView() {
           <Circle className="h-3 w-3 fill-gray-500 text-gray-500" />
           <span className="text-sm text-gray-300">No Show</span>
         </div>
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-8 bg-red-500 rounded opacity-30" />
+          <span className="text-sm text-gray-300">Bloqueado</span>
+        </div>
       </div>
 
       {/* Calendario */}
-      <div className="rounded-lg bg-[#d9d9d9] p-6 shadow ">
+      <div className="rounded-lg bg-[#d9d9d9] p-6 shadow">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -360,7 +467,19 @@ export default function CalendarView() {
           }}
           titleFormat={{
             year: 'numeric',
-            month: 'long'
+            month: 'long',
+            day: 'numeric' 
+          }}
+          views={{
+            dayGridMonth: {
+              titleFormat: { year: 'numeric', month: 'long' }
+            },
+            timeGridWeek: {
+              titleFormat: { year: 'numeric', month: 'long', day: 'numeric' }
+            },
+            timeGridDay: {
+              titleFormat: { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
+            }
           }}
           slotMinTime="08:00:00"
           slotMaxTime="22:00:00"
@@ -377,6 +496,7 @@ export default function CalendarView() {
           nowIndicator={true}
           editable={false}
           selectable={true}
+          selectMirror={true}
           weekends={true}
           datesSet={handleDatesSet}
           dateClick={handleDateClick}
@@ -390,46 +510,76 @@ export default function CalendarView() {
           eventContent={renderEventContent}
           dayCellContent={(arg) => {
             if (arg.view.type === 'dayGridMonth') {
-              const dayEvents = events.filter(event => {
-                const eventDate = new Date(event.start);
-                const cellDate = new Date(arg.date);
+              const cellDate = new Date(arg.date);
 
-                // Comparar solo año, mes y día (ignorar hora)
+              // Filtrar citas del día
+              const dayAppointments = events.filter(event => {
+                if (event.extendedProps?.type !== 'appointment') return false;
+                const eventDate = new Date(event.start);
                 return eventDate.getFullYear() === cellDate.getFullYear() &&
                   eventDate.getMonth() === cellDate.getMonth() &&
                   eventDate.getDate() === cellDate.getDate();
               });
 
-              if (dayEvents.length > 0) {
-                return {
-                  html: `
-          <div class="fc-daygrid-day-top">
-            <div class="fc-daygrid-day-number">${arg.dayNumberText}</div>
-          </div>
+              // Verificar si hay bloqueos en este día
+              const dayBlocks = events.filter(event => {
+                if (event.extendedProps?.type !== 'block') return false;
+                const blockStart = new Date(event.start);
+                const blockEnd = new Date(event.end);
+                const dayStart = new Date(cellDate);
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = new Date(cellDate);
+                dayEnd.setHours(23, 59, 59, 999);
+
+                return (blockStart <= dayEnd && blockEnd >= dayStart);
+              });
+
+              const hasBlocks = dayBlocks.length > 0;
+              const appointmentCount = dayAppointments.length;
+
+              return {
+                html: `
+        <div class="fc-daygrid-day-top">
+          <div class="fc-daygrid-day-number ${hasBlocks ? 'blocked-day-number' : ''}">${arg.dayNumberText}</div>
+        </div>
+        ${appointmentCount > 0 ? `
           <div class="custom-event-counter">
-            <span class="event-count">${dayEvents.length}</span>
-            <span class="event-label">${dayEvents.length === 1 ? 'cita' : 'citas'}</span>
+            <span class="event-count">${appointmentCount}</span>
+            <span class="event-label">${appointmentCount === 1 ? 'cita' : 'citas'}</span>
           </div>
-        `
-                };
-              }
+        ` : ''}
+      `
+              };
             }
             return { html: `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>` };
           }}
           eventDidMount={(info) => {
-            const bgColor = info.event.backgroundColor;
             const eventEl = info.el;
+            const bgColor = info.event.backgroundColor;
 
             eventEl.style.backgroundColor = bgColor;
             eventEl.style.borderColor = bgColor;
-            eventEl.style.color = 'white';
-            eventEl.style.fontWeight = '600';
 
-            eventEl.title = `${info.event.extendedProps.customerName} - ${info.event.extendedProps.service} (${info.event.extendedProps.duration} min) - ${info.event.extendedProps.statusLabel}`;
+            // Para bloqueos de fondo
+            if (info.event.display === 'background') {
+              eventEl.style.opacity = '0.4';
+              eventEl.style.zIndex = '1';
+              eventEl.title = info.event.title;
+
+              // Forzar visibilidad permanente
+              eventEl.classList.add('fc-block-event');
+            } else {
+              // Para citas normales
+              eventEl.style.color = 'white';
+              eventEl.style.fontWeight = '600';
+              eventEl.style.zIndex = '2';
+              eventEl.title = `${info.event.extendedProps.customerName} - ${info.event.extendedProps.service} (${info.event.extendedProps.duration} min) - ${info.event.extendedProps.statusLabel}`;
+            }
           }}
         />
       </div>
 
+      {/* Modales sin cambios */}
       <CreateAppointmentModal
         isOpen={showCreateModal}
         onClose={() => {
@@ -439,6 +589,34 @@ export default function CalendarView() {
         onSuccess={handleCreateSuccess}
         initialDate={selectedSlot?.date}
         initialTime={selectedSlot?.time}
+      />
+
+      <BlockSlotModal
+        open={blockModalOpen}
+        onClose={() => setBlockModalOpen(false)}
+        onSave={handleSaveBlock}
+        initialDate={selectedBlockDate}
+        initialTime={selectedBlockTime}
+      />
+
+      {/* Modales */}
+      <CreateAppointmentModal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setSelectedSlot(null);
+        }}
+        onSuccess={handleCreateSuccess}
+        initialDate={selectedSlot?.date}
+        initialTime={selectedSlot?.time}
+      />
+
+      <BlockSlotModal
+        open={blockModalOpen}
+        onClose={() => setBlockModalOpen(false)}
+        onSave={handleSaveBlock}
+        initialDate={selectedBlockDate}
+        initialTime={selectedBlockTime}
       />
     </div>
   );

@@ -335,6 +335,44 @@ class APIService {
       method: 'POST',
     });
   }
+
+// Blocked Slots
+
+async getBlockedSlots(startDate, endDate) {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  
+  return this.request(`/api/blocked-slots?${params.toString()}`);
+}
+
+async createBlockedSlot(data) {
+  return this.request('/api/blocked-slots', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+async updateBlockedSlot(blockId, data) {
+  return this.request(`/api/blocked-slots/${blockId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+async deleteBlockedSlot(blockId) {
+  return this.request(`/api/blocked-slots/${blockId}`, {
+    method: 'DELETE',
+  });
+}
+
+async checkIfBlocked(datetime) {
+  return this.request('/api/blocked-slots/check', {
+    method: 'POST',
+    body: JSON.stringify({ datetime }),
+  });
+}
+
 };
 
   export const api = new APIService();
