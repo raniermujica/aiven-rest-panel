@@ -1,208 +1,135 @@
-import { useState, useEffect, useCallback } from 'react';
-import { X, AlertCircle, CheckCircle, Clock, Plus, Trash2, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Calendar, Clock, Users, Phone, Mail, Scissors, MapPin, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
-import { cn } from '@/lib/utils';
+import { api } from '@/services/api';
 
-
-export function CreateAppointmentModal({ isOpen, onClose, onSuccess, initialCustomer = null, initialDate = null, initialTime = null }) {
+export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [customers, setCustomers] = useState([]);
   const [services, setServices] = useState([]);
-  const [availability, setAvailability] = useState(null);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  
-  const [selectedServices, setSelectedServices] = useState([]);
-  
   const [formData, setFormData] = useState({
-    clientName: '',
-    clientPhone: '',
-    clientEmail: '',
-    scheduledDate: '',
-    appointmentTime: '',
-    notes: '',
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    reservationDate: '',
+    reservationTime: '',
+    partySize: 2,
+    serviceId: '',
+    specialRequests: '',
+    tablePreference: '', 
   });
-
-  const [sendEmailConfirmation, setSendEmailConfirmation] = useState(true);
-  const [tempServiceId, setTempServiceId] = useState('');
 
   const terminology = user?.business?.terminology || {
     booking: 'Cita',
+    bookings: 'Citas',
     customer: 'Cliente',
-    service: 'Servicio',
   };
 
-  // Cargar servicios y datos iniciales
-useEffect(() => {
-  if (isOpen) {
-    loadServices();
-    
-    const today = new Date().toISOString().split('T')[0];
-    setFormData({
-      clientName: initialCustomer?.name || '',
-      clientPhone: initialCustomer?.phone || '',
-      clientEmail: initialCustomer?.email || '',
-      scheduledDate: initialDate || today,
-      appointmentTime: initialTime || '10:00',
-      notes: '',
-    });
-      setAvailability(null);
-      setSelectedServices([]);
-      setTempServiceId('');
-      setError('');
+  const isRestaurant = user?.business?.type === 'restaurant';
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCustomers();
+      if (!isRestaurant) {
+        loadServices();
+      }
+      // Reset form
+      setFormData({
+        customerName: '',
+        customerPhone: '',
+        customerEmail: '',
+        reservationDate: '',
+        reservationTime: '',
+        partySize: isRestaurant ? 2 : 1,
+        serviceId: '',
+        specialRequests: '',
+        tablePreference: '',
+      });
     }
-  }, [isOpen, initialCustomer, initialDate, initialTime]);
-  
+  }, [isOpen]);
+
+  const loadCustomers = async () => {
+    try {
+      const data = await api.getCustomers();
+      setCustomers(data.customers || []);
+    } catch (error) {
+      console.error('Error cargando clientes:', error);
+    }
+  };
+
   const loadServices = async () => {
     try {
-      const response = await api.getServices();
-      setServices(response.services || []);
+      const data = await api.getServices();
+      setServices(data.services || []);
     } catch (error) {
       console.error('Error cargando servicios:', error);
     }
   };
 
-  // Calcular duración total del carrito
-  const getTotalDuration = useCallback(() => {
-    return selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
-  }, [selectedServices]);
-
-  // Agregar servicio al carrito
-  const handleAddService = () => {
-    if (!tempServiceId) return;
-    
-    const service = services.find(s => s.id === tempServiceId);
-    if (!service) return;
-
-    if (selectedServices.find(s => s.serviceId === service.id)) {
-      setError('Este servicio ya está agregado');
-      setTimeout(() => setError(''), 3000);
-      return;
+  const handleCustomerSelect = (e) => {
+    const customerId = e.target.value;
+    if (customerId) {
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        setFormData({
+          ...formData,
+          customerId: customer.id,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          customerEmail: customer.email || '',
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        customerId: '',
+        customerName: '',
+        customerPhone: '',
+        customerEmail: '',
+      });
     }
-
-    setSelectedServices([...selectedServices, {
-      serviceId: service.id,
-      serviceName: service.name,
-      durationMinutes: service.duration_minutes || 60,
-      price: service.price || 0,
-    }]);
-
-    setTempServiceId('');
-  };
-
-  // Eliminar servicio del carrito
-  const handleRemoveService = (serviceId) => {
-    setSelectedServices(selectedServices.filter(s => s.serviceId !== serviceId));
-  };
-
-  // Verificación de disponibilidad
-  const checkAvailability = useCallback(async () => {
-    if (!formData.scheduledDate || !formData.appointmentTime || selectedServices.length === 0) {
-      setAvailability(null);
-      return;
-    }
-
-    try {
-      setCheckingAvailability(true);
-      
-      const totalDuration = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
-      
-      const result = await api.checkAppointmentAvailability(
-        formData.scheduledDate,
-        formData.appointmentTime,
-        totalDuration
-      );
-      
-      setAvailability(result);
-    } catch (error) {
-      console.error('Error verificando disponibilidad:', error);
-      setAvailability(null);
-    } finally {
-      setCheckingAvailability(false);
-    }
-  }, [formData.scheduledDate, formData.appointmentTime, selectedServices]);
-
-  // Ejecutar verificación cuando cambian fecha/hora/servicios
-  useEffect(() => {
-    checkAvailability();
-  }, [checkAvailability]);
-
-  // Validación de email
-  const validateEmail = (email) => {
-    if (!email) return true;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
-    // Validaciones
-    if (!formData.clientName || !formData.clientPhone) {
-      setError('Nombre y teléfono del cliente son requeridos');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.clientEmail && !validateEmail(formData.clientEmail)) {
-      setError('El formato del email no es válido');
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.scheduledDate || !formData.appointmentTime) {
-      setError('Fecha y hora son requeridas');
-      setLoading(false);
-      return;
-    }
-
-    if (selectedServices.length === 0) {
-      setError('Debes agregar al menos un servicio');
-      setLoading(false);
-      return;
-    }
-
-    // Validar disponibilidad
-    if (availability && !availability.available) {
-      setError('El horario seleccionado no está disponible. Por favor elige otro horario.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await api.createAppointment({
-        clientName: formData.clientName,
-        clientPhone: formData.clientPhone,
-        clientEmail: formData.clientEmail || null,
-        scheduledDate: formData.scheduledDate,
-        appointmentTime: formData.appointmentTime,
-        services: selectedServices, 
-        notes: formData.notes,
-      });
+      const payload = {
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerEmail: formData.customerEmail || null,
+        reservationDate: formData.reservationDate,
+        reservationTime: formData.reservationTime,
+        partySize: parseInt(formData.partySize),
+        specialRequests: formData.specialRequests || null,
+        source: 'manual',
+      };
 
-      // Enviar email de confirmación si está activado y hay email
-      // if (sendEmailConfirmation && formData.clientEmail && response.appointment?.id) {
-      //   try {
-      //     await api.sendAppointmentConfirmation(response.appointment.id);
-      //     console.log('✅ Email de confirmación enviado');
-      //   } catch (emailError) {
-      //     console.error('⚠️ Error enviando email:', emailError);
-      //   }
-      // }
-
-      onSuccess();
-    } catch (error) {
-      console.error('Error creando cita:', error);
-      
-      if (error.response?.status === 409) {
-        setError(error.response.data.message || 'Ya existe una cita en ese horario');
+      // Agregar campos específicos según tipo de negocio
+      if (isRestaurant) {
+        if (formData.tablePreference) {
+          payload.tablePreference = formData.tablePreference;
+        }
       } else {
-        setError(error.message || 'Error al crear la cita');
+        // Para beauty/otros: agregar servicio
+        if (formData.serviceId) {
+          payload.serviceId = formData.serviceId;
+        }
       }
+
+      await api.createReservation(payload);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error creando reserva:', error);
+      alert(error.response?.data?.error || 'Error al crear la reserva');
     } finally {
       setLoading(false);
     }
@@ -210,258 +137,225 @@ useEffect(() => {
 
   if (!isOpen) return null;
 
-  const totalDuration = getTotalDuration();
-  const totalPrice = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 h-screen = height: 100vh width: 100vw">
-      <div className="bg-[#1a2f38] rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">Nueva {terminology.booking}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#0a1820] border border-gray-700 shadow-xl">
+        <div className="sticky top-0 bg-[#0a1820] border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">
+            Crear {terminology.booking}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Sección: Cliente */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+              Información del {terminology.customer.toLowerCase()}
+            </h3>
 
-          {/* Cliente */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Nombre del {terminology.customer} *
-            </label>
-            <Input
-              value={formData.clientName}
-              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-              placeholder="Juan Pérez"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Teléfono *
-            </label>
-            <Input
-              type="tel"
-              value={formData.clientPhone}
-              onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-              placeholder="34612345678"
-              required
-            />
-          </div>
-
-          {/* EMAIL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Email
-            </label>
-            <Input
-              type="email"
-              value={formData.clientEmail}
-              onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-              placeholder="juan@example.com"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              📧 Se enviará confirmación por email si se proporciona
-            </p>
-          </div>
-
-          {/* SERVICIOS */}
-          <div className="border-t border-gray-700 pt-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2 ">
-              Servicios *
-            </label>
-            
-            <div className="flex gap-2 mb-3">
+            {/* Selector de cliente existente */}
+            <div>
+              <label className="text-sm font-medium text-white">
+                <User className="inline h-4 w-4 mr-1" />
+                Seleccionar {terminology.customer.toLowerCase()} existente (opcional)
+              </label>
               <select
-               className="flex-1 min-w-0 px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={tempServiceId}
-                onChange={(e) => setTempServiceId(e.target.value)}
+                onChange={handleCustomerSelect}
+                className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
               >
-                <option value="">Seleccionar servicio</option>
-                {services.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.emoji && `${service.emoji} `}
-                    {service.name} ({service.duration_minutes} min
-                    {service.price && ` - €${service.price}`})
+                <option value="">Nuevo {terminology.customer.toLowerCase()}</option>
+                {customers.map(customer => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name} - {customer.phone}
                   </option>
                 ))}
               </select>
-              <Button
-                type="button"
-                onClick={handleAddService}
-                disabled={!tempServiceId}
-                className="flex-shrink-0"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Agregar
-              </Button>
             </div>
 
-            {selectedServices.length > 0 && (
-              <div className="bg-[#0a1820] border border-gray-700 rounded-lg p-3 space-y-2">
-                <p className="text-xs font-medium text-gray-400 mb-2">
-                  Servicios seleccionados ({selectedServices.length})
-                </p>
-                {selectedServices.map((service, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-[#1a2f38] p-3 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-white text-sm">{service.serviceName}</p>
-                      <p className="text-xs text-gray-400">
-                        {service.durationMinutes} min
-                        {service.price > 0 && ` • €${service.price}`}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveService(service.serviceId)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                
-                <div className="border-t border-gray-700 pt-2 mt-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Duración total:</span>
-                    <span className="font-semibold text-white">{totalDuration} min</span>
-                  </div>
-                  {totalPrice > 0 && (
-                    <div className="flex justify-between text-sm mt-1">
-                      <span className="text-gray-400">Precio total:</span>
-                      <span className="font-semibold text-green-400">€{totalPrice.toFixed(2)}</span>
-                    </div>
-                  )}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-white">
+                  <User className="inline h-4 w-4 mr-1" />
+                  Nombre completo *
+                </label>
+                <Input
+                  type="text"
+                  value={formData.customerName}
+                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  placeholder="Juan Pérez"
+                  required
+                  className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-white">
+                  <Phone className="inline h-4 w-4 mr-1" />
+                  Teléfono *
+                </label>
+                <Input
+                  type="tel"
+                  value={formData.customerPhone}
+                  onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                  placeholder="+34 600 123 456"
+                  required
+                  className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-white">
+                <Mail className="inline h-4 w-4 mr-1" />
+                Email
+              </label>
+              <Input
+                type="email"
+                value={formData.customerEmail}
+                onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                placeholder="ejemplo@email.com"
+                className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Sección: Detalles de la reserva */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+              Detalles de la {terminology.booking.toLowerCase()}
+            </h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-white">
+                  <Calendar className="inline h-4 w-4 mr-1" />
+                  Fecha *
+                </label>
+                <Input
+                  type="date"
+                  value={formData.reservationDate}
+                  onChange={(e) => setFormData({ ...formData, reservationDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                  className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-white">
+                  <Clock className="inline h-4 w-4 mr-1" />
+                  Hora *
+                </label>
+                <Input
+                  type="time"
+                  value={formData.reservationTime}
+                  onChange={(e) => setFormData({ ...formData, reservationTime: e.target.value })}
+                  required
+                  className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            {/* Campo específico para RESTAURANTES */}
+            {isRestaurant && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-white">
+                    <Users className="inline h-4 w-4 mr-1" />
+                    Número de comensales *
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={formData.partySize}
+                    onChange={(e) => setFormData({ ...formData, partySize: e.target.value })}
+                    required
+                    className="mt-1 bg-[#1a2f38] border-gray-600 text-white"
+                  />
                 </div>
+
+                <div>
+                  <label className="text-sm font-medium text-white">
+                    <MapPin className="inline h-4 w-4 mr-1" />
+                    Preferencia de ubicación
+                  </label>
+                  <select
+                    value={formData.tablePreference}
+                    onChange={(e) => setFormData({ ...formData, tablePreference: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">Asignación automática</option>
+                    <option value="salon">Preferencia: Salón</option>
+                    <option value="terraza">Preferencia: Terraza</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    El sistema asignará automáticamente la mejor mesa disponible
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Campo específico para BEAUTY/OTROS */}
+            {!isRestaurant && (
+              <div>
+                <label className="text-sm font-medium text-white">
+                  <Scissors className="inline h-4 w-4 mr-1" />
+                  Servicio
+                </label>
+                <select
+                  value={formData.serviceId}
+                  onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="">Seleccionar servicio...</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} {service.price && `- €${service.price}`}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
-          </div>
-
-          {/* Fecha y Hora */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Fecha *
-              </label>
-              <Input
-                type="date"
-                value={formData.scheduledDate}
-                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                min={new Date().toISOString().split('T')[0]}
-                required
-              />
-            </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Hora *
+              <label className="text-sm font-medium text-white">
+                <Scissors className="inline h-4 w-4 mr-1" />
+                {isRestaurant ? 'Solicitudes especiales' : 'Notas adicionales'}
               </label>
-              <Input
-                type="time"
-                value={formData.appointmentTime}
-                onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
-                required
+              <textarea
+                value={formData.specialRequests}
+                onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
+                className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                rows={3}
+                placeholder={isRestaurant ? 
+                  'Ej: Alergia a frutos secos, mesa junto a ventana...' :
+                  'Ej: Primera vez, cliente VIP, ocasión especial...'}
               />
             </div>
           </div>
 
-          {/* Availability Check */}
-          {formData.scheduledDate && formData.appointmentTime && selectedServices.length > 0 && (
-            <div className={cn(
-              'p-3 rounded-lg text-sm flex items-start gap-2 border',
-              checkingAvailability ? 'bg-gray-800/50 text-gray-300 border-gray-700' :
-              availability?.available ? 'bg-green-900/30 text-green-300 border-green-700/50' :
-              'bg-red-900/30 text-red-300 border-red-700/50'
-            )}>
-              {checkingAvailability ? (
-                <>
-                  <Clock className="h-5 w-5 animate-spin flex-shrink-0 mt-0.5" />
-                  <span>Verificando disponibilidad...</span>
-                </>
-              ) : availability?.available ? (
-                <>
-                  <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-green-200">Horario disponible</p>
-                    <p className="text-xs text-green-400 mt-1">
-                      Duración: {totalDuration} min ({formData.appointmentTime} - 
-                      {new Date(new Date(`2000-01-01T${formData.appointmentTime}`).getTime() + totalDuration * 60000).toTimeString().slice(0, 5)})
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-red-200">Horario no disponible</p>
-                    {availability?.business_hours_message && (
-                      <p className="text-xs mt-1 text-red-400">{availability.business_hours_message}</p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Notas */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Notas
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-600 bg-[#102027] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
-              rows="3"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Información adicional..."
-            />
-          </div>
-
-          {/* Checkbox Email */}
-          {formData.clientEmail && (
-            <div className="flex items-center space-x-2 bg-blue-900/20 border border-blue-700/30 p-3 rounded-lg">
-              <input
-                type="checkbox"
-                id="sendEmail"
-                checked={sendEmailConfirmation}
-                onChange={(e) => setSendEmailConfirmation(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <label htmlFor="sendEmail" className="text-sm text-gray-300 cursor-pointer flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Enviar email de confirmación al cliente
-              </label>
-            </div>
-          )}
-
-          {/* Buttons */}
+          {/* Botones */}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1"
+              disabled={loading}
+              className="flex-1 border-gray-600 bg-transparent text-white hover:bg-[#1a2f38]"
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={loading || checkingAvailability || selectedServices.length === 0 || (availability && !availability.available)}
-              className="flex-1"
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
               {loading ? 'Creando...' : 'Crear ' + terminology.booking}
             </Button>

@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { TodayReservations } from './pages/TodayReservations';
 import { AllReservations } from './pages/AllReservations';
 import { Customers } from './pages/Customers';
+import TableManagement from './pages/restaurant/TableManagement';
 import { Waitlist } from './pages/Waitlist';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
@@ -18,6 +19,7 @@ import Demo from './pages/Demo';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PERMISSIONS } from './utils/permissions';
 import { useAuthStore } from './store/authStore';
+import TableStatus from './pages/restaurant/TableStatus';
 
 function SuperAdminRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -76,6 +78,8 @@ function App() {
                     <Route path="/waitlist" element={<Waitlist />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/calendar" element={<CalendarView />} />
+                    <Route path="/tables" element={<TableManagement />} />
+                    <Route path="/tables/status" element={<TableStatus />} />
                     <Route
                       path="/settings"
                       element={

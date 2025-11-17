@@ -292,13 +292,11 @@ function AppointmentCard({ appointment, onNavigate, onDelete, terminology }) {
   const statusInfo = getStatusInfo(appointment.status);
   const StatusIcon = statusInfo.icon;
 
-  // Formatear hora (convertir UTC a Madrid)
+  // 🔧 FIX: Extraer hora UTC directamente sin conversión
   const appointmentDate = new Date(appointment.appointment_time);
-  const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
-    timeZone: 'Europe/Madrid',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const hours = appointmentDate.getUTCHours();
+  const minutes = appointmentDate.getUTCMinutes();
+  const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
   return (
     <Card 
@@ -328,7 +326,6 @@ function AppointmentCard({ appointment, onNavigate, onDelete, terminology }) {
                 <span>{appointment.client_phone}</span>
               </div>
 
-              {/* ✅ MODIFICADO: Mostrar servicio + indicador */}
               {appointment.service_name && (
                 <div className="flex items-center gap-2 text-white">
                   <Star className="h-4 w-4" />

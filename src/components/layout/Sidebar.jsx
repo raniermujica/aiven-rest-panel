@@ -17,6 +17,7 @@ import {
   Sparkles,
   Activity,
   LogOut,
+  LayoutGrid
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -75,54 +76,78 @@ export function Sidebar() {
 
   // Navegación con permisos
   const navigation = [
-    { 
-      name: 'Panel de Control', 
-      href: '/dashboard', 
+    {
+      name: 'Panel de Control',
+      href: '/dashboard',
       icon: LayoutDashboard,
       permission: PERMISSIONS.VIEW_DASHBOARD
     },
-    { 
-      name: `${terminology.bookings} de hoy`, 
-      href: '/reservations/today', 
+    {
+      name: `${terminology.bookings} de hoy`,
+      href: '/reservations/today',
       icon: Calendar,
       permission: PERMISSIONS.VIEW_TODAY_APPOINTMENTS
     },
-    { 
-      name: `Todas las ${terminology.bookings.toLowerCase()}`, 
-      href: '/reservations', 
+    {
+      name: `Todas las ${terminology.bookings.toLowerCase()}`,
+      href: '/reservations',
       icon: CalendarDays,
       permission: PERMISSIONS.VIEW_ALL_APPOINTMENTS
     },
     {
-      name: 'Calendario', 
-      href: '/calendar', 
+      name: 'Mesas',
+      href: '/tables',
+      icon: UtensilsCrossed,
+      permission: PERMISSIONS.VIEW_DASHBOARD,
+      showOnlyFor: ['restaurant'] // 🆕 Solo para restaurantes
+    },
+    {
+      name: 'Estado de Mesas',
+      href: '/tables/status',
+      icon: LayoutGrid,
+      permission: PERMISSIONS.VIEW_DASHBOARD,
+      showOnlyFor: ['restaurant'] // 🆕 Solo para restaurantes
+    },
+    {
+      name: 'Calendario',
+      href: '/calendar',
       icon: CalendarDays,
       permission: PERMISSIONS.VIEW_CALENDAR
     },
-    { 
-      name: 'Clientes', 
-      href: '/customers', 
+    {
+      name: 'Clientes',
+      href: '/customers',
       icon: Users,
       permission: PERMISSIONS.VIEW_CUSTOMERS
     },
-    { 
-      name: 'Estadísticas', 
-      href: '/analytics', 
+    {
+      name: 'Estadísticas',
+      href: '/analytics',
       icon: BarChart3,
       permission: PERMISSIONS.VIEW_ANALYTICS
     },
-    { 
-      name: 'Configuración', 
-      href: '/settings', 
+    {
+      name: 'Configuración',
+      href: '/settings',
       icon: Settings,
       permission: PERMISSIONS.VIEW_SETTINGS
     },
   ];
 
-  // Filtrar navegación según permisos
-  const visibleNavigation = navigation.filter(item => 
-    hasPermission(user?.role, item.permission)
-  );
+  // Filtrar navegación según permisos Y tipo de negocio
+  const visibleNavigation = navigation.filter(item => {
+    // Verificar permisos
+    if (!hasPermission(user?.role, item.permission)) {
+      return false;
+    }
+
+    // Verificar si el item es solo para ciertos tipos de negocio
+    if (item.showOnlyFor && !item.showOnlyFor.includes(user?.business?.type)) {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <>
