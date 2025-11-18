@@ -118,7 +118,7 @@ export const createTableAssignment = async (token, businessSlug, assignmentData)
 export async function getOccupancyByShift(token, businessSlug, date) {
   const params = new URLSearchParams({ date });
   
-  const response = await fetch(`${API_URL}/tables/occupancy?${params}`, {
+  const response = await fetch(`api/tables/occupancy?${params}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -57,3 +56,5 @@ button[class*="bg-blue-"]:hover,
 .btn-primary:hover {
   background-color: var(--color-primary-hover) !important;
 }
+
+@import './styles/timeline-custom.css';
