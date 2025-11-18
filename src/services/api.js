@@ -297,40 +297,23 @@ class APIService {
     if (endDate) params.append('endDate', endDate);
     return this.request(`/api/appointments?${params.toString()}`);
   }
+  /**
+ * Marcar cliente como "En Mesa" (Check-in)
+ */
+async checkInAppointment(appointmentId) {
+  return this.request(`/api/appointments/${appointmentId}/check-in`, {
+    method: 'POST',
+  });
+}
 
-  async checkInAppointment(appointmentId) {
-    const token = useAuthStore.getState().token;
-    const businessSlug = useAuthStore.getState().user?.business?.slug;
-
-    const response = await axios.post(
-      `${API_URL}/appointments/${appointmentId}/check-in`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-business-slug': businessSlug,
-        },
-      }
-    );
-    return response.data;
-  }
-
-  async checkOutAppointment(appointmentId) {
-    const token = useAuthStore.getState().token;
-    const businessSlug = useAuthStore.getState().user?.business?.slug;
-
-    const response = await axios.post(
-      `${API_URL}/appointments/${appointmentId}/check-out`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-business-slug': businessSlug,
-        },
-      }
-    );
-    return response.data;
-  }
+/**
+ * Marcar cliente como "Se fue" (Check-out)
+ */
+async checkOutAppointment(appointmentId) {
+  return this.request(`/api/appointments/${appointmentId}/check-out`, {
+    method: 'POST',
+  });
+}
 
   // --- FUNCIONES DE WHATSAPP ---
   async initializeWhatsApp() {
@@ -406,60 +389,6 @@ class APIService {
       body: JSON.stringify({ datetime }),
     });
   }
-
-  /**
- * Marcar cliente como "En Mesa" (Check-in)
- */
-async checkInAppointment(appointmentId) {
-  const token = useAuthStore.getState().token;
-  const businessSlug = useAuthStore.getState().user?.business?.slug;
-
-  const response = await fetch(
-    `${API_URL}/appointments/${appointmentId}/check-in`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'x-business-slug': businessSlug,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Error en check-in');
-  }
-
-  return response.json();
-}
-
-/**
- * Marcar cliente como "Se fue" (Check-out)
- */
-async checkOutAppointment(appointmentId) {
-  const token = useAuthStore.getState().token;
-  const businessSlug = useAuthStore.getState().user?.business?.slug;
-
-  const response = await fetch(
-    `${API_URL}/appointments/${appointmentId}/check-out`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'x-business-slug': businessSlug,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Error en check-out');
-  }
-
-  return response.json();
-}
 
 };
 

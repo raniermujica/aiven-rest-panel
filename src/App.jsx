@@ -7,7 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { TodayReservations } from './pages/TodayReservations';
 import { AllReservations } from './pages/AllReservations';
 import { Customers } from './pages/Customers';
-import TableManagement from './pages/restaurant/TableManagement';
+import TableManagement from './components/restaurant/TableManagement';
 import { Waitlist } from './pages/Waitlist';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';

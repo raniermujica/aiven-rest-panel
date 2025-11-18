@@ -24,11 +24,13 @@ import {
   LogOut,
   Users,
   UtensilsCrossed,
-  MapPin
+  MapPin,
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { TableSelectorModal } from '@/components/restaurant/TableSelectorModal';
 
 export function AppointmentDetail() {
   const { appointmentId } = useParams();
@@ -44,13 +46,14 @@ export function AppointmentDetail() {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
+  const [showTableSelector, setShowTableSelector] = useState(false);
 
   const terminology = user?.business?.terminology || {
     customer: 'Cliente',
     booking: 'Cita',
   };
 
-  const isRestaurant = user?.business?.business_type === 'restaurant';
+  const isRestaurant = user?.business?.type === 'restaurant';
 
   useEffect(() => {
     loadAppointmentDetail();
@@ -157,6 +160,10 @@ export function AppointmentDetail() {
     }
   };
 
+  const handleTableAssigned = () => {
+    loadAppointmentDetail();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -194,6 +201,10 @@ export function AppointmentDetail() {
     minute: '2-digit',
     timeZone: 'Europe/Madrid'
   });
+
+  // Para TableSelectorModal
+  const scheduledDate = appointment.scheduled_date || appointment.appointment_time.split('T')[0];
+  const scheduledTime = timeStr;
 
   // Determinar qué mostrar en el título
   const servicesCount = appointment.services?.length || 0;
@@ -262,12 +273,6 @@ export function AppointmentDetail() {
                       <span>{appointment.party_size} personas</span>
                     </div>
                   )}
-                  {appointment.table_id && (
-                    <div className="flex items-center gap-2">
-                      <UtensilsCrossed className="h-4 w-4" />
-                      <span>Mesa asignada</span>
-                    </div>
-                  )}
                   {appointment.booking_channel && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
@@ -282,6 +287,34 @@ export function AppointmentDetail() {
               <StatusBadge status={appointment.status} />
             </div>
           </div>
+
+          {/* Mesa Asignada (NUEVO) */}
+          {isRestaurant && (
+            <div className="mb-6 bg-[#0a1820] p-4 rounded-lg border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UtensilsCrossed className="h-5 w-5 text-blue-400" />
+                  <span className="text-gray-400">Mesa asignada:</span>
+                  {appointment.tables?.table_number ? (
+                    <span className="text-white font-semibold">
+                      Mesa {appointment.tables.table_number}
+                    </span>
+                  ) : (
+                    <span className="text-yellow-400">Sin asignar</span>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowTableSelector(true)}
+                  className="gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {appointment.tables?.table_number ? 'Cambiar Mesa' : 'Asignar Mesa'}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Estado "En Mesa" */}
           {isRestaurant && appointment.checked_in_at && (
@@ -571,6 +604,21 @@ export function AppointmentDetail() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Table Selector Modal */}
+      {isRestaurant && (
+        <TableSelectorModal
+          isOpen={showTableSelector}
+          appointmentId={appointmentId}
+          appointmentDate={scheduledDate}
+          appointmentTime={scheduledTime}
+          partySize={appointment.party_size || 2}
+          duration={totalDuration}
+          currentTableId={appointment.table_id}
+          onTableAssigned={handleTableAssigned}
+          onClose={() => setShowTableSelector(false)}
+        />
       )}
     </div>
   );
