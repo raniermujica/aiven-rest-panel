@@ -20,6 +20,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PERMISSIONS } from './utils/permissions';
 import { useAuthStore } from './store/authStore';
 import TableStatus from './pages/restaurant/TableStatus';
+import ShiftOccupancy from './pages/restaurant/ShiftOccupancy';
 
 function SuperAdminRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -80,6 +81,7 @@ function App() {
                     <Route path="/calendar" element={<CalendarView />} />
                     <Route path="/tables" element={<TableManagement />} />
                     <Route path="/tables/status" element={<TableStatus />} />
+                    <Route path="/shift-occupancy" element={<ShiftOccupancy />} />
                     <Route
                       path="/settings"
                       element={

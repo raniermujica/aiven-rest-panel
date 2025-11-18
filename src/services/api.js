@@ -298,6 +298,40 @@ class APIService {
     return this.request(`/api/appointments?${params.toString()}`);
   }
 
+  async checkInAppointment(appointmentId) {
+    const token = useAuthStore.getState().token;
+    const businessSlug = useAuthStore.getState().user?.business?.slug;
+
+    const response = await axios.post(
+      `${API_URL}/appointments/${appointmentId}/check-in`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-business-slug': businessSlug,
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async checkOutAppointment(appointmentId) {
+    const token = useAuthStore.getState().token;
+    const businessSlug = useAuthStore.getState().user?.business?.slug;
+
+    const response = await axios.post(
+      `${API_URL}/appointments/${appointmentId}/check-out`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-business-slug': businessSlug,
+        },
+      }
+    );
+    return response.data;
+  }
+
   // --- FUNCIONES DE WHATSAPP ---
   async initializeWhatsApp() {
     return this.request('/api/whatsapp/initialize', {
@@ -336,43 +370,97 @@ class APIService {
     });
   }
 
-// Blocked Slots
+  // Blocked Slots
 
-async getBlockedSlots(startDate, endDate) {
-  const params = new URLSearchParams();
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
-  
-  return this.request(`/api/blocked-slots?${params.toString()}`);
+  async getBlockedSlots(startDate, endDate) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    return this.request(`/api/blocked-slots?${params.toString()}`);
+  }
+
+  async createBlockedSlot(data) {
+    return this.request('/api/blocked-slots', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBlockedSlot(blockId, data) {
+    return this.request(`/api/blocked-slots/${blockId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteBlockedSlot(blockId) {
+    return this.request(`/api/blocked-slots/${blockId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async checkIfBlocked(datetime) {
+    return this.request('/api/blocked-slots/check', {
+      method: 'POST',
+      body: JSON.stringify({ datetime }),
+    });
+  }
+
+  /**
+ * Marcar cliente como "En Mesa" (Check-in)
+ */
+async checkInAppointment(appointmentId) {
+  const token = useAuthStore.getState().token;
+  const businessSlug = useAuthStore.getState().user?.business?.slug;
+
+  const response = await fetch(
+    `${API_URL}/appointments/${appointmentId}/check-in`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-business-slug': businessSlug,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Error en check-in');
+  }
+
+  return response.json();
 }
 
-async createBlockedSlot(data) {
-  return this.request('/api/blocked-slots', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
+/**
+ * Marcar cliente como "Se fue" (Check-out)
+ */
+async checkOutAppointment(appointmentId) {
+  const token = useAuthStore.getState().token;
+  const businessSlug = useAuthStore.getState().user?.business?.slug;
 
-async updateBlockedSlot(blockId, data) {
-  return this.request(`/api/blocked-slots/${blockId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
+  const response = await fetch(
+    `${API_URL}/appointments/${appointmentId}/check-out`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-business-slug': businessSlug,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
-async deleteBlockedSlot(blockId) {
-  return this.request(`/api/blocked-slots/${blockId}`, {
-    method: 'DELETE',
-  });
-}
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Error en check-out');
+  }
 
-async checkIfBlocked(datetime) {
-  return this.request('/api/blocked-slots/check', {
-    method: 'POST',
-    body: JSON.stringify({ datetime }),
-  });
+  return response.json();
 }
 
 };
 
-  export const api = new APIService();
+export const api = new APIService();

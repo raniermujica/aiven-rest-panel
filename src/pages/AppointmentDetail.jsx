@@ -19,7 +19,12 @@ import {
   AlertCircle,
   Star,
   History,
-  Package 
+  Package,
+  UserCheck,
+  LogOut,
+  Users,
+  UtensilsCrossed,
+  MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
@@ -38,11 +43,14 @@ export function AppointmentDetail() {
   const [amountPaid, setAmountPaid] = useState('0.00');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState('');
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const terminology = user?.business?.terminology || {
     customer: 'Cliente',
     booking: 'Cita',
   };
+
+  const isRestaurant = user?.business?.business_type === 'restaurant';
 
   useEffect(() => {
     loadAppointmentDetail();
@@ -52,7 +60,7 @@ export function AppointmentDetail() {
     try {
       setLoading(true);
       const data = await api.getAppointmentById(appointmentId);
-      console.log('Appointment data:', data); // ✅ Debug
+      console.log('Appointment data:', data);
       setAppointment(data.appointment);
       setCustomer(data.customer);
       setCustomerHistory(data.customerHistory || []);
@@ -64,6 +72,38 @@ export function AppointmentDetail() {
       navigate('/appointments/today');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!confirm('¿Marcar al cliente como "En Mesa"?')) return;
+
+    try {
+      setCheckingIn(true);
+      await api.checkInAppointment(appointmentId);
+      await loadAppointmentDetail();
+      alert('✅ Cliente marcado como en mesa');
+    } catch (error) {
+      console.error('Error en check-in:', error);
+      alert('Error al marcar cliente en mesa');
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!confirm('¿Marcar al cliente como "Se fue" y liberar la mesa?')) return;
+
+    try {
+      setCheckingIn(true);
+      await api.checkOutAppointment(appointmentId);
+      await loadAppointmentDetail();
+      alert('✅ Cliente marcó salida, mesa liberada');
+    } catch (error) {
+      console.error('Error en check-out:', error);
+      alert('Error al marcar salida del cliente');
+    } finally {
+      setCheckingIn(false);
     }
   };
 
@@ -161,7 +201,7 @@ export function AppointmentDetail() {
     ? `${servicesCount} Servicios`
     : appointment.service_name;
 
-  // NUEVO: Calcular totales
+  // Calcular totales
   const totalPrice = appointment.services?.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0) || 0;
   const totalDuration = appointment.duration_minutes ||
     appointment.services?.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) || 0;
@@ -183,7 +223,7 @@ export function AppointmentDetail() {
           <Button
             variant="outline"
             onClick={handleDelete}
-            className="gap-2 "
+            className="gap-2"
           >
             <Trash2 className="h-4 w-4" />
             Eliminar
@@ -212,12 +252,46 @@ export function AppointmentDetail() {
                   )}
                 </div>
               </div>
+
+              {/* Info de restaurante */}
+              {isRestaurant && (
+                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-400">
+                  {appointment.party_size && (
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{appointment.party_size} personas</span>
+                    </div>
+                  )}
+                  {appointment.table_id && (
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="h-4 w-4" />
+                      <span>Mesa asignada</span>
+                    </div>
+                  )}
+                  {appointment.booking_channel && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="capitalize">{appointment.booking_channel}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex-shrink-0">
               <StatusBadge status={appointment.status} />
             </div>
           </div>
+
+          {/* Estado "En Mesa" */}
+          {isRestaurant && appointment.checked_in_at && (
+            <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4">
+              <p className="text-sm font-medium text-green-400 flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                Cliente en mesa desde {new Date(appointment.checked_in_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          )}
 
           {/* Lista de Servicios */}
           {appointment.services && appointment.services.length > 0 && (
@@ -261,6 +335,31 @@ export function AppointmentDetail() {
                     </div>
                   )}
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Botones de Check-in/Check-out (solo restaurantes) */}
+          {isRestaurant && appointment.status === 'confirmado' && (
+            <div className="flex gap-2 mb-6">
+              {!appointment.checked_in_at ? (
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={checkingIn}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  {checkingIn ? 'Procesando...' : 'Marcar En Mesa'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleCheckOut}
+                  disabled={checkingIn}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {checkingIn ? 'Procesando...' : 'Marcar Salida'}
+                </Button>
               )}
             </div>
           )}

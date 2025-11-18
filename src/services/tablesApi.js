@@ -110,4 +110,27 @@ export const createTableAssignment = async (token, businessSlug, assignmentData)
     },
     body: JSON.stringify(assignmentData),
   });
+}
+
+/**
+ * Obtener ocupación de mesas por turno
+ */
+export async function getOccupancyByShift(token, businessSlug, date) {
+  const params = new URLSearchParams({ date });
+  
+  const response = await fetch(`${API_URL}/tables/occupancy?${params}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'x-business-slug': businessSlug,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Error obteniendo ocupación de mesas');
+  }
+
+  return response.json();
 };

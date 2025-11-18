@@ -109,10 +109,18 @@ export function Sidebar() {
       showOnlyFor: ['restaurant'] // 🆕 Solo para restaurantes
     },
     {
+      name: 'Ocupación por Turnos',
+      href: '/shift-occupancy',
+      icon: LayoutGrid,
+      permission: PERMISSIONS.VIEW_DASHBOARD,
+      showOnlyFor: ['restaurant']
+    },
+    {
       name: 'Calendario',
       href: '/calendar',
       icon: CalendarDays,
-      permission: PERMISSIONS.VIEW_CALENDAR
+      permission: PERMISSIONS.VIEW_CALENDAR,
+      showOnlyFor: ['beauty_salon', 'aesthetic_clinic', 'dental_clinic', 'barbershop']
     },
     {
       name: 'Clientes',
