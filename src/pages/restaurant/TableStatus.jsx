@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Loader2, Users, Clock, Phone, User, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { getTableStatus } from '@/services/tablesApi';
@@ -9,6 +10,8 @@ export default function TableStatus() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadTableStatus();
@@ -69,7 +72,7 @@ export default function TableStatus() {
           <h1 className="text-3xl font-bold text-white">Estado de Mesas</h1>
           <p className="text-gray-400">Vista en tiempo real de ocupación</p>
         </div>
-        <Button 
+        <Button
           onClick={loadTableStatus}
           className="bg-blue-600 hover:bg-blue-700"
         >
@@ -171,75 +174,88 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 function TableStatusCard({ table }) {
-  const getStatusColor = () => {
-    if (table.isOccupied) {
-      return 'bg-red-500/20 border-red-500/50';
-    }
-    if (table.reservations && table.reservations.length > 0) {
-      return 'bg-yellow-500/20 border-yellow-500/50';
-    }
-    return 'bg-green-500/20 border-green-500/50';
-  };
-
-  const getStatusBadge = () => {
-    if (table.isOccupied) {
-      return <span className="rounded-full bg-red-500/20 border border-red-500/50 px-2 py-1 text-xs font-medium text-red-400">Ocupada</span>;
-    }
-    if (table.reservations && table.reservations.length > 0) {
-      return <span className="rounded-full bg-yellow-500/20 border border-yellow-500/50 px-2 py-1 text-xs font-medium text-yellow-400">{table.reservations.length} reserva(s)</span>;
-    }
-    return <span className="rounded-full bg-green-500/20 border border-green-500/50 px-2 py-1 text-xs font-medium text-green-400">Disponible</span>;
-  };
-
+  const navigate = useNavigate();
+  const hasReservations = table.reservations && table.reservations.length > 0;
+  
   return (
-    <div className={`rounded-lg border-2 p-4 bg-[#1a2f38] ${getStatusColor()}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-lg font-bold text-white">Mesa {table.table_number}</h3>
-          <p className="text-sm text-gray-400">
-            <Users className="inline h-3 w-3 mr-1" />
-            {table.min_capacity}-{table.capacity} personas
-          </p>
-        </div>
-        {getStatusBadge()}
+    <div className="rounded-lg border-2 border-gray-700 bg-[#1a2f38] p-4">
+      {/* Header de la mesa */}
+      <div className="mb-3">
+        <h3 className="text-lg font-bold text-white">Mesa {table.table_number}</h3>
+        <p className="text-sm text-gray-400">
+          <Users className="inline h-3 w-3 mr-1" />
+          {table.min_capacity}-{table.capacity} personas • {table.table_type}
+        </p>
       </div>
 
-      {/* Reservas */}
-      {table.reservations && table.reservations.length > 0 && (
-        <div className="space-y-2 mt-3 pt-3 border-t border-gray-700">
-          {table.reservations.map((reservation, idx) => (
-            <div key={idx} className="text-xs space-y-1">
-              <div className="flex items-center gap-2 text-white">
-                <Clock className="h-3 w-3" />
-                <span className="font-medium">
-                  {reservation.time.substring(0, 5)}
-                </span>
-                <span className="text-gray-400">
-                  ({reservation.duration || 90} min)
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-400">
-                <User className="h-3 w-3" />
-                <span>{reservation.customerName}</span>
-              </div>
-              {reservation.customerPhone && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Phone className="h-3 w-3" />
-                  <span>{reservation.customerPhone}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Users className="h-3 w-3 text-gray-400" />
-                <span className="text-gray-400">{reservation.partySize} personas</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Reservas individuales */}
+      {hasReservations ? (
+        <div className="space-y-2">
+          {table.reservations.map((reservation, idx) => {
+            // 🆕 Color individual por estado de cada reserva
+            const getReservationColor = () => {
+              switch (reservation.status) {
+                case 'confirmado':
+                  return 'bg-yellow-500/20 border-yellow-500/50 hover:bg-yellow-500/30';
+                case 'pendiente':
+                  return 'bg-blue-500/20 border-blue-500/50';
+                case 'completado':
+                  return 'bg-green-500/20 border-green-500/50';
+                case 'cancelado':
+                  return 'bg-red-500/20 border-red-500/50';
+                default:
+                  return 'bg-gray-500/20 border-gray-500/50';
+              }
+            };
 
-      {/* Sin reservas */}
-      {(!table.reservations || table.reservations.length === 0) && !table.isOccupied && (
-        <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-700">
+            const getStatusBadge = () => {
+              switch (reservation.status) {
+                case 'confirmado':
+                  return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400">Confirmado</span>;
+                case 'pendiente':
+                  return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 border border-blue-500/50 text-blue-400">Pendiente</span>;
+                case 'completado':
+                  return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 border border-green-500/50 text-green-400">Completado</span>;
+                case 'cancelado':
+                  return <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 border border-red-500/50 text-red-400">Cancelado</span>;
+                default:
+                  return null;
+              }
+            };
+
+            return (
+              <div
+                key={idx}
+                onClick={() => navigate(`/appointments/${reservation.id}`)}
+                className={`rounded-md border-2 p-3 cursor-pointer transition-all hover:scale-[1.02] ${getReservationColor()}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-white flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    {reservation.time}
+                  </span>
+                  {getStatusBadge()}
+                </div>
+                <p className="text-xs text-gray-300 flex items-center gap-1 mb-1">
+                  <User className="h-3 w-3" />
+                  {reservation.customerName}
+                </p>
+                {reservation.customerPhone && (
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                    <Phone className="h-3 w-3" />
+                    {reservation.customerPhone}
+                  </p>
+                )}
+                <p className="text-xs text-gray-400">
+                  <Users className="h-3 w-3 inline mr-1" />
+                  {reservation.partySize} personas • {reservation.duration || 90} min
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500 text-center py-4 border-t border-gray-700 mt-3">
           Sin reservas programadas
         </p>
       )}

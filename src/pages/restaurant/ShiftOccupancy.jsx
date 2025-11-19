@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { DayPilotScheduler } from '@daypilot/daypilot-lite-react';
+import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import 'moment/locale/es';
 import { Calendar as CalendarIcon, Clock, Users, Filter, ChevronDown, RefreshCw } from 'lucide-react';
@@ -25,6 +26,7 @@ export default function ShiftOccupancy() {
 
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
 
   const shifts = {
     lunch: { start: 7, end: 16, label: 'Almuerzo' },
@@ -121,7 +123,7 @@ export default function ShiftOccupancy() {
           break;
         case 'completed':
         case 'completado':
-          backColor = '#d1fae5';
+          backColor = '#0a552eff';
           borderColor = '#10b981';
           textColor = '#065f46';
           break;
@@ -162,46 +164,75 @@ export default function ShiftOccupancy() {
 
   const occupancy = calculateOccupancy();
 
-  // Configuración de DayPilot CORREGIDA
- const config = {
-  locale: 'es-es',
-  timeHeaders: [
-    { groupBy: 'Hour' },
-    { groupBy: 'Cell', format: 'mm' }
-  ],
-  scale: 'CellDuration',
-  cellDuration: 15,
-  cellWidth: 60,
-  days: 1,
-  startDate: format(selectedDate, 'yyyy-MM-dd'),
-  timeRangeSelectedHandling: 'Disabled',
-  eventMoveHandling: 'Disabled',
-  eventResizeHandling: 'Disabled',
-  eventDeleteHandling: 'Disabled',
-  eventClickHandling: 'Disabled',
-  allowEventOverlap: false,
-  resources: resources,
-  events: events,
-  height: 600,
-  headerHeight: 30,
-  rowHeaderColumns: [
-    { title: 'Mesas', width: 200 }
-  ],
-  eventHeight: 40,
-  eventBorderRadius: 8,
+  // Configuración de DayPilot 
+  const config = {
+    locale: 'es-es',
+    timeHeaders: [
+      { groupBy: 'Hour' },
+      { groupBy: 'Cell', format: 'mm' }
+    ],
+    scale: 'CellDuration',
+    cellDuration: 15,
+    cellWidth: 60,
+    days: 1,
+    startDate: format(selectedDate, 'yyyy-MM-dd'),
+    timeRangeSelectedHandling: 'Disabled',
+    eventMoveHandling: 'Disabled',
+    eventResizeHandling: 'Disabled',
+    eventDeleteHandling: 'Disabled',
+    eventClickHandling: 'Enabled',
+    allowEventOverlap: false,
+    resources: resources,
+    events: events,
+    height: 800,
+    headerHeight: 30,
+    rowHeaderColumns: [
+      { title: 'Mesas', width: 200 }
+    ],
+    eventHeight: 40,
+    eventBorderRadius: 8,
 
-  // 🔹 Business hours (informativo)
-  businessBeginsHour: shift.start,
-  businessEndsHour: shift.end,
+    onEventClick: (args) => {
+      navigate(`/appointments/${args.e.id()}`);
+    },
 
-  // 🔹 Forzar ocultar horas fuera del turno
-  onBeforeCellRender: args => {
-    const hour = args.cell.start.getHours();
-    if (hour < shift.start || hour >= shift.end) {
-      args.cell.visible = false;
+    // 🔹 Business hours (informativo)
+    businessBeginsHour: shift.start,
+    businessEndsHour: shift.end,
+
+    // 🔹 Forzar ocultar horas fuera del turno
+    onBeforeCellRender: args => {
+      const hour = args.cell.start.getHours();
+      if (hour < shift.start || hour >= shift.end) {
+        args.cell.visible = false;
+      }
+    },
+
+    onBeforeEventRender: (args) => {
+      // Aplicar estilos según el estado
+      args.data.barColor = args.data.backColor;
+      args.data.borderColor = args.data.borderColor;
+      args.data.fontColor = args.data.fontColor;
+
+      // Agregar borde más grueso y redondeado
+      args.data.cssClass = "custom-event";
+      args.data.html = `
+      <div style="
+        padding: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: ${args.data.fontColor};
+        height: 100%;
+        display: flex;
+        align-items: center;
+      ">
+        ${args.data.text}
+      </div>
+    `;
     }
-  }
-};
+  };
+
+
 
   if (loading) {
     return (
@@ -233,7 +264,6 @@ export default function ShiftOccupancy() {
 
       {/* Controles */}
       <div className="bg-[#1a2f38] rounded-lg border border-gray-700 p-6">
-        {/* ... resto del código de controles igual ... */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center bg-[#0a1820] rounded-lg p-1">
@@ -278,7 +308,7 @@ export default function ShiftOccupancy() {
           </div>
 
           <div className="flex items-center gap-2">
-            {Object.entries(shifts).map(([key, shift]) => (
+            {/* {Object.entries(shifts).map(([key, shift]) => (
               <button
                 key={key}
                 onClick={() => setSelectedShift(key)}
@@ -290,7 +320,7 @@ export default function ShiftOccupancy() {
                 <Clock className="w-4 h-4 inline mr-1" />
                 {shift.label}
               </button>
-            ))}
+            ))} */}
           </div>
         </div>
 

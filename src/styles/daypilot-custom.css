@@ -63,3 +63,14 @@
 .scheduler_default_scrollable::-webkit-scrollbar-thumb:hover {
   background: #79328d;
 }
+
+/* Eventos personalizados */
+.custom-event {
+  border-radius: 8px !important;
+  border-width: 2px !important;
+  overflow: hidden !important;
+}
+
+.scheduler_default_event {
+  border-radius: 8px !important;
+}
