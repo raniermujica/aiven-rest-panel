@@ -115,22 +115,12 @@ export const createTableAssignment = async (token, businessSlug, assignmentData)
 /**
  * Obtener ocupación de mesas por turno
  */
-export async function getOccupancyByShift(token, businessSlug, date) {
+export const getOccupancyByShift = async (token, businessSlug, date) => {
   const params = new URLSearchParams({ date });
-  
-  const response = await fetch(`api/tables/occupancy?${params}`, {
-    method: 'GET',
+  return fetchAPI(`${API_URL}/api/tables/occupancy?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'x-business-slug': businessSlug,
-      'Content-Type': 'application/json',
     },
   });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Error obteniendo ocupación de mesas');
-  }
-
-  return response.json();
 };

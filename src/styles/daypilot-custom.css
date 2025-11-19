@@ -1,0 +1,65 @@
+/* DayPilot Timeline - Tema Oscuro Personalizado */
+
+/* Fondo general del scheduler */
+.scheduler_default_main {
+  background-color: #0f1f27 !important;
+  border: 1px solid #374151 !important;
+}
+
+/* Header de horas (arriba) */
+.scheduler_default_timeheadercol,
+.scheduler_default_timeheadercol_inner {
+  background-color: #1a2f38 !important;
+  color: #ffffff !important;
+  border-color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+/* Sidebar izquierdo (nombres de mesas) */
+.scheduler_default_rowheader,
+.scheduler_default_rowheader_inner,
+.scheduler_default_corner {
+  background-color: #1a2f38 !important;
+  color: #ffffff !important;
+  border-color: #374151 !important;
+}
+
+/* Celdas del timeline (fondo gris claro) */
+.scheduler_default_cell,
+.scheduler_default_cell_business {
+  background-color: #e5d4e8 !important;
+  border-color: #d1d5db !important;
+}
+
+/* Líneas divisorias */
+.scheduler_default_divider,
+.scheduler_default_divider_horizontal {
+  background-color: #374151 !important;
+}
+
+/* Eventos/Reservas - mantener colores personalizados */
+.scheduler_default_event_inner {
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+/* Scrollbars */
+.scheduler_default_scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scheduler_default_scrollable::-webkit-scrollbar-track {
+  background: #1a2f38;
+}
+
+.scheduler_default_scrollable::-webkit-scrollbar-thumb {
+  background: #4d195c;
+  border-radius: 4px;
+}
+
+.scheduler_default_scrollable::-webkit-scrollbar-thumb:hover {
+  background: #79328d;
+}

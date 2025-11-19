@@ -57,4 +57,3 @@ button[class*="bg-blue-"]:hover,
   background-color: var(--color-primary-hover) !important;
 }
 
-@import './styles/timeline-custom.css';
