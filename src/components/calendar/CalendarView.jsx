@@ -25,6 +25,8 @@ export default function CalendarView() {
   const [isMobile, setIsMobile] = useState(false);
   const calendarRef = useRef(null);
 
+  const businessTimezone = 'local';
+
   useEffect(() => {
     loadAppointments();
   }, []);
@@ -482,7 +484,7 @@ const handleDatesSet = async (dateInfo) => {
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-          timeZone="UTC" 
+          timeZone={businessTimezone} 
           locale={esLocale}
           headerToolbar={
             isMobile

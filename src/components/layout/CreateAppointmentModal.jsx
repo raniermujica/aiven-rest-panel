@@ -14,11 +14,11 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   const [services, setServices] = useState([]);
   const [availability, setAvailability] = useState(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
-  
+
   // ✅ CARRITO DE SERVICIOS
   const [selectedServices, setSelectedServices] = useState([]);
   const [tempServiceId, setTempServiceId] = useState('');
-  
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -44,7 +44,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
       if (!isRestaurant) {
         loadServices();
       }
-      
+
       const today = new Date().toISOString().split('T')[0];
       setFormData({
         customerName: '',
@@ -94,7 +94,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   // ✅ AGREGAR SERVICIO AL CARRITO
   const handleAddService = () => {
     if (!tempServiceId) return;
-    
+
     const service = services.find(s => s.id === tempServiceId);
     if (!service) return;
 
@@ -138,16 +138,16 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     try {
       setCheckingAvailability(true);
       setError('');
-      
+
       const totalDuration = getTotalDuration();
-      
+
       const result = await api.checkAppointmentAvailability(
         formData.reservationDate,
         formData.reservationTime,
         totalDuration,
         selectedServices
       );
-      
+
       setAvailability(result);
     } catch (error) {
       console.error('Error verificando disponibilidad:', error);
@@ -182,7 +182,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validaciones
@@ -205,28 +205,30 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     setError('');
 
     try {
+      // Construir payload para /api/appointments
       const payload = {
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        customerEmail: formData.customerEmail || null,
-        reservationDate: formData.reservationDate,
-        reservationTime: formData.reservationTime,
-        partySize: parseInt(formData.partySize),
-        specialRequests: formData.specialRequests || null,
-        source: 'manual',
+        clientName: formData.customerName,
+        clientPhone: formData.customerPhone,
+        clientEmail: formData.customerEmail || null,
+        scheduledDate: formData.reservationDate,
+        appointmentTime: formData.reservationTime,
+        notes: formData.specialRequests || null,
+        
+        // Lógica condicional para Restaurante vs Beauty
+        ...(isRestaurant ? {
+             partySize: parseInt(formData.partySize),
+             tablePreference: formData.tablePreference,
+             // Para restaurante usamos duration fija o calculada diferente, 
+             // pero para beauty enviamos los servicios
+             durationMinutes: 90 
+           } : {
+             services: selectedServices,
+             // No enviamos durationMinutes fijo, dejamos que el backend lo calcule sumando servicios
+           })
       };
 
-      // Para restaurantes
-      if (isRestaurant) {
-        if (formData.tablePreference) {
-          payload.tablePreference = formData.tablePreference;
-        }
-      } else {
-        // Para beauty/otros: agregar servicios
-        payload.services = selectedServices;
-      }
-
-      await api.createReservation(payload);
+      // USAR LA API CORRECTA
+      await api.createAppointment(payload);
       
       if (onSuccess) {
         onSuccess();
@@ -234,7 +236,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
       onClose();
     } catch (error) {
       console.error('Error creando cita:', error);
-      setError(error.response?.data?.error || 'Error al crear la cita');
+      setError(error.response?.data?.error || error.message || 'Error al crear la cita');
     } finally {
       setLoading(false);
     }
@@ -258,7 +260,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          
+
           {/* SECCIÓN: CLIENTE */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
