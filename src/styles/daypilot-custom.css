@@ -27,7 +27,7 @@
 /* Celdas del timeline (fondo gris claro) */
 .scheduler_default_cell,
 .scheduler_default_cell_business {
-  background-color: #e5d4e8 !important;
+  background-color: #38545f !important;
   border-color: #d1d5db !important;
 }
 
@@ -56,12 +56,12 @@
 }
 
 .scheduler_default_scrollable::-webkit-scrollbar-thumb {
-  background: #4d195c;
+  background: #b198b8;
   border-radius: 4px;
 }
 
 .scheduler_default_scrollable::-webkit-scrollbar-thumb:hover {
-  background: #79328d;
+  background: #855093;
 }
 
 /* Eventos personalizados */

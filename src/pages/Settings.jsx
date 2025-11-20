@@ -23,162 +23,563 @@ import {
   RefreshCw,
   LogOut,
   AlertTriangle,
+  Building,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
-export function Settings() {
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('general');
+// export function Settings() {
+//   const { user } = useAuthStore();
+//   const [activeTab, setActiveTab] = useState('general');
 
-  const tabs = [
-    { id: 'general', label: 'General', icon: Building2 },
-    { id: 'services', label: 'Servicios', icon: Scissors },
-    { id: 'agent', label: 'Agente IA', icon: Bot },
-    { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'hours', label: 'Horarios', icon: Clock },
-    { id: 'security', label: 'Seguridad', icon: Shield },
-  ];
+//   const tabs = [
+//     { id: 'general', label: 'General', icon: Building2 },
+//     { id: 'services', label: 'Servicios', icon: Scissors },
+//     { id: 'agent', label: 'Agente IA', icon: Bot },
+//     { id: 'users', label: 'Usuarios', icon: Users },
+//     { id: 'hours', label: 'Horarios', icon: Clock },
+//     { id: 'security', label: 'Seguridad', icon: Shield },
+//   ];
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Page Header */}
+//       <div>
+//         <h1 className="text-3xl font-bold text-white">Configuración</h1>
+//         <p className="mt-1 text-sm text-gray-400">
+//           Gestiona la configuración de {user?.business?.name || 'tu negocio'}
+//         </p>
+//       </div>
+
+//       {/* Tabs */}
+//       <div className="border-b border-gray-700">
+//         <nav className="-mb-px flex space-x-8 overflow-x-auto">
+//           {tabs.map((tab) => {
+//             const Icon = tab.icon;
+//             return (
+//               <button
+//                 key={tab.id}
+//                 onClick={() => setActiveTab(tab.id)}
+//                 className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
+//                   ? 'border-blue-500 text-blue-400'
+//                   : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
+//                   }`}
+//               >
+//                 <Icon className="h-5 w-5" />
+//                 {tab.label}
+//               </button>
+//             );
+//           })}
+//         </nav>
+//       </div>
+
+//       {/* Tab Content */}
+//       {activeTab === 'general' && <GeneralSettings user={user} />}
+//       {activeTab === 'services' && <ServicesSettings user={user} />}
+//       {activeTab === 'agent' && <AgentSettings user={user} />}
+//       {activeTab === 'users' && <UsersSettings user={user} />}
+//       {activeTab === 'hours' && <HoursSettings user={user} />}
+//       {activeTab === 'security' && <SecuritySettings user={user} />}
+//     </div>
+//   );
+// }
+
+// function GeneralSettings({ user }) {
+//   const { updateBusinessName } = useAuthStore();
+//   const [formData, setFormData] = useState({
+//     name: '',
+//     email: '',
+//     phone: '',
+//     address: '',
+//     city: '',
+//     website: '',
+//     maxCapacity: '',
+//     assistantName: '',
+//     businessHours: '',
+//     config: {},
+//   });
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+//   const [error, setError] = useState('');
+//   const [success, setSuccess] = useState('');
+
+//   const defaultConfig = {
+//     terminology: {
+//       booking: "Cita",
+//       service: "Servicio",
+//       bookings: "Citas",
+//       customer: "Cliente",
+//       services: "Servicios",
+//       customers: "Clientes"
+//     },
+//     max_party_size: 12,
+//     min_party_size: 1,
+//     assistant_config: {
+//       name: "Asistente",
+//       tone: "amigable y profesional",
+//       personality_traits: ["servicial", "eficiente"]
+//     },
+//     auto_unblock_hours: 4,
+//     require_confirmation: true,
+//     booking_buffer_minutes: 15,
+//     business_hours_detailed: {
+//       friday: { open: "09:00", close: "20:00", closed: false },
+//       monday: { open: "09:00", close: "20:00", closed: false },
+//       sunday: { open: null, close: null, closed: true },
+//       tuesday: { open: "09:00", close: "20:00", closed: false },
+//       saturday: { open: "10:00", close: "18:00", closed: false },
+//       thursday: { open: "09:00", close: "20:00", closed: false },
+//       wednesday: { open: "09:00", close: "20:00", closed: false }
+//     },
+//     max_appointments_per_slot: 1, // Default 1
+//     allow_same_day_reservations: true,
+//     email_required_for_reservations: false
+//   };
+
+//   useEffect(() => {
+//     loadSettings();
+//   }, []);
+
+//   const loadSettings = async () => {
+//     try {
+//       setLoading(true);
+//       const data = await api.getSettings();
+
+//       const loadedConfig = data.settings.config || {};
+
+//       const mergedConfig = {
+//         ...defaultConfig, 
+//         ...loadedConfig,  
+
+//         terminology: {
+//           ...defaultConfig.terminology,
+//           ...(loadedConfig.terminology || {}),
+//         },
+//         assistant_config: {
+//           ...defaultConfig.assistant_config,
+//           ...(loadedConfig.assistant_config || {}),
+//         },
+//         business_hours_detailed: {
+//           ...defaultConfig.business_hours_detailed,
+//           ...(loadedConfig.business_hours_detailed || {}),
+//         },
+//       };
+
+//       setFormData({
+//         name: data.settings.name || '',
+//         email: data.settings.email || '',
+//         phone: data.settings.phone || '',
+//         address: data.settings.address || '',
+//         city: data.settings.city || '',
+//         website: data.settings.website || '',
+//         maxCapacity: data.settings.maxCapacity || '',
+//         assistantName: data.settings.assistantName || '',
+//         businessHours: data.settings.businessHours || '',
+//         config: mergedConfig,
+//       });
+//     } catch (error) {
+//       console.error('Error cargando configuración:', error);
+//       setError('Error al cargar la configuración');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setError('');
+//     setSuccess('');
+//     setSaving(true);
+
+//     try {
+//       console.log('1. Guardando settings...');
+//       await api.updateSettings(formData);
+
+//       console.log('2. Recargando usuario...');
+//       // await refreshUser();
+//       await updateBusinessName();
+
+//       console.log('3. Usuario actualizado en store');
+//       console.log('3. Usuario actualizado:', user);
+
+//       setSuccess('Configuración actualizada correctamente');
+//       setTimeout(() => setSuccess(''), 3000);
+//     } catch (error) {
+//       console.error('Error actualizando configuración:', error);
+//       setError(error.message || 'Error al actualizar configuración');
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   // const handleSubmit = async (e) => {
+//   //   // ... (código de saving)
+//   //   try {
+//   //     console.log('1. Guardando settings en BD...'); // (Mensaje actualizado)
+//   //     await api.updateSettings(formData);
+
+//   //     // --- 💡 INICIO DE LA CORRECCIÓN ---
+//   //     console.log('2. Actualizando nombre en el store local...'); // (Mensaje actualizado)
+//   //     updateBusinessName(formData.name); // <-- CAMBIO: Se usa la función correcta del store
+
+//   //     console.log('3. Store actualizado con:', formData.name); // (Mensaje actualizado)
+//   //     // --- FIN DE LA CORRECCIÓN ---
+
+//   //     setSuccess('Configuración actualizada correctamente');
+//   //        setTimeout(() => setSuccess(''), 3000);
+//   //   } catch (error) {
+//   //     console.error('Error actualizando configuración:', error);
+//   //     setError(error.message || 'Error al actualizar configuración');
+//   //   } finally {
+//   //     setSaving(false);
+//   //   }
+//   // };
+
+//   if (loading) {
+//     return (
+//       <div className="flex items-center justify-center py-12">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+//           <p className="mt-4 text-white">Cargando configuración...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6">
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Información del negocio</CardTitle>
+//           <CardDescription className="text-gray-400">
+//             Datos básicos de tu negocio
+//           </CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <form onSubmit={handleSubmit} className="space-y-4">
+//             {error && (
+//               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+//                 <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+//                 <span>{error}</span>
+//               </div>
+//             )}
+
+//             {success && (
+//               <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm">
+//                 {success}
+//               </div>
+//             )}
+
+//             <div>
+//               <label className="text-sm font-medium text-gray-300">
+//                 Nombre del negocio *
+//               </label>
+//               <Input
+//                 value={formData.name}
+//                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+//                 placeholder="Ej: Bella Estética"
+//                 required
+//               />
+//             </div>
+
+//             <div className="grid gap-4 md:grid-cols-2">
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Email de contacto
+//                 </label>
+//                 <Input
+//                   type="email"
+//                   value={formData.email}
+//                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+//                   placeholder="contacto@negocio.com"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Teléfono
+//                 </label>
+//                 <Input
+//                   value={formData.phone}
+//                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+//                   placeholder="+34 600 123 456"
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="grid gap-4 md:grid-cols-2">
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Dirección
+//                 </label>
+//                 <Input
+//                   value={formData.address}
+//                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+//                   placeholder="Calle Principal 123"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Ciudad
+//                 </label>
+//                 <Input
+//                   value={formData.city}
+//                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+//                   placeholder="Madrid"
+//                 />
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="text-sm font-medium text-gray-300">
+//                 Sitio web
+//               </label>
+//               <Input
+//                 type="url"
+//                 value={formData.website}
+//                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+//                 placeholder="https://www.minegocio.com"
+//               />
+//             </div>
+
+//             <div className="grid gap-4 md:grid-cols-2">
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Capacidad máxima
+//                 </label>
+//                 <Input
+//                   type="number"
+//                   value={formData.maxCapacity}
+//                   onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+//                   placeholder="50"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="text-sm font-medium text-gray-300">
+//                   Nombre del asistente IA
+//                 </label>
+//                 <Input
+//                   value={formData.assistantName}
+//                   onChange={(e) => setFormData({ ...formData, assistantName: e.target.value })}
+//                   placeholder="Sofía"
+//                 />
+//               </div>
+//             </div>
+//             <div>
+//               <label className="text-sm font-medium text-gray-300">
+//                 Citas simultáneas (Nº de empleados)
+//               </label>
+//               <Input
+//                 type="number"
+//                 min="1"
+//                 value={formData.config?.max_appointments_per_slot || 1}
+//                 onChange={(e) => setFormData({ 
+//                   ...formData, 
+//                   config: {
+//                     ...formData.config,
+//                     max_appointments_per_slot: parseInt(e.target.value, 10) || 1
+//                   }
+//                 })}
+//                 placeholder="1"
+//               />
+//               <p className="text-xs text-gray-400 mt-1">
+//                 Define cuántas citas se pueden agendar en la misma franja horaria.
+//               </p>
+//             </div>
+
+//             <div>
+//               <label className="text-sm font-medium text-gray-300">
+//                 Horario de atención
+//               </label>
+//               <Input
+//                 value={formData.businessHours}
+//                 onChange={(e) => setFormData({ ...formData, businessHours: e.target.value })}
+//                 placeholder="Lunes a Domingo 09:00-22:00"
+//               />
+//             </div>
+
+//             <div className="flex justify-end">
+//               <Button type="submit" disabled={saving}>
+//                 <Save className="mr-2 h-4 w-4" />
+//                 {saving ? 'Guardando...' : 'Guardar cambios'}
+//               </Button>
+//             </div>
+//           </form>
+//         </CardContent>
+//       </Card>
+
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Información de la plataforma</CardTitle>
+//         </CardHeader>
+//         <CardContent className="space-y-3">
+//           <div className="flex justify-between py-2 border-b border-gray-700">
+//             <span className="text-sm text-gray-400">Tipo de negocio</span>
+//             <span className="text-sm font-medium text-white">
+//               {user?.business?.config?.name || 'N/A'}
+//             </span>
+//           </div>
+//           <div className="flex justify-between py-2 border-b border-gray-700">
+//             <span className="text-sm text-gray-400">URL de acceso</span>
+//             <span className="text-sm font-medium text-blue-400">
+//               {window.location.origin}/{user?.business?.slug || 'slug'}
+//             </span>
+//           </div>
+//           <div className="flex justify-between py-2 border-b border-gray-700">
+//             <span className="text-sm text-gray-400">Plan actual</span>
+//             <span className="text-sm font-medium text-white">Básico</span>
+//           </div>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
+
+function RestaurantShiftSettings({ config, onChange }) {
+  const shifts = config.shifts || {
+    breakfast: { label: 'Desayuno', enabled: false, start: '08:00', end: '11:00', duration: 60 },
+    lunch: { label: 'Almuerzo', enabled: true, start: '13:00', end: '16:00', duration: 90 },
+    dinner: { label: 'Cena', enabled: true, start: '20:00', end: '23:00', duration: 90 },
+    all_day: { label: 'Horario Continuo', enabled: false, start: '12:00', end: '23:00', duration: 90 }
+  };
+
+  const handleShiftChange = (key, field, value) => {
+    const newShifts = {
+      ...shifts,
+      [key]: {
+        ...shifts[key],
+        [field]: value
+      }
+    };
+    onChange({ ...config, shifts: newShifts });
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-6 border-t border-gray-700 pt-6 mt-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Configuración</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          Gestiona la configuración de {user?.business?.name || 'tu negocio'}
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Clock className="w-5 h-5 text-blue-400" />
+          Configuración de Turnos y Horarios
+        </h3>
+        <p className="text-sm text-gray-400">
+          Activa los turnos y define la duración de las reservas para cada uno.
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-700">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-white'
-                  }`}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <div className="grid gap-4">
+        {Object.entries(shifts).map(([key, shift]) => (
+          <div 
+            key={key} 
+            // Usamos la misma estética que HoursSettings: bg-[#1a2f38] para items, border-gray-700
+            className={`p-4 rounded-lg border transition-colors ${
+              shift.enabled 
+                ? 'bg-[#1a2f38] border-gray-700' 
+                : 'bg-transparent border-gray-800 opacity-60'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={shift.enabled}
+                  onChange={(e) => handleShiftChange(key, 'enabled', e.target.checked)}
+                  className="h-5 w-5 rounded border-gray-600 bg-transparent text-blue-600 cursor-pointer"
+                />
+                <span className="font-medium text-white text-base uppercase">{shift.label}</span>
+              </div>
+            </div>
 
-      {/* Tab Content */}
-      {activeTab === 'general' && <GeneralSettings user={user} />}
-      {activeTab === 'services' && <ServicesSettings user={user} />}
-      {activeTab === 'agent' && <AgentSettings user={user} />}
-      {activeTab === 'users' && <UsersSettings user={user} />}
-      {activeTab === 'hours' && <HoursSettings user={user} />}
-      {activeTab === 'security' && <SecuritySettings user={user} />}
+            {shift.enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-2 md:pl-8">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Inicio</label>
+                  <Input
+                    type="time"
+                    value={shift.start}
+                    onChange={(e) => handleShiftChange(key, 'start', e.target.value)}
+                    // Sin bg color forzado, solo estilos base
+                    className="h-9"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Fin (Cierre Cocina)</label>
+                  <Input
+                    type="time"
+                    value={shift.end}
+                    onChange={(e) => handleShiftChange(key, 'end', e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Duración (min)</label>
+                  <Input
+                    type="number"
+                    value={shift.duration}
+                    onChange={(e) => handleShiftChange(key, 'duration', parseInt(e.target.value))}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 function GeneralSettings({ user }) {
-  const { updateBusinessName } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [isRestaurant, setIsRestaurant] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
-    city: '',
     website: '',
-    maxCapacity: '',
+    description: '',
+    timezone: 'Europe/Madrid',
     assistantName: '',
-    businessHours: '',
-    config: {},
+    config: {} 
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const defaultConfig = {
-    terminology: {
-      booking: "Cita",
-      service: "Servicio",
-      bookings: "Citas",
-      customer: "Cliente",
-      services: "Servicios",
-      customers: "Clientes"
-    },
-    max_party_size: 12,
-    min_party_size: 1,
-    assistant_config: {
-      name: "Asistente",
-      tone: "amigable y profesional",
-      personality_traits: ["servicial", "eficiente"]
-    },
-    auto_unblock_hours: 4,
-    require_confirmation: true,
-    booking_buffer_minutes: 15,
-    business_hours_detailed: {
-      friday: { open: "09:00", close: "20:00", closed: false },
-      monday: { open: "09:00", close: "20:00", closed: false },
-      sunday: { open: null, close: null, closed: true },
-      tuesday: { open: "09:00", close: "20:00", closed: false },
-      saturday: { open: "10:00", close: "18:00", closed: false },
-      thursday: { open: "09:00", close: "20:00", closed: false },
-      wednesday: { open: "09:00", close: "20:00", closed: false }
-    },
-    max_appointments_per_slot: 1, // Default 1
-    allow_same_day_reservations: true,
-    email_required_for_reservations: false
-  };
 
   useEffect(() => {
-    loadSettings();
+    loadBusinessData();
   }, []);
 
-  const loadSettings = async () => {
+  const loadBusinessData = async () => {
     try {
-      setLoading(true);
-      const data = await api.getSettings();
+      const response = await api.getSettings();
+      const data = response.settings || response.data?.settings || response; 
+      
+      // Detectar tipo de negocio
+      const type = data.businessType || user?.business?.businessType || '';
+      setIsRestaurant(type === 'restaurant');
 
-      const loadedConfig = data.settings.config || {};
-
-      const mergedConfig = {
-        ...defaultConfig, 
-        ...loadedConfig,  
-        
-        terminology: {
-          ...defaultConfig.terminology,
-          ...(loadedConfig.terminology || {}),
-        },
-        assistant_config: {
-          ...defaultConfig.assistant_config,
-          ...(loadedConfig.assistant_config || {}),
-        },
-        business_hours_detailed: {
-          ...defaultConfig.business_hours_detailed,
-          ...(loadedConfig.business_hours_detailed || {}),
-        },
-      };
+      // Parsear config
+      let parsedConfig = {};
+      if (typeof data.config === 'string') {
+        try { parsedConfig = JSON.parse(data.config); } catch(e) {}
+      } else {
+        parsedConfig = data.config || {};
+      }
 
       setFormData({
-        name: data.settings.name || '',
-        email: data.settings.email || '',
-        phone: data.settings.phone || '',
-        address: data.settings.address || '',
-        city: data.settings.city || '',
-        website: data.settings.website || '',
-        maxCapacity: data.settings.maxCapacity || '',
-        assistantName: data.settings.assistantName || '',
-        businessHours: data.settings.businessHours || '',
-        config: mergedConfig,
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        website: data.website || '',
+        description: data.description || '',
+        timezone: data.timezone || 'Europe/Madrid',
+        assistantName: data.assistantName || '',
+        config: parsedConfig
       });
     } catch (error) {
       console.error('Error cargando configuración:', error);
-      setError('Error al cargar la configuración');
     } finally {
       setLoading(false);
     }
@@ -186,252 +587,244 @@ function GeneralSettings({ user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setSaving(true);
-
+    setLoading(true);
     try {
-      console.log('1. Guardando settings...');
-      await api.updateSettings(formData);
-
-      console.log('2. Recargando usuario...');
-      // await refreshUser();
-      await updateBusinessName();
-
-      console.log('3. Usuario actualizado en store');
-      console.log('3. Usuario actualizado:', user);
-
-      setSuccess('Configuración actualizada correctamente');
-      setTimeout(() => setSuccess(''), 3000);
+      const payload = {
+        ...formData,
+        config: formData.config
+      };
+      await api.updateSettings(payload);
+      alert('Configuración guardada exitosamente');
     } catch (error) {
-      console.error('Error actualizando configuración:', error);
-      setError(error.message || 'Error al actualizar configuración');
+      console.error('Error guardando:', error);
+      alert('Error al guardar');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //   // ... (código de saving)
-  //   try {
-  //     console.log('1. Guardando settings en BD...'); // (Mensaje actualizado)
-  //     await api.updateSettings(formData);
-
-  //     // --- 💡 INICIO DE LA CORRECCIÓN ---
-  //     console.log('2. Actualizando nombre en el store local...'); // (Mensaje actualizado)
-  //     updateBusinessName(formData.name); // <-- CAMBIO: Se usa la función correcta del store
-
-  //     console.log('3. Store actualizado con:', formData.name); // (Mensaje actualizado)
-  //     // --- FIN DE LA CORRECCIÓN ---
-
-  //     setSuccess('Configuración actualizada correctamente');
-  //        setTimeout(() => setSuccess(''), 3000);
-  //   } catch (error) {
-  //     console.error('Error actualizando configuración:', error);
-  //     setError(error.message || 'Error al actualizar configuración');
-  //   } finally {
-  //     setSaving(false);
-  //   }
-  // };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-white">Cargando configuración...</p>
+          <Loader2 className="animate-spin rounded-full h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-400">Cargando configuración...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
           <CardTitle>Información del negocio</CardTitle>
-          <CardDescription className="text-gray-400">
-            Datos básicos de tu negocio
+          <CardDescription>
+            {isRestaurant 
+              ? "Configura los detalles y turnos de tu restaurante" 
+              : "Datos básicos de tu negocio"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm">
-                {success}
-              </div>
-            )}
-
-            <div>
-              <label className="text-sm font-medium text-gray-300">
-                Nombre del negocio *
-              </label>
+        <CardContent className="space-y-6">
+          
+          {/* Campos Principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Nombre del negocio</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ej: Bella Estética"
-                required
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Email de contacto
-                </label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="contacto@negocio.com"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Teléfono
-                </label>
-                <Input
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+34 600 123 456"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Dirección
-                </label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Calle Principal 123"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Ciudad
-                </label>
-                <Input
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="Madrid"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-300">
-                Sitio web
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Email de contacto</label>
               <Input
-                type="url"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="contacto@negocio.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Teléfono</label>
+              <Input
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+34 600 123 456"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Dirección</label>
+              <Input
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Calle Principal 123"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Sitio web</label>
+              <Input
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="https://www.minegocio.com"
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Capacidad máxima
-                </label>
-                <Input
-                  type="number"
-                  value={formData.maxCapacity}
-                  onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                  placeholder="50"
-                />
-              </div>
+            {/* ZONA HORARIA CORREGIDA */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Zona Horaria</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-gray-700 bg-[#1a2f38] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.timezone}
+                onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+              >
+                <optgroup label="Europa">
+                  <option value="Europe/Madrid">Madrid (España)</option>
+                  <option value="Europe/Lisbon">Lisboa (Portugal)</option>
+                  <option value="Europe/Paris">París (Francia)</option>
+                  <option value="Europe/Rome">Roma (Italia)</option>
+                  <option value="UTC">UTC (Universal)</option>
+                </optgroup>
+                
+                <optgroup label="América Latina">
+                  <option value="America/Mexico_City">Ciudad de México (México)</option>
+                  <option value="America/Bogota">Bogotá (Colombia)</option>
+                  <option value="America/Lima">Lima (Perú)</option>
+                  <option value="America/Caracas">Caracas (Venezuela)</option>
+                  <option value="America/Santiago">Santiago (Chile)</option>
+                  <option value="America/Argentina/Buenos_Aires">Buenos Aires (Argentina)</option>
+                </optgroup>
 
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Nombre del asistente IA
-                </label>
-                <Input
-                  value={formData.assistantName}
-                  onChange={(e) => setFormData({ ...formData, assistantName: e.target.value })}
-                  placeholder="Sofía"
-                />
-              </div>
+                <optgroup label="Estados Unidos">
+                  <option value="America/New_York">New York (EST)</option>
+                  <option value="America/Los_Angeles">Los Angeles (PST)</option>
+                </optgroup>
+              </select>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-300">
-                Citas simultáneas (Nº de empleados)
-              </label>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Nombre Asistente IA</label>
               <Input
-                type="number"
-                min="1"
-                value={formData.config?.max_appointments_per_slot || 1}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  config: {
-                    ...formData.config,
-                    max_appointments_per_slot: parseInt(e.target.value, 10) || 1
-                  }
-                })}
-                placeholder="1"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Define cuántas citas se pueden agendar en la misma franja horaria.
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-300">
-                Horario de atención
-              </label>
-              <Input
-                value={formData.businessHours}
-                onChange={(e) => setFormData({ ...formData, businessHours: e.target.value })}
-                placeholder="Lunes a Domingo 09:00-22:00"
+                value={formData.assistantName}
+                onChange={(e) => setFormData({ ...formData, assistantName: e.target.value })}
+                placeholder="Ej: Sofía"
               />
             </div>
+          </div>
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
-                <Save className="mr-2 h-4 w-4" />
-                {saving ? 'Guardando...' : 'Guardar cambios'}
-              </Button>
+          <div className="space-y-2">
+             <label className="text-sm font-medium text-gray-300">Descripción</label>
+             <textarea 
+               className="flex min-h-[80px] w-full rounded-md border border-gray-700 bg-[#1a2f38] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
+               value={formData.description}
+               onChange={(e) => setFormData({...formData, description: e.target.value})}
+               rows={3}
+               placeholder="Describe tu negocio..."
+             />
+          </div>
+
+          {/* SECCIONES ESPECÍFICAS POR TIPO DE NEGOCIO */}
+          
+          {isRestaurant ? (
+            <RestaurantShiftSettings
+              config={formData.config}
+              onChange={(newConfig) => setFormData({ ...formData, config: newConfig })}
+            />
+          ) : (
+            <div className="space-y-4 border-t border-gray-700 pt-6 mt-6">
+               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                 <Scissors className="w-5 h-5 text-pink-400" />
+                 Configuración de Citas
+               </h3>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Citas simultáneas (Personal disponible)
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.config?.max_appointments_per_slot || 1}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      config: {
+                        ...formData.config,
+                        max_appointments_per_slot: parseInt(e.target.value) || 1
+                      }
+                    })}
+                  />
+                  <p className="text-xs text-gray-400">
+                    Número máximo de clientes que pueden ser atendidos al mismo tiempo.
+                  </p>
+                 </div>
+               </div>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Información de la plataforma</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between py-2 border-b border-gray-700">
-            <span className="text-sm text-gray-400">Tipo de negocio</span>
-            <span className="text-sm font-medium text-white">
-              {user?.business?.config?.name || 'N/A'}
-            </span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-700">
-            <span className="text-sm text-gray-400">URL de acceso</span>
-            <span className="text-sm font-medium text-blue-400">
-              {window.location.origin}/{user?.business?.slug || 'slug'}
-            </span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-700">
-            <span className="text-sm text-gray-400">Plan actual</span>
-            <span className="text-sm font-medium text-white">Básico</span>
+          <div className="flex justify-end pt-4">
+            <Button type="submit" disabled={loading}>
+              <Save className="mr-2 h-4 w-4" />
+              {loading ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
           </div>
         </CardContent>
       </Card>
+    </form>
+  );
+}
+
+export function Settings() {
+  const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState('general');
+
+  const tabs = [
+    { id: 'general', label: 'General' },
+    { id: 'services', label: 'Servicios' },
+    { id: 'agent', label: 'Agente IA' },
+    { id: 'users', label: 'Usuarios' },
+    { id: 'hours', label: 'Horarios' },
+    { id: 'security', label: 'Seguridad' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white">Configuración</h1>
+        <p className="mt-1 text-sm text-gray-400">
+          Gestiona la configuración de {user?.business?.name || 'tu negocio'}
+        </p>
+      </div>
+
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 border-b border-gray-700/50">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
+              activeTab === tab.id 
+                ? 'border-blue-500 text-blue-400 bg-[#1a2f38]/50' 
+                : 'border-transparent text-gray-400 hover:text-white hover:bg-[#1a2f38]/30'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        {activeTab === 'general' && <GeneralSettings user={user} />}
+        {activeTab === 'services' && <ServicesSettings user={user} />} 
+        {activeTab === 'agent' && <AgentSettings user={user} />}
+        {activeTab === 'users' && <UsersSettings user={user} />}
+        {activeTab === 'hours' && <HoursSettings user={user} />}
+        {activeTab === 'security' && <SecuritySettings user={user} />}
+      </div>
     </div>
   );
 }

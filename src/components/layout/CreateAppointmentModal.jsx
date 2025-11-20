@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, Clock, Plus, Trash2, Calendar, User, Phone, Mail, DollarSign } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Clock, Plus, Trash2, Calendar, User, Phone, Mail, DollarSign, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/services/api';
@@ -27,7 +27,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     reservationTime: '',
     partySize: 2,
     specialRequests: '',
-    tablePreference: '',
+    tablePreference: 'any', // Default para restaurante
   });
 
   const terminology = user?.business?.terminology || {
@@ -35,26 +35,30 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     customer: 'Cliente',
   };
 
-  const isRestaurant = user?.business?.type === 'restaurant';
+  // Detectar tipo de negocio de forma robusta
+  const isRestaurant = user?.business?.type === 'restaurant' || user?.businessType === 'restaurant' || user?.business?.business_type === 'restaurant';
 
   // Inicializar modal
   useEffect(() => {
     if (isOpen) {
       loadCustomers();
+      
+      // Solo cargar servicios si NO es restaurante (o si quieres mostrarlos opcionalmente)
       if (!isRestaurant) {
         loadServices();
       }
 
       const today = new Date().toISOString().split('T')[0];
+      
       setFormData({
         customerName: '',
         customerPhone: '',
         customerEmail: '',
         reservationDate: today,
-        reservationTime: '10:00',
-        partySize: isRestaurant ? 2 : 1,
+        reservationTime: '13:00', // Hora default ajustada
+        partySize: 2,
         specialRequests: '',
-        tablePreference: '',
+        tablePreference: 'any',
       });
       setSelectedServices([]);
       setTempServiceId('');
@@ -83,6 +87,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
   // ✅ CALCULAR DURACIÓN TOTAL
   const getTotalDuration = () => {
+    if (isRestaurant) return 90; // Duración estimada base para restaurante
     return selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
   };
 
@@ -123,17 +128,19 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
   // ✅ CHECK AVAILABILITY cuando cambian fecha/hora/servicios
   useEffect(() => {
-    if (formData.reservationDate && formData.reservationTime && selectedServices.length > 0) {
+    // Para beauty requerimos servicios, para restaurante solo fecha/hora
+    const shouldCheck = formData.reservationDate && formData.reservationTime && (isRestaurant || selectedServices.length > 0);
+
+    if (shouldCheck) {
       checkAvailability();
     } else {
       setAvailability(null);
     }
-  }, [formData.reservationDate, formData.reservationTime, selectedServices]);
+  }, [formData.reservationDate, formData.reservationTime, selectedServices, isRestaurant, formData.partySize]);
 
   const checkAvailability = async () => {
-    if (!formData.reservationDate || !formData.reservationTime || selectedServices.length === 0) {
-      return;
-    }
+    if (!formData.reservationDate || !formData.reservationTime) return;
+    if (!isRestaurant && selectedServices.length === 0) return;
 
     try {
       setCheckingAvailability(true);
@@ -141,18 +148,20 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
       const totalDuration = getTotalDuration();
 
+      // Ajustamos la llamada para soportar los parámetros de restaurante si es necesario
+      // Nota: Asumimos que tu api.checkAppointmentAvailability puede manejar estos datos extra o los ignora
       const result = await api.checkAppointmentAvailability(
         formData.reservationDate,
         formData.reservationTime,
         totalDuration,
-        selectedServices
+        isRestaurant ? [] : selectedServices // No enviamos servicios si es restaurante
       );
 
       setAvailability(result);
     } catch (error) {
       console.error('Error verificando disponibilidad:', error);
       setAvailability(null);
-      setError('Error al verificar disponibilidad');
+      // No mostramos error UI bloqueante aquí, solo log
     } finally {
       setCheckingAvailability(false);
     }
@@ -182,7 +191,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validaciones
@@ -216,15 +225,13 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
         
         // Lógica condicional para Restaurante vs Beauty
         ...(isRestaurant ? {
-             partySize: parseInt(formData.partySize),
-             tablePreference: formData.tablePreference,
-             // Para restaurante usamos duration fija o calculada diferente, 
-             // pero para beauty enviamos los servicios
-             durationMinutes: 90 
-           } : {
-             services: selectedServices,
-             // No enviamos durationMinutes fijo, dejamos que el backend lo calcule sumando servicios
-           })
+            partySize: parseInt(formData.partySize),
+            tablePreference: formData.tablePreference === 'any' ? null : formData.tablePreference,
+            // El backend calculará la duración según el turno
+          } : {
+            services: selectedServices,
+            // El backend calculará la duración sumando servicios
+          })
       };
 
       // USAR LA API CORRECTA
@@ -245,11 +252,12 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4">
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#0a1820] border border-gray-700 shadow-xl">
-        <div className="sticky top-0 bg-[#0a1820] border-b border-gray-700 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">
-            Crear {terminology.booking}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#0a1820] border border-gray-700 shadow-xl custom-scrollbar">
+        <div className="sticky top-0 bg-[#0a1820] border-b border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            {isRestaurant ? <Users className="h-6 w-6 text-blue-400" /> : <Clock className="h-6 w-6 text-pink-400" />}
+            {isRestaurant ? 'Nueva Reserva de Mesa' : `Crear ${terminology.booking}`}
           </h2>
           <button
             onClick={onClose}
@@ -268,15 +276,15 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             </h3>
 
             <div>
-              <label className="text-sm font-medium text-white">
+              <label className="text-sm font-medium text-gray-300 mb-1 block">
                 <User className="inline h-4 w-4 mr-1" />
-                Seleccionar {terminology.customer.toLowerCase()} existente (opcional)
+                Seleccionar existente (opcional)
               </label>
               <select
                 onChange={handleCustomerSelect}
-                className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
               >
-                <option value="">Nuevo {terminology.customer.toLowerCase()}</option>
+                <option value="">Nuevo cliente</option>
                 {customers.map(customer => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name} - {customer.phone}
@@ -287,28 +295,27 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-white">
-                  <User className="inline h-4 w-4 mr-1" />
+                <label className="text-sm font-medium text-gray-300 mb-1 block">
                   Nombre completo *
                 </label>
                 <Input
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Nombre del cliente"
+                  placeholder="Ej: Juan Pérez"
                   required
                   className="bg-[#1a2f38] border-gray-600 text-white"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-gray-300 mb-1 block">
                   <Phone className="inline h-4 w-4 mr-1" />
                   Teléfono *
                 </label>
                 <Input
                   value={formData.customerPhone}
                   onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                  placeholder="+34 612 345 678"
+                  placeholder="+34 600 000 000"
                   required
                   className="bg-[#1a2f38] border-gray-600 text-white"
                 />
@@ -316,7 +323,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-white">
+              <label className="text-sm font-medium text-gray-300 mb-1 block">
                 <Mail className="inline h-4 w-4 mr-1" />
                 Email (opcional)
               </label>
@@ -330,85 +337,127 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* SECCIÓN: SERVICIOS (Solo para non-restaurant) */}
-          {!isRestaurant && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
-                Servicios
-              </h3>
+          {/* CONDICIONAL: RESTAURANTE VS BEAUTY */}
+          
+          {isRestaurant ? (
+             /* === VISTA RESTAURANTE === */
+             <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2 flex items-center gap-2">
+                   <Users className="h-5 w-5 text-blue-400" />
+                   Detalles de la Mesa
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[#1a2f38]/50 rounded-lg border border-gray-700">
+                    <div>
+                        <label className="text-sm font-medium text-gray-300 mb-1 block">Nº Comensales</label>
+                        <div className="relative">
+                            <Users className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Input 
+                                type="number" 
+                                min="1" 
+                                max="20"
+                                className="pl-9 bg-[#1a2f38] border-gray-600 text-white"
+                                value={formData.partySize}
+                                onChange={e => setFormData({...formData, partySize: e.target.value})}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-gray-300 mb-1 block">Preferencia de Zona</label>
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <select 
+                                className="w-full h-10 rounded-md border border-gray-600 bg-[#1a2f38] pl-9 pr-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={formData.tablePreference}
+                                onChange={e => setFormData({...formData, tablePreference: e.target.value})}
+                            >
+                                <option value="any">Cualquiera</option>
+                                <option value="salon">Salón</option>
+                                <option value="terraza">Terraza</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          ) : (
+             /* === VISTA BEAUTY: CARRITO SERVICIOS === */
+             <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                  Servicios
+                </h3>
 
-              {/* Agregar servicio */}
-              <div className="flex gap-2">
-                <select
-                  value={tempServiceId}
-                  onChange={(e) => setTempServiceId(e.target.value)}
-                  className="flex-1 rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">Seleccionar servicio...</option>
-                  {services
-                    .filter(s => !selectedServices.find(ss => ss.serviceId === s.id))
-                    .map(service => (
-                      <option key={service.id} value={service.id}>
-                        {service.name} - €{service.price} ({service.duration_minutes} min)
-                      </option>
-                    ))}
-                </select>
-                <Button
-                  type="button"
-                  onClick={handleAddService}
-                  disabled={!tempServiceId}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+                {/* Agregar servicio */}
+                <div className="flex gap-2">
+                  <select
+                    value={tempServiceId}
+                    onChange={(e) => setTempServiceId(e.target.value)}
+                    className="flex-1 rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seleccionar servicio...</option>
+                    {services
+                      .filter(s => !selectedServices.find(ss => ss.serviceId === s.id))
+                      .map(service => (
+                        <option key={service.id} value={service.id}>
+                          {service.name} - €{service.price} ({service.duration_minutes} min)
+                        </option>
+                      ))}
+                  </select>
+                  <Button
+                    type="button"
+                    onClick={handleAddService}
+                    disabled={!tempServiceId}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
 
-              {/* Lista de servicios seleccionados */}
-              {selectedServices.length > 0 && (
-                <div className="space-y-2">
-                  {selectedServices.map((service, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-[#1a2f38] rounded-lg border border-gray-700"
-                    >
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{service.serviceName}</p>
-                        <p className="text-sm text-gray-400">
-                          {service.durationMinutes} min • €{service.price}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveService(service.serviceId)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-950"
+                {/* Lista de servicios seleccionados */}
+                {selectedServices.length > 0 && (
+                  <div className="space-y-2">
+                    {selectedServices.map((service, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-[#1a2f38] rounded-lg border border-gray-700"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{service.serviceName}</p>
+                          <p className="text-sm text-gray-400">
+                            {service.durationMinutes} min • €{service.price}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveService(service.serviceId)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-950"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
 
-                  {/* Resumen */}
-                  <div className="mt-3 p-3 bg-blue-950 rounded-lg border border-blue-800">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-200">
-                        <Clock className="inline h-4 w-4 mr-1" />
-                        Duración total:
-                      </span>
-                      <span className="text-white font-semibold">{getTotalDuration()} min</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-1">
-                      <span className="text-blue-200">
-                        <DollarSign className="inline h-4 w-4 mr-1" />
-                        Precio total:
-                      </span>
-                      <span className="text-white font-semibold">€{getTotalPrice()}</span>
+                    {/* Resumen */}
+                    <div className="mt-3 p-3 bg-blue-950 rounded-lg border border-blue-800">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-blue-200">
+                          <Clock className="inline h-4 w-4 mr-1" />
+                          Duración total:
+                        </span>
+                        <span className="text-white font-semibold">{getTotalDuration()} min</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mt-1">
+                        <span className="text-blue-200">
+                          <DollarSign className="inline h-4 w-4 mr-1" />
+                          Precio total:
+                        </span>
+                        <span className="text-white font-semibold">€{getTotalPrice()}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+             </div>
           )}
 
           {/* SECCIÓN: FECHA Y HORA */}
@@ -419,7 +468,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-gray-300 mb-1 block">
                   <Calendar className="inline h-4 w-4 mr-1" />
                   Fecha *
                 </label>
@@ -433,7 +482,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-gray-300 mb-1 block">
                   <Clock className="inline h-4 w-4 mr-1" />
                   Hora *
                 </label>
@@ -486,7 +535,7 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
                                   key={idx}
                                   type="button"
                                   onClick={() => setFormData({ ...formData, reservationTime: time })}
-                                  className="px-2 py-1 bg-red-900 hover:bg-red-800 text-red-100 text-xs rounded"
+                                  className="px-2 py-1 bg-red-900 hover:bg-red-800 text-red-100 text-xs rounded transition-colors"
                                 >
                                   {time}
                                 </button>
@@ -504,15 +553,15 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
 
           {/* SECCIÓN: NOTAS */}
           <div>
-            <label className="text-sm font-medium text-white">
-              Notas (opcional)
+            <label className="text-sm font-medium text-gray-300 mb-1 block">
+              Notas / Peticiones especiales
             </label>
             <textarea
               value={formData.specialRequests}
               onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-              placeholder="Información adicional..."
+              placeholder="Alergias, mesa tranquila, etc..."
               rows={3}
-              className="mt-1 w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-600 bg-[#1a2f38] px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -527,22 +576,22 @@ export function CreateAppointmentModal({ isOpen, onClose, onSuccess }) {
           )}
 
           {/* BOTONES */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 border-t border-gray-700">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 border-gray-600 text-gray-300 hover:bg-white/10 hover:text-white"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={loading || (!isRestaurant && selectedServices.length === 0) || (availability && !availability.available)}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {loading ? 'Creando...' : `Crear ${terminology.booking}`}
+              {loading ? 'Creando...' : isRestaurant ? 'Reservar Mesa' : `Crear ${terminology.booking}`}
             </Button>
           </div>
         </form>
