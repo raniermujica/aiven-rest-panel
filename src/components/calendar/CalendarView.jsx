@@ -12,6 +12,7 @@ import { CreateAppointmentModal } from '../layout/CreateAppointmentModal';
 import { BlockSlotModal } from '@/components/calendar/BlockSlotModal';
 import { Button } from '@/components/ui/button';
 import { Plus, Circle, Ban } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export default function CalendarView() {
   const navigate = useNavigate();
@@ -24,8 +25,9 @@ export default function CalendarView() {
   const [selectedBlockTime, setSelectedBlockTime] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const calendarRef = useRef(null);
+  const { user } = useAuthStore();
 
-  const businessTimezone = 'local';
+  const businessTimezone = user?.business?.timezone || 'local';
 
   useEffect(() => {
     loadAppointments();
@@ -484,7 +486,7 @@ const handleDatesSet = async (dateInfo) => {
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-          timeZone={businessTimezone} 
+          timeZone={businessTimezone}
           locale={esLocale}
           headerToolbar={
             isMobile

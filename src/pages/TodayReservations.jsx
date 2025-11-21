@@ -293,10 +293,11 @@ function AppointmentCard({ appointment, onNavigate, onDelete, terminology }) {
   const StatusIcon = statusInfo.icon;
 
   // 🔧 FIX: Extraer hora UTC directamente sin conversión
-  const appointmentDate = new Date(appointment.appointment_time);
-  const hours = appointmentDate.getUTCHours();
-  const minutes = appointmentDate.getUTCMinutes();
-  const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+  const timeStr = appointment.formatted_time || (() => {
+    const d = new Date(appointment.appointment_time);
+    return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+  })();
 
   return (
     <Card 
