@@ -7,11 +7,10 @@ import { Calendar as CalendarIcon, Clock, Users, Filter, ChevronDown, RefreshCw 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuthStore } from '../../store/authStore';
-import '../../styles/daypilot-custom.css'; // 🆕 Importar CSS personalizado
+import '../../styles/daypilot-custom.css';
+import { getOccupancyByShift } from '@/services/tablesApi';
 
 moment.locale('es');
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function ShiftOccupancy() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -44,33 +43,41 @@ export default function ShiftOccupancy() {
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'x-business-slug': user.business.slug,
-      };
+      
+      //  2. USAR EL ENDPOINT ESPECÍFICO DE OCUPACIÓN
 
-      const [tablesRes, reservationsRes] = await Promise.all([
-        fetch(`${API_URL}/api/tables`, { headers }),
-        fetch(`${API_URL}/api/reservations?date=${dateStr}`, { headers })
-      ]);
+      const data = await getOccupancyByShift(token, user.business.slug, dateStr);
 
-      if (!tablesRes.ok || !reservationsRes.ok) throw new Error('Error cargando datos');
+      const tablesData = data.tables || [];
+      setTables(tablesData);
 
-      const tablesData = await tablesRes.json();
-      const reservationsData = await reservationsRes.json();
+      // ✅ 3. APLANAR Y MAPEAR LAS RESERVAS
+      // El backend devuelve: tables[ { reservations: [ { time: "21:00", ... } ] } ]
+      // Necesitamos extraerlas todas a un array plano para DayPilot
+      const flatReservations = tablesData.flatMap(table => 
+        (table.reservations || []).map(r => ({
+          ...r,
+          id: r.id,
+          table_id: table.id, // Aseguramos el vínculo con la mesa
+          
+          // Mapeo crítico de datos
+          reservation_date: dateStr,
+          reservation_time: r.time, // "21:00" (Hora Local corregida por el Backend)
+          estimated_duration_minutes: r.duration,
+          party_size: r.partySize,
+          client_name: r.clientName,
+          status: r.status,
+          
+          // Mock para compatibilidad con el renderizado existente
+          customer: { name: r.clientName, phone: r.clientPhone, is_vip: r.isVip }
+        }))
+      );
 
-      setTables(tablesData.tables || []);
-      const appointments = reservationsData.appointments || [];
-      setReservations(appointments.map(apt => ({
-        ...apt,
-        reservation_date: apt.scheduled_date?.split('T')[0],
-        reservation_time: apt.appointment_time?.split('T')[1]?.substring(0, 5),
-        estimated_duration_minutes: apt.duration_minutes,
-        customer: apt.customers
-      })));
+      console.log('🔍 Reservas procesadas (ShiftOccupancy):', flatReservations[0]); 
+      setReservations(flatReservations);
+
     } catch (error) {
-      console.error('❌ Error:', error);
+      console.error('❌ Error cargando ocupación:', error);
     } finally {
       setLoading(false);
     }
@@ -232,8 +239,6 @@ export default function ShiftOccupancy() {
     }
   };
 
-
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -308,23 +313,11 @@ export default function ShiftOccupancy() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* {Object.entries(shifts).map(([key, shift]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedShift(key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedShift === key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-[#0a1820] text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  }`}
-              >
-                <Clock className="w-4 h-4 inline mr-1" />
-                {shift.label}
-              </button>
-            ))} */}
+            {/* Selectores de turno si se necesitan */}
           </div>
         </div>
 
-        {/* Estadísticas y Filtros igual */}
+        {/* Estadísticas */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-[#0a1820] rounded-lg p-4 border border-gray-700">
             <div className="text-sm text-gray-400 mb-1">Ocupación</div>
@@ -414,17 +407,14 @@ export default function ShiftOccupancy() {
       <div className="bg-[#1a2f38] rounded-lg border border-gray-700 p-4">
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <span className="font-medium text-white">Estados:</span>
-
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-500" />
             <span className="text-gray-300">Confirmada</span>
           </div>
-
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-500" />
             <span className="text-gray-300">En mesa</span>
           </div>
-
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-green-100 border-2 border-green-500" />
             <span className="text-gray-300">Completada</span>

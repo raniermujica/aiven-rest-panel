@@ -27,7 +27,9 @@ export default function CalendarView() {
   const calendarRef = useRef(null);
   const { user } = useAuthStore();
 
-  const businessTimezone = user?.business?.timezone || 'local';
+  // ✅ CORRECCIÓN: Usamos 'UTC' para que FullCalendar muestre la hora tal cual viene del backend
+  // sin aplicar la conversión de la zona horaria del navegador del cliente.
+  const businessTimezone = 'UTC';
 
   useEffect(() => {
     loadAppointments();
@@ -73,16 +75,28 @@ export default function CalendarView() {
 
       // Convertir citas a eventos
       const appointmentEvents = (appointmentsData.appointments || []).map(apt => {
-        // 🔧 FIX: Mantener fecha/hora como UTC sin conversión de zona horaria
+        // 🔧 FIX: Mantener fecha/hora alineada con AllReservations.jsx
         const startDate = new Date(apt.appointment_time);
+        
+        let hour = startDate.getUTCHours();
+        let minute = startDate.getUTCMinutes();
 
-        // Crear nueva fecha usando los componentes UTC para evitar conversión automática
+        // Si tenemos formatted_time (ej: "10:00"), usamos eso prioritariamente para evitar fallos
+        if (apt.formatted_time) {
+          const [h, m] = apt.formatted_time.split(':').map(Number);
+          if (!isNaN(h) && !isNaN(m)) {
+            hour = h;
+            minute = m;
+          }
+        }
+
+        // Crear fecha usando los componentes determinados
         const startUTC = new Date(Date.UTC(
           startDate.getUTCFullYear(),
           startDate.getUTCMonth(),
           startDate.getUTCDate(),
-          startDate.getUTCHours(),
-          startDate.getUTCMinutes(),
+          hour,
+          minute,
           0
         ));
 
@@ -162,7 +176,7 @@ export default function CalendarView() {
           if (payload.eventType === 'INSERT') {
             const newApt = payload.new;
 
-            // 🔧 FIX: Usar componentes UTC
+            // 🔧 FIX: Usar componentes UTC para Realtime
             const startDate = new Date(newApt.appointment_time);
             const startUTC = new Date(Date.UTC(
               startDate.getUTCFullYear(),
@@ -198,7 +212,7 @@ export default function CalendarView() {
           if (payload.eventType === 'UPDATE') {
             const updatedApt = payload.new;
 
-            // 🔧 FIX: Usar componentes UTC
+            // 🔧 FIX: Usar componentes UTC para Realtime
             const startDate = new Date(updatedApt.appointment_time);
             const startUTC = new Date(Date.UTC(
               startDate.getUTCFullYear(),
@@ -247,77 +261,90 @@ export default function CalendarView() {
     };
   }, []);
 
-const handleDatesSet = async (dateInfo) => {
-  try {
-    const params = {
-      startDate: dateInfo.startStr.split('T')[0],
-      endDate: dateInfo.endStr.split('T')[0]
-    };
-
-    // Cargar citas
-    const appointmentsData = await api.getReservations(params);
-
-    const appointmentEvents = (appointmentsData.appointments || []).map(apt => {
-      // 🔧 FIX: Usar componentes UTC
-      const startDate = new Date(apt.appointment_time);
-      const startUTC = new Date(Date.UTC(
-        startDate.getUTCFullYear(),
-        startDate.getUTCMonth(),
-        startDate.getUTCDate(),
-        startDate.getUTCHours(),
-        startDate.getUTCMinutes(),
-        0
-      ));
-      const endUTC = new Date(startUTC.getTime() + (apt.duration_minutes || 60) * 60000);
-
-      return {
-        id: String(apt.id),
-        title: `${apt.client_name} - ${apt.service_name}`,
-        start: startUTC.toISOString(),
-        end: endUTC.toISOString(),
-        backgroundColor: getStatusColor(apt.status),
-        borderColor: getStatusColor(apt.status),
-        extendedProps: {
-          type: 'appointment',
-          status: apt.status,
-          customerName: apt.client_name,
-          customerPhone: apt.client_phone,
-          service: apt.service_name,
-          duration: apt.duration_minutes,
-          statusLabel: getStatusLabel(apt.status)
-        }
-      };
-    });
-
-    // Cargar bloqueos
-    let blockEvents = [];
+  const handleDatesSet = async (dateInfo) => {
     try {
-      const blocksData = await api.getBlockedSlots(params.startDate, params.endDate);
+      const params = {
+        startDate: dateInfo.startStr.split('T')[0],
+        endDate: dateInfo.endStr.split('T')[0]
+      };
 
-      blockEvents = (blocksData.blockedSlots || []).map(block => ({
-        id: `block-${block.id}`,
-        title: block.reason || 'Bloqueado',
-        start: block.blocked_from,
-        end: block.blocked_until,
-        backgroundColor: '#ef4444',
-        borderColor: '#dc2626',
-        display: 'background',
-        extendedProps: {
-          type: 'block',
-          blockId: block.id,
-          blockType: block.block_type,
-          reason: block.reason
+      // Cargar citas
+      const appointmentsData = await api.getReservations(params);
+
+      const appointmentEvents = (appointmentsData.appointments || []).map(apt => {
+        // 🔧 FIX: Misma lógica de precisión que en loadAppointments
+        const startDate = new Date(apt.appointment_time);
+        
+        let hour = startDate.getUTCHours();
+        let minute = startDate.getUTCMinutes();
+
+        if (apt.formatted_time) {
+          const [h, m] = apt.formatted_time.split(':').map(Number);
+          if (!isNaN(h) && !isNaN(m)) {
+            hour = h;
+            minute = m;
+          }
         }
-      }));
-    } catch (blockError) {
-      console.warn('⚠️ Error cargando bloqueos:', blockError);
-    }
 
-    setEvents([...appointmentEvents, ...blockEvents]);
-  } catch (error) {
-    console.error('❌ Error recargando eventos:', error);
-  }
-};
+        const startUTC = new Date(Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate(),
+          hour,
+          minute,
+          0
+        ));
+        
+        const endUTC = new Date(startUTC.getTime() + (apt.duration_minutes || 60) * 60000);
+
+        return {
+          id: String(apt.id),
+          title: `${apt.client_name} - ${apt.service_name}`,
+          start: startUTC.toISOString(),
+          end: endUTC.toISOString(),
+          backgroundColor: getStatusColor(apt.status),
+          borderColor: getStatusColor(apt.status),
+          extendedProps: {
+            type: 'appointment',
+            status: apt.status,
+            customerName: apt.client_name,
+            customerPhone: apt.client_phone,
+            service: apt.service_name,
+            duration: apt.duration_minutes,
+            statusLabel: getStatusLabel(apt.status)
+          }
+        };
+      });
+
+      // Cargar bloqueos
+      let blockEvents = [];
+      try {
+        const blocksData = await api.getBlockedSlots(params.startDate, params.endDate);
+
+        blockEvents = (blocksData.blockedSlots || []).map(block => ({
+          id: `block-${block.id}`,
+          title: block.reason || 'Bloqueado',
+          start: block.blocked_from,
+          end: block.blocked_until,
+          backgroundColor: '#ef4444',
+          borderColor: '#dc2626',
+          display: 'background',
+          extendedProps: {
+            type: 'block',
+            blockId: block.id,
+            blockType: block.block_type,
+            reason: block.reason
+          }
+        }));
+      } catch (blockError) {
+        console.warn('⚠️ Error cargando bloqueos:', blockError);
+      }
+
+      setEvents([...appointmentEvents, ...blockEvents]);
+    } catch (error) {
+      console.error('❌ Error recargando eventos:', error);
+    }
+  };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -486,7 +513,7 @@ const handleDatesSet = async (dateInfo) => {
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-          timeZone={businessTimezone}
+          timeZone={businessTimezone} // ✅ USANDO UTC
           locale={esLocale}
           headerToolbar={
             isMobile
