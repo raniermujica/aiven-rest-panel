@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
-import { BlockSlotModal } from '@/components/BlockSlotModal';
+import { BlockSlotModal } from '../components/calendar/BlockSlotModal';
 
 export function Dashboard() {
   const navigate = useNavigate();

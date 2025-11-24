@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getTables, createTable, updateTable, deleteTable } from '@/services/tablesApi';
 import { TableCard } from '@/components/restaurant/TableCard';
 import { TableModal } from '@/components/restaurant/TableModal';
-import { BlockSlotModal } from '@/components/BlockSlotModal';
+import { BlockSlotModal } from '../calendar/BlockSlotModal';
 import { Button } from '@/components/ui/button';
 import { api } from '@/services/api';
 
