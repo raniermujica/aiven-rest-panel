@@ -246,20 +246,51 @@ class APIService {
     });
   }
 
-  // Crear bloqueo de horarios
-  async createBlockedSlot(blockData) {
-    try {
-      console.log('📤 Creando bloqueo:', blockData);
-
-      const response = await this.client.post('/api/blocked-slots', blockData);
-
-      console.log('✅ Bloqueo creado:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Error creando bloqueo:', error);
-      throw error;
+// Crear bloqueo de horarios
+async createBlockedSlot(blockData) {
+  try {
+    console.log('📤 Creando bloqueo:', blockData);
+    
+    // ✅ OBTENER TOKEN del localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      throw new Error('No hay sesión activa');
     }
+
+    // ✅ OBTENER businessSlug del localStorage (de Zustand)
+    const authStore = localStorage.getItem('auth-storage');
+    let businessSlug = null;
+    
+    if (authStore) {
+      try {
+        const parsed = JSON.parse(authStore);
+        businessSlug = parsed.state?.user?.business?.slug;
+      } catch (e) {
+        console.error('Error parseando auth-storage:', e);
+      }
+    }
+
+    if (!businessSlug) {
+      throw new Error('No se encontró el slug del negocio');
+    }
+
+    console.log('🔐 Token encontrado, slug:', businessSlug);
+    
+    const response = await this.client.post('/api/blocked-slots', blockData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Business-Slug': businessSlug
+      }
+    });
+    
+    console.log('✅ Bloqueo creado:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error creando bloqueo:', error);
+    throw error;
   }
+}
 
   async updateService(serviceId, data) {
     return this.request(`/api/services/${serviceId}`, {
