@@ -246,6 +246,21 @@ class APIService {
     });
   }
 
+  // Crear bloqueo de horarios
+  async createBlockedSlot(blockData) {
+    try {
+      console.log('📤 Creando bloqueo:', blockData);
+
+      const response = await this.client.post('/api/blocked-slots', blockData);
+
+      console.log('✅ Bloqueo creado:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error creando bloqueo:', error);
+      throw error;
+    }
+  }
+
   async updateService(serviceId, data) {
     return this.request(`/api/services/${serviceId}`, {
       method: 'PATCH',
@@ -300,20 +315,20 @@ class APIService {
   /**
  * Marcar cliente como "En Mesa" (Check-in)
  */
-async checkInAppointment(appointmentId) {
-  return this.request(`/api/appointments/${appointmentId}/check-in`, {
-    method: 'POST',
-  });
-}
+  async checkInAppointment(appointmentId) {
+    return this.request(`/api/appointments/${appointmentId}/check-in`, {
+      method: 'POST',
+    });
+  }
 
-/**
- * Marcar cliente como "Se fue" (Check-out)
- */
-async checkOutAppointment(appointmentId) {
-  return this.request(`/api/appointments/${appointmentId}/check-out`, {
-    method: 'POST',
-  });
-}
+  /**
+   * Marcar cliente como "Se fue" (Check-out)
+   */
+  async checkOutAppointment(appointmentId) {
+    return this.request(`/api/appointments/${appointmentId}/check-out`, {
+      method: 'POST',
+    });
+  }
 
   // --- FUNCIONES DE WHATSAPP ---
   async initializeWhatsApp() {

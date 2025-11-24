@@ -11,12 +11,14 @@ import {
   UserPlus,
   ListChecks,
   BarChart3,
-  Star
+  Star,
+  Ban
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { CreateAppointmentModal } from '@/components/layout/CreateAppointmentModal';
+import { BlockSlotModal } from '@/components/BlockSlotModal';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export function Dashboard() {
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   const terminology = user?.business?.terminology || {
     booking: 'Cita',
@@ -38,8 +41,8 @@ export function Dashboard() {
   }, []);
 
   console.log('👤 User en Dashboard:', user);
-console.log('🏢 Business en Dashboard:', user?.business);
-console.log('📝 Nombre del negocio:', user?.business?.name);
+  console.log('🏢 Business en Dashboard:', user?.business);
+  console.log('📝 Nombre del negocio:', user?.business?.name);
 
   const loadDashboardData = async () => {
     try {
@@ -58,6 +61,16 @@ console.log('📝 Nombre del negocio:', user?.business?.name);
     }
   };
 
+  const handleSaveBlock = async (blockData) => {
+    try {
+      await api.createBlockedSlot(blockData);
+      console.log('✅ Bloqueo creado exitosamente');
+    } catch (error) {
+      console.error('❌ Error creando bloqueo:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,13 +85,25 @@ console.log('📝 Nombre del negocio:', user?.business?.name);
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">
-          Panel de Control
-        </h1>
-        <p className="text-white mt-1">
-          Bienvenido, {user?.name} - {user?.business?.name}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">
+            Panel de Control
+          </h1>
+          <p className="text-white mt-1">
+            Bienvenido, {user?.name} - {user?.business?.name}
+          </p>
+        </div>
+        
+        {/* ✅ BOTÓN BLOQUEAR DISPONIBILIDAD */}
+        <Button
+          onClick={() => setShowBlockModal(true)}
+          variant="outline"
+          className="border-red-600 text-red-400 hover:bg-red-900/20"
+        >
+          <Ban className="mr-2 h-4 w-4" />
+          Bloquear Disponibilidad
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -139,12 +164,11 @@ console.log('📝 Nombre del negocio:', user?.business?.name);
               color="purple"
             />
             <QuickActionButton
-              icon={ListChecks}
-              label="Gestionar Lista de Espera"
-              description="Próximamente"
-              onClick={() => {}}
-              color="gray"
-              disabled
+              icon={Ban}
+              label="Bloquear Horarios"
+              description="Gestionar disponibilidad"
+              onClick={() => setShowBlockModal(true)}
+              color="red"
             />
           </div>
         </CardContent>
@@ -209,6 +233,13 @@ console.log('📝 Nombre del negocio:', user?.business?.name);
           setShowCreateModal(false);
         }}
       />
+
+      {/* ✅ MODAL BLOQUEO */}
+      <BlockSlotModal
+        open={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        onSave={handleSaveBlock}
+      />
     </div>
   );
 }
@@ -247,6 +278,7 @@ function QuickActionButton({ icon: Icon, label, description, onClick, color, dis
     blue: 'bg-[#1a2f38] text-blue-400 hover:bg-[#09181f]',
     yellow: 'bg-[#1a2f38] text-yellow-400 hover:bg-[#09181f]',
     purple: 'bg-[#1a2f38] text-purple-400 hover:bg-[#09181f]',
+    red: 'bg-[#1a2f38] text-red-400 hover:bg-[#09181f]',
     gray: 'bg-[#1a2f38] text-gray-500 cursor-not-allowed opacity-60',
   };
 

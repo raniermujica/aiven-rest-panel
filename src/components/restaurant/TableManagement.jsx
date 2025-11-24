@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Ban } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { getTables, createTable, updateTable, deleteTable } from '@/services/tablesApi';
 import { TableCard } from '@/components/restaurant/TableCard';
 import { TableModal } from '@/components/restaurant/TableModal';
+import { BlockSlotModal } from '@/components/BlockSlotModal';
 import { Button } from '@/components/ui/button';
+import { api } from '@/services/api';
 
 export default function TableManagement() {
   const { token, user } = useAuthStore();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
 
   useEffect(() => {
@@ -66,6 +69,16 @@ export default function TableManagement() {
     }
   };
 
+  const handleSaveBlock = async (blockData) => {
+    try {
+      await api.createBlockedSlot(blockData);
+      console.log('✅ Bloqueo creado exitosamente');
+    } catch (error) {
+      console.error('❌ Error creando bloqueo:', error);
+      throw error;
+    }
+  };
+
   // Agrupar por tipo
   const salonTables = tables.filter(t => t.table_type === 'salon' && t.is_active);
   const terrazaTables = tables.filter(t => t.table_type === 'terraza' && t.is_active);
@@ -86,10 +99,22 @@ export default function TableManagement() {
           <h1 className="text-3xl font-bold">Gestión de Mesas</h1>
           <p className="text-gray-600">Administra las mesas de tu restaurante</p>
         </div>
-        <Button onClick={handleCreateTable}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Mesa
-        </Button>
+        <div className="flex gap-3">
+          {/* ✅ BOTÓN BLOQUEAR */}
+          <Button 
+            onClick={() => setShowBlockModal(true)}
+            variant="outline"
+            className="border-red-600 text-red-400 hover:bg-red-900/20"
+          >
+            <Ban className="mr-2 h-4 w-4" />
+            Bloquear Disponibilidad
+          </Button>
+          
+          <Button onClick={handleCreateTable}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Mesa
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -114,7 +139,7 @@ export default function TableManagement() {
         </div>
       </div>
 
-      {/* Empty state también cambiar */}
+      {/* Empty state */}
       {tables.length === 0 && (
         <div className="rounded-lg bg-[#1a2f38] border border-gray-700 p-12 text-center shadow">
           <p className="text-gray-400">No hay mesas configuradas</p>
@@ -158,22 +183,19 @@ export default function TableManagement() {
         </div>
       )}
 
-      {/* Empty state */}
-      {tables.length === 0 && (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <p className="text-gray-500">No hay mesas configuradas</p>
-          <Button onClick={handleCreateTable} className="mt-4">
-            Crear primera mesa
-          </Button>
-        </div>
-      )}
-
-      {/* Modal */}
+      {/* Modal Crear/Editar Mesa */}
       <TableModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onSave={handleSaveTable}
         table={editingTable}
+      />
+
+      {/* ✅ MODAL BLOQUEO */}
+      <BlockSlotModal
+        open={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        onSave={handleSaveBlock}
       />
     </div>
   );
