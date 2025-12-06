@@ -42,7 +42,6 @@ export default function Demo() {
           filter: 'restaurant_id=db63ea52-be46-42f7-b577-ac5e498c5013'
         },
         (payload) => {
-          console.log('🔄 Nueva cita:', payload);
           loadAppointments();
         }
       )
@@ -84,7 +83,7 @@ export default function Demo() {
     setSending(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/contact/demo', {
+      const response = await fetch('https://www.api.agentpaul.es/contact/demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
